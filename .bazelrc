@@ -1,0 +1,2 @@
+build --strategy=ObjcLink=standalone
+build --disk_cache=/tmp/bazel

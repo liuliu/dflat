@@ -1,0 +1,56 @@
+import SQLite3
+
+final class SQLiteConnection {
+  var sqlite: OpaquePointer?
+  private var stringPool = [String: OpaquePointer]()
+  private var staticPool = [UnsafePointer<UInt8>: OpaquePointer]()
+  init?(filePath: String) {
+    guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) else { return nil }
+    guard sqlite != nil else { return nil }
+  }
+  deinit {
+    guard let sqlite = sqlite else { return }
+    for prepared in stringPool.values {
+      sqlite3_finalize(prepared)
+    }
+    for prepared in staticPool.values {
+      sqlite3_finalize(prepared)
+    }
+    sqlite3_close(sqlite)
+  }
+  func close() {
+    guard let sqlite = sqlite else { return }
+    for prepared in stringPool.values {
+      sqlite3_finalize(prepared)
+    }
+    for prepared in staticPool.values {
+      sqlite3_finalize(prepared)
+    }
+    sqlite3_close(sqlite)
+  }
+  func prepareStatement(_ statement: String) -> OpaquePointer? {
+    guard let sqlite = sqlite else { return nil }
+    if let prepared = stringPool[statement] {
+      return prepared
+    }
+    var prepared: OpaquePointer? = nil
+    sqlite3_prepare_v2(sqlite, statement, -1, &prepared, nil)
+    if let prepared = prepared {
+      stringPool[statement] = prepared
+    }
+    return prepared
+  }
+  func prepareStatement(_ statement: StaticString) -> OpaquePointer? {
+    guard let sqlite = sqlite else { return nil }
+    let identifier = statement.utf8Start
+    if let prepared = staticPool[identifier] {
+      return prepared
+    }
+    var prepared: OpaquePointer? = nil
+    sqlite3_prepare_v2(sqlite, UnsafeRawPointer(identifier).assumingMemoryBound(to: Int8.self), -1, &prepared, nil)
+    if let prepared = prepared {
+      staticPool[identifier] = prepared
+    }
+    return prepared
+  }
+}
