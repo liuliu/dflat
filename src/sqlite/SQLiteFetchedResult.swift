@@ -1,6 +1,6 @@
 import Dflat
 
-final class SQLiteDflatFetchedResult<Element: DflatAtom>: DflatFetchedResult<Element> {
+final class SQLiteFetchedResult<Element: Atom>: FetchedResult<Element> {
   private let clause: AnySQLiteExpr<Bool>
   private let limit: Limit
   private let orderBy: [OrderBy]

@@ -1,5 +1,5 @@
 // Using abstract class so we can provide implementation for array.
-open class DflatFetchedResult<Element: DflatAtom>: RandomAccessCollection {
+open class FetchedResult<Element: Atom>: RandomAccessCollection {
   let array: [Element]
 
   public typealias Element = Element

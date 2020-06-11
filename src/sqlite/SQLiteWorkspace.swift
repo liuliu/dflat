@@ -1,8 +1,9 @@
 import Dflat
 import SQLite3
 import Dispatch
+import Foundation
 
-public final class SQLiteDflat: Dflat {
+public final class SQLiteWorkspace: Workspace {
 
   public enum FileProtectionLevel: Int32 {
     case noProtection = 4 // Class D
@@ -15,6 +16,15 @@ public final class SQLiteDflat: Dflat {
   private let queue: DispatchQueue
   private var writer: SQLiteConnection?
   private let readerPool: SQLiteConnectionPool
+  
+  private(set) var current: SQLiteWorkspace? {
+    get {
+      Thread.current.threadDictionary["SQLiteDflatCurrent"] as? SQLiteWorkspace
+    }
+    set (newCurrent) {
+      Thread.current.threadDictionary["SQLiteDflatCurrent"] = newCurrent
+    }
+  }
 
   public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, queue: DispatchQueue = DispatchQueue(label: "com.dflat.write", qos: .utility)) {
     self.filePath = filePath
@@ -26,15 +36,19 @@ public final class SQLiteDflat: Dflat {
     }
   }
 
-  public func performChanges(_ anyPool: [Any.Type], changesHandler: @escaping Dflat.ChangesHandler, completionHandler: Dflat.CompletionHandler? = nil) {
+  public func performChanges(_ anyPool: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
     queue.async { [weak self] in
       self?.invokeChangesHandler(anyPool, changesHandler: changesHandler, completionHandler: completionHandler)
     }
   }
 
-  public func fetchFor<T: DflatAtom>(ofType: T.Type) -> DflatQueryBuilder<T> {
+  public func fetchFor<T: Atom>(ofType: T.Type) -> QueryBuilder<T> {
     let reader = readerPool.borrow()
-    return SQLiteDflatQueryBuilder<T>(reader)
+    return SQLiteQueryBuilder<T>(reader)
+  }
+  
+  public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
+    return closure()
   }
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
@@ -51,7 +65,7 @@ public final class SQLiteDflat: Dflat {
   private func prepareData() {
     dispatchPrecondition(condition: .onQueue(queue))
     // Set the flag before creating the s
-    SQLiteDflat.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
+    Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
     writer = SQLiteConnection(filePath: filePath)
     guard let writer = writer else { return }
     sqlite3_busy_timeout(writer.sqlite, 10_000)
@@ -60,15 +74,17 @@ public final class SQLiteDflat: Dflat {
     sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
   }
 
-  private func invokeChangesHandler(_ anyPool: [Any.Type], changesHandler: Dflat.ChangesHandler, completionHandler: Dflat.CompletionHandler?) {
+  private func invokeChangesHandler(_ anyPool: [Any.Type], changesHandler: Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler?) {
     guard let writer = writer else {
       completionHandler?(false)
       return
     }
-    let txContext = SQLiteDflatTransactionContext()
+    let txnContext = SQLiteTransactionContext(anyPool: anyPool, writer: writer)
     let begin = writer.prepareStatement("BEGIN")
     sqlite3_step(begin)
-    changesHandler(txContext)
+    self.current = self
+    changesHandler(txnContext)
+    self.current = nil
     let commit = writer.prepareStatement("COMMIT")
     sqlite3_step(commit)
     completionHandler?(false)

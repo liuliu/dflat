@@ -17,7 +17,7 @@ public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
     }
     return lval.result < rval.result
   }
-  public func areInIncreasingOrder(_ lhs: DflatAtom, _ rhs: DflatAtom) -> Bool {
+  public func areInIncreasingOrder(_ lhs: Atom, _ rhs: Atom) -> Bool {
     let lval = column.objectReader(lhs)
     let rval = column.objectReader(rhs)
     guard !lval.unknown || !rval.unknown else { return true }
@@ -33,7 +33,7 @@ public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
 public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
   public typealias ResultType = T
   public typealias TableReader = (_ table: FlatBufferObject) -> (result: T, unknown: Bool)
-  public typealias ObjectReader = (_ object: DflatAtom) -> (result: T, unknown: Bool)
+  public typealias ObjectReader = (_ object: Atom) -> (result: T, unknown: Bool)
   public let name: String
   let tableReader: TableReader
   let objectReader: ObjectReader
@@ -46,7 +46,7 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
     self.tableReader = tableReader
     self.objectReader = objectReader
   }
-  public func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     precondition(table != nil || object != nil)
     if let table = table {
       return tableReader(table)

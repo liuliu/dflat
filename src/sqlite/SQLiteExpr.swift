@@ -7,7 +7,7 @@ public protocol SQLiteExpr {
 }
 
 private class _AnyExprBase<ResultType>: Expr {
-  func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     fatalError()
   }
   func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
@@ -21,7 +21,7 @@ private class _AnyExpr<T: Expr>: _AnyExprBase<T.ResultType> {
   init(_ base: T) {
     self.base = base
   }
-  override func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  override func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     base.evaluate(table: table, object: object)
   }
   override func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
@@ -43,7 +43,7 @@ public final class AnySQLiteExpr<ResultType>: Expr, SQLiteExpr {
     self.sqlBase = sqlBase
     self.base = _AnyExpr(base)
   }
-  public func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     base.evaluate(table: table, object: object)
   }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {

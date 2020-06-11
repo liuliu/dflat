@@ -1,7 +1,8 @@
+import Dflat
 import SQLite3
 
-final class SQLiteConnection {
-  var sqlite: OpaquePointer?
+public final class SQLiteConnection: SchemaSetUpper {
+  public var sqlite: OpaquePointer?
   private var stringPool = [String: OpaquePointer]()
   private var staticPool = [UnsafePointer<UInt8>: OpaquePointer]()
   init?(filePath: String) {
@@ -28,7 +29,7 @@ final class SQLiteConnection {
     }
     sqlite3_close(sqlite)
   }
-  func prepareStatement(_ statement: String) -> OpaquePointer? {
+  public func prepareStatement(_ statement: String) -> OpaquePointer? {
     guard let sqlite = sqlite else { return nil }
     if let prepared = stringPool[statement] {
       return prepared
@@ -40,7 +41,7 @@ final class SQLiteConnection {
     }
     return prepared
   }
-  func prepareStatement(_ statement: StaticString) -> OpaquePointer? {
+  public func prepareStatement(_ statement: StaticString) -> OpaquePointer? {
     guard let sqlite = sqlite else { return nil }
     let identifier = statement.utf8Start
     if let prepared = staticPool[identifier] {

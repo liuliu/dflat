@@ -25,7 +25,7 @@ public struct Vec3 {
   }
 }
 
-public final class Monster: DflatAtom {
+public final class Monster: Dflat.Atom {
   let pos: Vec3?
   let mana: Int16
   let hp: Int16

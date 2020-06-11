@@ -2,7 +2,7 @@ import Dflat
 import XCTest
 import FlatBuffers
 
-final class TestObj: DflatAtom {
+final class TestObj: Dflat.Atom {
   var x: Int32 = 0
   var y: Float = 0
 }
@@ -11,12 +11,12 @@ func testObjXTable(_ table: FlatBufferObject) -> (result: Int32, unknown: Bool) 
   return (0, true)
 }
 
-func testObjX(_ object: DflatAtom) -> (result: Int32, unknown: Bool) {
+func testObjX(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
   let object: TestObj = object as! TestObj
   return (object.x, false)
 }
 
-func testObjX10AsNull(_ object: DflatAtom) -> (result: Int32, unknown: Bool) {
+func testObjX10AsNull(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
   let object: TestObj = object as! TestObj
   if object.x == 10 {
     return (object.x, true)
@@ -28,7 +28,7 @@ func testObjYTable(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) 
   return (0, true)
 }
 
-func testObjY(_ object: DflatAtom) -> (result: Float, unknown: Bool) {
+func testObjY(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
   let object: TestObj = object as! TestObj
   return (object.y, false)
 }

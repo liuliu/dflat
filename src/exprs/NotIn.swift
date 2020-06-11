@@ -4,7 +4,7 @@ public struct NotInExpr<T: Expr>: Expr where T.ResultType: Hashable, T.ResultTyp
   public typealias ResultType = Bool
   public let unary: T
   public let set: Set<T.ResultType>
-  public func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     let val = unary.evaluate(table: table, object: object)
     guard (!val.unknown) else { return (false, true) }
     return (!set.contains(val.result), false)

@@ -94,3 +94,4 @@ iOSInjectionProject/
 *.mobileprovision
 bazel-*
 .DS_Store
+*.swp

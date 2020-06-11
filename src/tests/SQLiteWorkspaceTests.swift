@@ -4,7 +4,7 @@ import FlatBuffers
 import XCTest
 import Foundation
 
-final class TestObj: DflatAtom {
+final class TestObj: Dflat.Atom {
   var x: Int32 = 0
   var y: Float = 0
 }
@@ -13,12 +13,12 @@ func testObjXTable(_ table: FlatBufferObject) -> (result: Int32, unknown: Bool) 
   return (0, true)
 }
 
-func testObjX(_ object: DflatAtom) -> (result: Int32, unknown: Bool) {
+func testObjX(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
   let object: TestObj = object as! TestObj
   return (object.x, false)
 }
 
-func testObjX10AsNull(_ object: DflatAtom) -> (result: Int32, unknown: Bool) {
+func testObjX10AsNull(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
   let object: TestObj = object as! TestObj
   if object.x == 10 {
     return (object.x, true)
@@ -30,20 +30,26 @@ func testObjYTable(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) 
   return (0, true)
 }
 
-func testObjY(_ object: DflatAtom) -> (result: Float, unknown: Bool) {
+func testObjY(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
   let object: TestObj = object as! TestObj
   return (object.y, false)
 }
 
-class DflatTests: XCTestCase {
+class SQLiteWorkspaceTests: XCTestCase {
 
-  func testDflat() {
+  func testWorkspace() {
     let filePath = NSTemporaryDirectory().appending("\(UUID().uuidString).db")
-    let dflat = SQLiteDflat(filePath: filePath, fileProtectionLevel: .noProtection)
+    let dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let columnY = FieldExpr(name: "y", primaryKey: true, hasIndex: false, tableReader: testObjYTable, objectReader: testObjY)
     let _ = dflat.fetchFor(ofType: TestObj.self).where(columnY > 1.5)
-    dflat.performChanges([TestObj.self], changesHandler: { (txContext) in
-    })
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
+      let changeRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      txnContext.submit(changeRequest)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
   }
 
 }

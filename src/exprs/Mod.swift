@@ -4,7 +4,7 @@ public struct ModExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType
   public typealias ResultType = L.ResultType
   public let left: L
   public let right: R
-  public func evaluate(table: FlatBufferObject?, object: DflatAtom?) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
     let lval = left.evaluate(table: table, object: object)
     let rval = right.evaluate(table: table, object: object)
     return (lval.result % rval.result, lval.unknown || rval.unknown)
