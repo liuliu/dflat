@@ -1,8 +1,11 @@
-public protocol SchemaSetUpper {}
+public protocol PersistenceToolbox {}
 
 public protocol ChangeRequest {
   static var atomType: Any.Type { get }
-  static func setUpSchema(_: SchemaSetUpper)
+  // Called to setup basic schema in the persistence storage
+  static func setUpSchema(_: PersistenceToolbox)
+  // Commit whatever you have in the ChangeRequest to be permanent in persistence storage.
+  func commit(_: PersistenceToolbox) -> Bool
 }
 
 public enum ChangeRequestType {

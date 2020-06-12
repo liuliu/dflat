@@ -16,15 +16,6 @@ public final class SQLiteWorkspace: Workspace {
   private let queue: DispatchQueue
   private var writer: SQLiteConnection?
   private let readerPool: SQLiteConnectionPool
-  
-  private(set) var current: SQLiteWorkspace? {
-    get {
-      Thread.current.threadDictionary["SQLiteDflatCurrent"] as? SQLiteWorkspace
-    }
-    set (newCurrent) {
-      Thread.current.threadDictionary["SQLiteDflatCurrent"] = newCurrent
-    }
-  }
 
   public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, queue: DispatchQueue = DispatchQueue(label: "com.dflat.write", qos: .utility)) {
     self.filePath = filePath
@@ -42,13 +33,46 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
+  static private var snapshot: SQLiteConnectionPool.Borrowed? {
+    get {
+      Thread.current.threadDictionary["SQLiteSnapshot"] as? SQLiteConnectionPool.Borrowed
+    }
+    set(newSnapshot) {
+      Thread.current.threadDictionary["SQLiteSnapshot"] = newSnapshot
+    }
+  }
+
   public func fetchFor<T: Atom>(ofType: T.Type) -> QueryBuilder<T> {
-    let reader = readerPool.borrow()
-    return SQLiteQueryBuilder<T>(reader)
+    if let txnContext = SQLiteTransactionContext.current {
+      precondition(txnContext.contains(ofType: ofType))
+      return SQLiteQueryBuilder<T>(txnContext.borrowed)
+    }
+    if let snapshot = Self.snapshot {
+      return SQLiteQueryBuilder<T>(snapshot)
+    }
+    return SQLiteQueryBuilder<T>(readerPool.borrow())
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
-    return closure()
+    // If I am in a write transaction, it is a consistent view already.
+    if SQLiteTransactionContext.current != nil {
+      return closure()
+    }
+    // Require a consistent snapshot by starting a transaction.
+    let reader = readerPool.borrow()
+    Self.snapshot = reader
+    guard let pointee = reader.pointee else {
+      let retval = closure()
+      Self.snapshot = nil
+      return retval
+    }
+    let begin = pointee.prepareStatement("BEGIN")
+    sqlite3_step(begin)
+    let retval = closure()
+    let release = pointee.prepareStatement("RELEASE")
+    sqlite3_step(release)
+    Self.snapshot = nil
+    return retval
   }
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
@@ -81,12 +105,22 @@ public final class SQLiteWorkspace: Workspace {
     }
     let txnContext = SQLiteTransactionContext(anyPool: anyPool, writer: writer)
     let begin = writer.prepareStatement("BEGIN")
-    sqlite3_step(begin)
-    self.current = self
+    guard SQLITE_DONE == sqlite3_step(begin) else {
+      completionHandler?(false)
+      return
+    }
     changesHandler(txnContext)
-    self.current = nil
+    txnContext.destroy()
     let commit = writer.prepareStatement("COMMIT")
-    sqlite3_step(commit)
-    completionHandler?(false)
+    let status = sqlite3_step(commit)
+    if SQLITE_FULL == status {
+      let rollback = writer.prepareStatement("ROLLBACK")
+      let status = sqlite3_step(rollback)
+      precondition(status == SQLITE_DONE)
+      completionHandler?(false)
+      return
+    }
+    precondition(status == SQLITE_DONE)
+    completionHandler?(true)
   }
 }

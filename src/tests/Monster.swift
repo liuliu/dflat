@@ -29,13 +29,13 @@ public final class Monster: Dflat.Atom {
   let pos: Vec3?
   let mana: Int16
   let hp: Int16
-  let name: String?
+  let name: String // This is the primary key.
   let inventory: [UInt8]
   let color: Color
   let weapons: [Weapon]
   let equipped: Equipment?
   let path: [Vec3]
-  public init(pos: Vec3?, name: String?, inventory: [UInt8], weapons: [Weapon], equipped: Equipment?, path: [Vec3], mana: Int16 = 150, hp: Int16 = 100, color: Color = .blue) {
+  public init(pos: Vec3?, name: String, inventory: [UInt8], weapons: [Weapon], equipped: Equipment?, path: [Vec3], mana: Int16 = 150, hp: Int16 = 100, color: Color = .blue) {
     self.pos = pos
     self.mana = mana
     self.hp = hp
@@ -52,7 +52,7 @@ public final class Monster: Dflat.Atom {
     self.pos = monster.pos.map { Vec3($0) }
     self.mana = monster.mana
     self.hp = monster.hp
-    self.name = monster.name
+    self.name = monster.name!
     self.inventory = monster.inventory
     var weapons = [Weapon]()
     for i: Int32 in 0..<monster.weaponsCount {

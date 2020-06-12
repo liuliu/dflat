@@ -35,6 +35,7 @@ swift_library(
     "sqlite/SQLiteAtom.swift",
     "sqlite/SQLiteQueryBuilder.swift",
     "sqlite/SQLiteFetchedResult.swift",
+    "sqlite/SQLitePersistenceToolbox.swift",
     "sqlite/SQLiteTransactionContext.swift",
     "sqlite/SQLiteExpr.swift",
   ] + glob(["sqlite/exprs/*.swift"]),

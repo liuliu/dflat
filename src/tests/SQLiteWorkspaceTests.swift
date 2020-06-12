@@ -45,6 +45,7 @@ class SQLiteWorkspaceTests: XCTestCase {
     let expectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let changeRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      // dflat.fetchFor(ofType: MyGame.Sample.Monster.self)
       txnContext.submit(changeRequest)
     }) { success in
       expectation.fulfill()

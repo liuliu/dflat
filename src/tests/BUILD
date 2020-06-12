@@ -18,6 +18,7 @@ swift_library(
     "monster_generated.swift",
     "Monster.swift",
     "MonsterChangeRequest.swift",
+    "MonsterAttributes.swift",
     "SQLiteWorkspaceTests.swift",
   ],
   deps = [
