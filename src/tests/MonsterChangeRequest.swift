@@ -3,6 +3,16 @@ import SQLiteDflat
 import SQLite3
 import FlatBuffers
 
+// MARK - SQLiteValue for Enumerations
+
+extension MyGame.Sample.Color: SQLiteValue {
+  public func bindSQLite(_ clause: OpaquePointer, parameterId: Int32) {
+    self.rawValue.bindSQLite(clause, parameterId: parameterId)
+  }
+}
+
+// MARK - Serializer
+
 extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
   public static var table: String { "mygame__sample__monster" }
   public static var indexFields: [String] { [] }
@@ -66,6 +76,8 @@ extension MyGame.Sample.Monster {
     return FlatBuffers_Generated.MyGame.Sample.Monster.createMonster(&flatBufferBuilder, offsetOfPos: pos, mana: mana, hp: hp, offsetOfName: name, vectorOfInventory: vectorOfInventory, color: FlatBuffers_Generated.MyGame.Sample.Color(rawValue: color.rawValue) ?? .blue, vectorOfWeapons: vectorOfWeapons, equippedType: equippedType, offsetOfEquipped: equipped, vectorOfPath: vectorOfPath)
   }
 }
+
+// MARK - ChangeRequest
 
 extension MyGame.Sample {
   public final class MonsterChangeRequest: Dflat.ChangeRequest {

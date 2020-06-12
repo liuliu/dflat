@@ -4,10 +4,13 @@ import FlatBuffers
 public enum MyGame {
 public enum Sample {
 
-public enum Color: Int8 {
+public enum Color: Int8, DflatFriendlyValue {
   case red = 0
   case green = 1
   case blue = 2
+  public static func < (lhs: Color, rhs: Color) -> Bool {
+    return lhs.rawValue < rhs.rawValue
+  }
 }
 
 public enum Equipment {

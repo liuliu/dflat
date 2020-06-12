@@ -14,7 +14,7 @@ public struct IsNullExpr<T: Expr>: Expr {
 }
 
 public extension Expr {
-  func isNull() -> IsNullExpr<Self> {
+  var isNull: IsNullExpr<Self> {
     IsNullExpr(unary: self)
   }
 }
