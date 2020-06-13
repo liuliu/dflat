@@ -27,7 +27,7 @@ public struct ValueExpr<T>: Expr where T: DflatFriendlyValue {
   internal init(_ value: T) {
     self.value = value
   }
-  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
     (value, false)
   }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {

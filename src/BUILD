@@ -32,6 +32,7 @@ swift_library(
     "sqlite/SQLiteConnection.swift",
     "sqlite/SQLiteConnectionPool.swift",
     "sqlite/SQLiteWorkspace.swift",
+    "sqlite/SQLiteWorkspaceState.swift",
     "sqlite/SQLiteAtom.swift",
     "sqlite/SQLiteQueryBuilder.swift",
     "sqlite/SQLiteFetchedResult.swift",

@@ -38,6 +38,7 @@ public final class Monster: Dflat.Atom {
   let weapons: [Weapon]
   let equipped: Equipment?
   let path: [Vec3]
+  
   public init(pos: Vec3?, name: String, inventory: [UInt8], weapons: [Weapon], equipped: Equipment?, path: [Vec3], mana: Int16 = 150, hp: Int16 = 100, color: Color = .blue) {
     self.pos = pos
     self.mana = mana
@@ -48,7 +49,6 @@ public final class Monster: Dflat.Atom {
     self.weapons = weapons
     self.equipped = equipped
     self.path = path
-    super.init()
   }
 
   public init(_ monster: FlatBuffers_Generated.MyGame.Sample.Monster) {
@@ -76,11 +76,10 @@ public final class Monster: Dflat.Atom {
       path.append(Vec3(o))
     }
     self.path = path
-    super.init()
   }
   
-  override public convenience init(bb: ByteBuffer) {
-    self.init(FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: bb))
+  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
+    Self(FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: bb))
   }
 }
 

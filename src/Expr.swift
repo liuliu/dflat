@@ -7,18 +7,14 @@ public enum IndexUsefulness {
   case full
 }
 
-public protocol Expr {
-  associatedtype ResultType
-  func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool)
-  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness
-  var useScanToRefine: Bool { get }
+public enum Evaluable {
+  case table(_: ByteBuffer)
+  case object(_: Atom)
 }
 
-public extension Expr {
-  func evaluate(table: FlatBufferObject) -> (result: ResultType, unknown: Bool) {
-    evaluate(table: table, object: nil)
-  }
-  func evaluate(object: Atom) -> (result: ResultType, unknown: Bool) {
-    evaluate(table: nil, object: object)
-  }
+public protocol Expr {
+  associatedtype ResultType
+  func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool)
+  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness
+  var useScanToRefine: Bool { get }
 }

@@ -2,14 +2,14 @@ import FlatBuffers
 
 public enum SortingOrder {
   case ascending
+  case same
   case descending
 }
 
 public protocol OrderBy {
   var name: String { get }
   var sortingOrder: SortingOrder { get }
-  func areInIncreasingOrder(_ a: FlatBufferObject, _ b: FlatBufferObject) -> Bool
-  func areInIncreasingOrder(_ a: Atom, _ b: Atom) -> Bool
+  func areInSortingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> SortingOrder
 }
 
 public enum Limit {
@@ -21,7 +21,7 @@ public enum Limit {
 // DflatQueryBuilder can be an associated type.
 open class QueryBuilder<Element: Atom> {
   public init() {}
-  open func `where`<T: Expr>(_ clause: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
+  open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     fatalError()
   }
 }

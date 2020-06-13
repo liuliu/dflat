@@ -3,8 +3,8 @@ import FlatBuffers
 public struct IsNotNullExpr<T: Expr>: Expr {
   public typealias ResultType = Bool
   public let unary: T
-  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
-    let val = unary.evaluate(table: table, object: object)
+  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+    let val = unary.evaluate(object: object)
     return (!val.unknown, false)
   }
   public var useScanToRefine: Bool { unary.useScanToRefine }

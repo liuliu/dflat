@@ -1,5 +1,5 @@
 public protocol Queryable {
-  func fetchFor<T: Atom>(ofType: T.Type) -> QueryBuilder<T>
+  func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T>
   func fetchWithinASnapshot<T>(_: () -> T, ofType: T.Type) -> T
 }
 

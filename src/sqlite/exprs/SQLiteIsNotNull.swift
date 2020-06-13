@@ -1,14 +1,14 @@
 import Dflat
 
 extension IsNotNullExpr: SQLiteExpr where T: SQLiteExpr {
-  public func buildWhereClause(availableIndexes: Set<String>, clause: inout String, parameterCount: inout Int32) {
+  public func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {
     guard self.canUsePartialIndex(availableIndexes) == .full else { return }
-    clause.append("(")
-    unary.buildWhereClause(availableIndexes: availableIndexes, clause: &clause, parameterCount: &parameterCount)
-    clause.append(") IS NOT NULL")
+    query.append("(")
+    unary.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
+    query.append(") IS NOT NULL")
   }
-  public func bindWhereClause(availableIndexes: Set<String>, clause: OpaquePointer, parameterCount: inout Int32) {
+  public func bindWhereQuery(availableIndexes: Set<String>, query: OpaquePointer, parameterCount: inout Int32) {
     guard self.canUsePartialIndex(availableIndexes) == .full else { return }
-    unary.bindWhereClause(availableIndexes: availableIndexes, clause: clause, parameterCount: &parameterCount)
+    unary.bindWhereQuery(availableIndexes: availableIndexes, query: query, parameterCount: &parameterCount)
   }
 }

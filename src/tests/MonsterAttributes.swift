@@ -3,8 +3,8 @@ import FlatBuffers
 
 public extension MyGame.Sample.Monster {
 
-  static private func _tr_mana(_ table: FlatBufferObject) -> (result: Int16, unknown: Bool) {
-    let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+  static private func _tr_mana(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
+    let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
     return (tr.mana, false)
   }
 
@@ -15,8 +15,8 @@ public extension MyGame.Sample.Monster {
 
   static let mana: FieldExpr<Int16> = FieldExpr(name: "mana", primaryKey: false, hasIndex: false, tableReader: _tr_mana, objectReader: _or_mana)
 
-  static private func _tr_hp(_ table: FlatBufferObject) -> (result: Int16, unknown: Bool) {
-    let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+  static private func _tr_hp(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
+    let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
     return (tr.hp, false)
   }
 
@@ -27,8 +27,8 @@ public extension MyGame.Sample.Monster {
 
   static let hp: FieldExpr<Int16> = FieldExpr(name: "hp", primaryKey: false, hasIndex: false, tableReader: _tr_hp, objectReader: _or_hp)
 
-  static private func _tr_name(_ table: FlatBufferObject) -> (result: String, unknown: Bool) {
-    let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+  static private func _tr_name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
+    let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
     return (tr.name!, false)
   }
 
@@ -39,8 +39,8 @@ public extension MyGame.Sample.Monster {
 
   static let name: FieldExpr<String> = FieldExpr(name: "__pk", primaryKey: true, hasIndex: false, tableReader: _tr_name, objectReader: _or_name)
 
-  static private func _tr_color(_ table: FlatBufferObject) -> (result: MyGame.Sample.Color, unknown: Bool) {
-    let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+  static private func _tr_color(_ table: ByteBuffer) -> (result: MyGame.Sample.Color, unknown: Bool) {
+    let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
     return (MyGame.Sample.Color(rawValue: tr.color.rawValue)!, false)
   }
 
@@ -53,8 +53,8 @@ public extension MyGame.Sample.Monster {
 
   struct pos {
 
-    static private func _tr_pos__x(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) {
-      let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+    static private func _tr_pos__x(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
+      let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
       guard let pos = tr.pos else { return (Float(), true) }
       return (pos.x, false)
     }
@@ -67,8 +67,8 @@ public extension MyGame.Sample.Monster {
 
     public static let x: FieldExpr<Float> = FieldExpr(name: "pos__x", primaryKey: false, hasIndex: false, tableReader: _tr_pos__x, objectReader: _or_pos__x)
 
-    static private func _tr_pos__y(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) {
-      let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+    static private func _tr_pos__y(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
+      let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
       guard let pos = tr.pos else { return (Float(), true) }
       return (pos.y, false)
     }
@@ -81,8 +81,8 @@ public extension MyGame.Sample.Monster {
 
     public static let y: FieldExpr<Float> = FieldExpr(name: "pos__y", primaryKey: false, hasIndex: false, tableReader: _tr_pos__y, objectReader: _or_pos__y)
 
-    static private func _tr_pos__z(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) {
-      let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+    static private func _tr_pos__z(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
+      let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
       guard let pos = tr.pos else { return (Float(), true) }
       return (pos.z, false)
     }
@@ -113,8 +113,8 @@ public protocol MyGame__Sample__Monster__equipped {
 }
 
 extension MyGame.Sample.Weapon: MyGame__Sample__Monster__equipped {
-  static private func _tr_equipped__match__weapon(_ table: FlatBufferObject) -> (result: Bool, unknown: Bool) {
-    let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+  static private func _tr_equipped__match__weapon(_ table: ByteBuffer) -> (result: Bool, unknown: Bool) {
+    let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
     switch tr.equippedType {
     case .none_:
       return (false, true)
@@ -134,8 +134,8 @@ extension MyGame.Sample.Weapon: MyGame__Sample__Monster__equipped {
 
   public struct _equipped__Weapon {
 
-    static private func _tr_equipped__Weapon_name(_ table: FlatBufferObject) -> (result: String, unknown: Bool) {
-      let tr = table as! FlatBuffers_Generated.MyGame.Sample.Monster
+    static private func _tr_equipped__Weapon_name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
+      let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
       guard let name = tr.equipped(type: FlatBuffers_Generated.MyGame.Sample.Weapon.self)?.name else { return (String(), true) }
       return (name, false)
     }

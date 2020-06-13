@@ -4,53 +4,55 @@ import FlatBuffers
 import XCTest
 import Foundation
 
-final class TestObj: Dflat.Atom {
-  var x: Int32 = 0
-  var y: Float = 0
-}
-
-fileprivate func testObjXTable(_ table: FlatBufferObject) -> (result: Int32, unknown: Bool) {
-  return (0, true)
-}
-
-fileprivate func testObjX(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
-  let object: TestObj = object as! TestObj
-  return (object.x, false)
-}
-
-fileprivate func testObjX10AsNull(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {
-  let object: TestObj = object as! TestObj
-  if object.x == 10 {
-    return (object.x, true)
-  }
-  return (object.x, false)
-}
-
-fileprivate func testObjYTable(_ table: FlatBufferObject) -> (result: Float, unknown: Bool) {
-  return (0, true)
-}
-
-fileprivate func testObjY(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
-  let object: TestObj = object as! TestObj
-  return (object.y, false)
-}
-
 class SQLiteWorkspaceTests: XCTestCase {
-
-  func testWorkspace() {
+  var filePath: String?
+  var dflat: Workspace?
+  
+  override func setUp() {
     let filePath = NSTemporaryDirectory().appending("\(UUID().uuidString).db")
-    let dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
-    let columnY = FieldExpr(name: "y", primaryKey: true, hasIndex: false, tableReader: testObjYTable, objectReader: testObjY)
-    let _ = dflat.fetchFor(ofType: TestObj.self).where(columnY > 1.5)
+    self.filePath = filePath
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+  }
+  
+  override func tearDown() {
+  }
+
+  func testObjectCreationAndSimpleQuery() {
+    guard let dflat = dflat else { return }
     let expectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let changeRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
-      dflat.fetchFor(ofType: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.equipped.as(MyGame.Sample.Weapon.self).name == "")
-      txnContext.submit(changeRequest)
+      let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest.name = "What's my name"
+      txnContext.submit(creationRequest)
     }) { success in
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "What's my name")
+    let firstMonster = fetchedResult[0]
+    XCTAssertEqual(firstMonster.name, "What's my name")
+  }
+  
+  func testObjectCreationAndQueryByNotIndexedProperty() {
+    guard let dflat = dflat else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.color = .red
+      txnContext.submit(creationRequest2)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.color == .green)
+    XCTAssert(fetchedResult.count == 1)
+    let firstMonster = fetchedResult[0]
+    XCTAssertEqual(firstMonster.name, "name1")
   }
 
 }

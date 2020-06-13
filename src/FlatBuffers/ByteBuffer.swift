@@ -51,11 +51,11 @@ public struct ByteBuffer {
         }
 
         @usableFromInline func copy(from ptr: UnsafeRawPointer, count: Int) {
-            memory.copyMemory(from: ptr, byteCount: count)
+          fatalError() // Cannot copy to.
         }
         
         @usableFromInline func initalize(for size: Int) {
-            memory.initializeMemory(as: UInt8.self, repeating: 0, count: size)
+          // No initialization
         }
     }
     

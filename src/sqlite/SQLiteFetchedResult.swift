@@ -1,12 +1,12 @@
 import Dflat
 
 final class SQLiteFetchedResult<Element: Atom>: FetchedResult<Element> {
-  private let clause: AnySQLiteExpr<Bool>
+  private let query: AnySQLiteExpr<Bool>
   private let limit: Limit
   private let orderBy: [OrderBy]
 
-  init(_ array: [Element], clause: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy]) {
-    self.clause = clause
+  init(_ array: [Element], query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy]) {
+    self.query = query
     self.limit = limit
     self.orderBy = orderBy
     super.init(array)

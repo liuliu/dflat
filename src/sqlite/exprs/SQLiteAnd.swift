@@ -1,27 +1,27 @@
 import Dflat
 
 extension AndExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExpr {
-  public func buildWhereClause(availableIndexes: Set<String>, clause: inout String, parameterCount: inout Int32) {
+  public func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {
     let lval = left.canUsePartialIndex(availableIndexes)
     let rval = right.canUsePartialIndex(availableIndexes)
     if lval != .none && rval != .none {
-      clause.append("(")
-      left.buildWhereClause(availableIndexes: availableIndexes, clause: &clause, parameterCount: &parameterCount)
-      clause.append(") AND (")
-      right.buildWhereClause(availableIndexes: availableIndexes, clause: &clause, parameterCount: &parameterCount)
-      clause.append(")")
+      query.append("(")
+      left.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
+      query.append(") AND (")
+      right.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
+      query.append(")")
     } else if lval != .none {
-      left.buildWhereClause(availableIndexes: availableIndexes, clause: &clause, parameterCount: &parameterCount)
+      left.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
     } else if rval != .none {
-      right.buildWhereClause(availableIndexes: availableIndexes, clause: &clause, parameterCount: &parameterCount)
+      right.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
     }
   }
-  public func bindWhereClause(availableIndexes: Set<String>, clause: OpaquePointer, parameterCount: inout Int32) {
+  public func bindWhereQuery(availableIndexes: Set<String>, query: OpaquePointer, parameterCount: inout Int32) {
     if left.canUsePartialIndex(availableIndexes) != .none {
-      left.bindWhereClause(availableIndexes: availableIndexes, clause: clause, parameterCount: &parameterCount)
+      left.bindWhereQuery(availableIndexes: availableIndexes, query: query, parameterCount: &parameterCount)
     }
     if right.canUsePartialIndex(availableIndexes) != .none {
-      right.bindWhereClause(availableIndexes: availableIndexes, clause: clause, parameterCount: &parameterCount)
+      right.bindWhereQuery(availableIndexes: availableIndexes, query: query, parameterCount: &parameterCount)
     }
   }
 }

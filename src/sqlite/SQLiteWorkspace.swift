@@ -16,6 +16,7 @@ public final class SQLiteWorkspace: Workspace {
   private let queue: DispatchQueue
   private var writer: SQLiteConnection?
   private let readerPool: SQLiteConnectionPool
+  private let state = SQLiteWorkspaceState()
 
   public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, queue: DispatchQueue = DispatchQueue(label: "com.dflat.write", qos: .utility)) {
     self.filePath = filePath
@@ -42,7 +43,7 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  public func fetchFor<T: Atom>(ofType: T.Type) -> QueryBuilder<T> {
+  public func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
       return SQLiteQueryBuilder<T>(txnContext.borrowed)
@@ -103,7 +104,7 @@ public final class SQLiteWorkspace: Workspace {
       completionHandler?(false)
       return
     }
-    let txnContext = SQLiteTransactionContext(anyPool: anyPool, writer: writer)
+    let txnContext = SQLiteTransactionContext(state, anyPool: anyPool, writer: writer)
     let begin = writer.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       completionHandler?(false)

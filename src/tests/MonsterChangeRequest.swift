@@ -6,8 +6,8 @@ import FlatBuffers
 // MARK - SQLiteValue for Enumerations
 
 extension MyGame.Sample.Color: SQLiteValue {
-  public func bindSQLite(_ clause: OpaquePointer, parameterId: Int32) {
-    self.rawValue.bindSQLite(clause, parameterId: parameterId)
+  public func bindSQLite(_ query: OpaquePointer, parameterId: Int32) {
+    self.rawValue.bindSQLite(query, parameterId: parameterId)
   }
 }
 
@@ -150,8 +150,10 @@ extension MyGame.Sample {
         toolbox.flatBufferBuilder.clear()
         let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
         toolbox.flatBufferBuilder.finish(offset: offset)
+        let byteBuffer = toolbox.flatBufferBuilder.buffer
+        let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
         let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-        sqlite3_bind_blob(insert, 2, toolbox.flatBufferBuilder.buffer.memory, Int32(toolbox.flatBufferBuilder.buffer.size), SQLITE_STATIC)
+        sqlite3_bind_blob(insert, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
         guard SQLITE_DONE == sqlite3_step(insert) else { return false }
         _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
         _type = .none
@@ -163,8 +165,10 @@ extension MyGame.Sample {
         toolbox.flatBufferBuilder.clear()
         let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
         toolbox.flatBufferBuilder.finish(offset: offset)
+        let byteBuffer = toolbox.flatBufferBuilder.buffer
+        let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
         let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-        sqlite3_bind_blob(update, 2, toolbox.flatBufferBuilder.buffer.memory, Int32(toolbox.flatBufferBuilder.buffer.size), SQLITE_STATIC)
+        sqlite3_bind_blob(update, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
         _rowid.bindSQLite(update, parameterId: 3)
         guard SQLITE_DONE == sqlite3_step(update) else { return false }
         _type = .none

@@ -2,8 +2,11 @@ import Dflat
 import SQLite3
 import Foundation
 
+// This is the object per transaction. Even if we support multi-writer later, we will simply
+// have one TransactionContext per writer. No thread-safety concerns.
 final class SQLiteTransactionContext: TransactionContext {
   private let anyPool: Set<ObjectIdentifier>
+  private let state: SQLiteWorkspaceState
   private let toolbox: SQLitePersistenceToolbox
   var borrowed: SQLiteConnectionPool.Borrowed {
     SQLiteConnectionPool.Borrowed(toolbox.connection)
@@ -18,11 +21,12 @@ final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(anyPool: [Any.Type], writer: SQLiteConnection) {
+  init(_ state: SQLiteWorkspaceState, anyPool: [Any.Type], writer: SQLiteConnection) {
     var anySet = Set<ObjectIdentifier>()
     for type in anyPool {
       anySet.update(with: ObjectIdentifier(type))
     }
+    self.state = state
     self.anyPool = anySet
     self.toolbox = SQLitePersistenceToolbox(connection: writer)
     Self.current = self
@@ -57,13 +61,18 @@ final class SQLiteTransactionContext: TransactionContext {
       return false
     }
     assert(status == SQLITE_DONE)
-    return false
+    return true
   }
 
   @discardableResult
   func submit(_ changeRequest: ChangeRequest) -> Bool {
-    precondition(contains(ofType: type(of: changeRequest).atomType))
-    type(of: changeRequest).setUpSchema(toolbox)
+    let atomType = type(of: changeRequest).atomType
+    precondition(contains(ofType: atomType))
+    let atomTypeIdentifier = ObjectIdentifier(atomType)
+    if !state.tableCreated.contains(atomTypeIdentifier) {
+      type(of: changeRequest).setUpSchema(toolbox)
+      state.tableCreated.update(with: atomTypeIdentifier)
+    }
     return Self.transactionalUpdate(toolbox: toolbox) { toolbox in
       changeRequest.commit(toolbox)
     }

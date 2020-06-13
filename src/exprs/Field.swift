@@ -1,38 +1,33 @@
 import FlatBuffers
 
 public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
-  let column: FieldExpr<T>
-  public var name: String { column.name }
+  let field: FieldExpr<T>
+  public var name: String { field.name }
   public let sortingOrder: SortingOrder
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
-  public func areInIncreasingOrder(_ lhs: FlatBufferObject, _ rhs: FlatBufferObject) -> Bool {
-    let lval = column.tableReader(lhs)
-    let rval = column.tableReader(rhs)
-    guard !lval.unknown || !rval.unknown else { return true }
+  public func areInSortingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> SortingOrder {
+    let lval = field.evaluate(object: lhs)
+    let rval = field.evaluate(object: rhs)
+    guard !lval.unknown || !rval.unknown else { return .same }
     if lval.unknown && !rval.unknown {
-      return true
+      return .ascending
     } else if !lval.unknown && rval.unknown {
-      return false
+      return .descending
     }
-    return lval.result < rval.result
-  }
-  public func areInIncreasingOrder(_ lhs: Atom, _ rhs: Atom) -> Bool {
-    let lval = column.objectReader(lhs)
-    let rval = column.objectReader(rhs)
-    guard !lval.unknown || !rval.unknown else { return true }
-    if lval.unknown && !rval.unknown {
-      return true
-    } else if !lval.unknown && rval.unknown {
-      return false
+    if lval.result < rval.result {
+      return .ascending
+    } else if lval.result == rval.result {
+      return .same
+    } else {
+      return .descending
     }
-    return lval.result < rval.result
   }
 }
 
 public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
   public typealias ResultType = T
-  public typealias TableReader = (_ table: FlatBufferObject) -> (result: T, unknown: Bool)
+  public typealias TableReader = (_ table: ByteBuffer) -> (result: T, unknown: Bool)
   public typealias ObjectReader = (_ object: Atom) -> (result: T, unknown: Bool)
   public let name: String
   let tableReader: TableReader
@@ -46,14 +41,13 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
     self.tableReader = tableReader
     self.objectReader = objectReader
   }
-  public func evaluate(table: FlatBufferObject?, object: Atom?) -> (result: ResultType, unknown: Bool) {
-    precondition(table != nil || object != nil)
-    if let table = table {
+  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+    switch object {
+    case .table(let table):
       return tableReader(table)
-    } else if let object = object {
-      return objectReader(object)
+    case .object(let atom):
+      return objectReader(atom)
     }
-    fatalError()
   }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     if primaryKey {
@@ -65,5 +59,5 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
     return .none
   }
   public var useScanToRefine: Bool { !self.primaryKey && !self.hasIndex }
-  public var ascending: OrderByField<T> { OrderByField(column: self, sortingOrder: .ascending) }
-  public var descending: OrderByField<T> { OrderByField(column: self, sortingOrder: .descending) }}
+  public var ascending: OrderByField<T> { OrderByField(field: self, sortingOrder: .ascending) }
+  public var descending: OrderByField<T> { OrderByField(field: self, sortingOrder: .descending) }}
