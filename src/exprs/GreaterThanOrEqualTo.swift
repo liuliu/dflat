@@ -15,7 +15,6 @@ public struct GreaterThanOrEqualToExpr<L: Expr, R: Expr>: Expr where L.ResultTyp
     }
     return .none
   }
-  public var useScanToRefine: Bool { left.useScanToRefine || right.useScanToRefine }
 }
 
 public func >= <L, R>(left: L, right: R) -> GreaterThanOrEqualToExpr<L, R> where L.ResultType == R.ResultType, L.ResultType: Comparable {

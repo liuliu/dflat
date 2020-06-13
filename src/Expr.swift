@@ -16,5 +16,4 @@ public protocol Expr {
   associatedtype ResultType
   func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool)
   func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness
-  var useScanToRefine: Bool { get }
 }

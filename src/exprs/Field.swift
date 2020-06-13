@@ -58,6 +58,5 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
     }
     return .none
   }
-  public var useScanToRefine: Bool { !self.primaryKey && !self.hasIndex }
   public var ascending: OrderByField<T> { OrderByField(field: self, sortingOrder: .ascending) }
   public var descending: OrderByField<T> { OrderByField(field: self, sortingOrder: .descending) }}

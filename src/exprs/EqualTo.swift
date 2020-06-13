@@ -15,7 +15,6 @@ public struct EqualToExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.Result
     }
     return .none
   }
-  public var useScanToRefine: Bool { left.useScanToRefine || right.useScanToRefine }
 }
 
 public func == <L, R>(left: L, right: R) -> EqualToExpr<L, R> where L.ResultType == R.ResultType, L.ResultType: Equatable {

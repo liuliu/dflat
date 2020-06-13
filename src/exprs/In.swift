@@ -9,7 +9,6 @@ public struct InExpr<T: Expr>: Expr where T.ResultType: Hashable, T.ResultType: 
     guard (!val.unknown) else { return (false, true) }
     return (set.contains(val.result), false)
   }
-  public var useScanToRefine: Bool { unary.useScanToRefine }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     unary.canUsePartialIndex(availableIndexes) == .full ? .full : .none
   }

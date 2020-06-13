@@ -3,19 +3,38 @@ import SQLite3
 import FlatBuffers
 
 extension Array where Element == OrderBy {
-  func areInNondecreasingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> Bool {
+  func areInIncreasingOrder(_ lhs: Atom, _ rhs: Atom) -> Bool {
     for orderBy in self {
-      let sortingOrder = orderBy.areInSortingOrder(lhs, rhs)
+      let sortingOrder = orderBy.areInSortingOrder(.object(lhs), .object(rhs))
       guard sortingOrder != .same else { continue }
       return sortingOrder == orderBy.sortingOrder
     }
-    return true
+    return lhs._rowid < rhs._rowid
   }
 }
 
 extension Array where Element: Atom {
-  func insertIntoSorted(_ newElement: Element) {
-    
+  mutating func insertSorted(_ newElement: Element, orderBy: [OrderBy]) {
+    var lb = 0
+    var ub = self.count - 1
+    var pivot = (ub - lb) / 2
+    while lb < ub {
+      pivot = (ub - lb) / 2
+      if orderBy.areInIncreasingOrder(self[pivot], newElement) {
+        lb = pivot + 1
+      } else {
+        ub = pivot - 1
+      }
+    }
+    if lb == self.count {
+      self.append(newElement)
+    } else {
+      if orderBy.areInIncreasingOrder(self[lb], newElement) {
+        self.insert(newElement, at: lb + 1)
+      } else {
+        self.insert(newElement, at: lb)
+      }
+    }
   }
 }
 
@@ -26,7 +45,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, quer
   let table = SQLiteElement.table
   let canUsePartialIndex = query.canUsePartialIndex(availableIndexes)
   let fullQuery: String
-  // TODO: Need to handle OrderBy
+  // TODO: Need to handle OrderBy by appending DESC (ASC is the default in SQLite).
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
@@ -62,19 +81,10 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, quer
       let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let retval = query.evaluate(object: .table(bb))
       if retval.result && !retval.unknown {
-        // TODO: Need to insert by OrderBy
         let element = Element.fromFlatBuffers(bb)
         element._rowid = rowid
-        result.insertIntoSorted(element)
         if orderBy.count > 0 {
-          let lastIndex = result.lastIndex { (lhs) -> Bool in
-            orderBy.areInNondecreasingOrder(.object(lhs), .object(element))
-          }
-          if let lastIndex = lastIndex {
-            result.insert(element, at: lastIndex)
-          } else {
-            result.append(element)
-          }
+          result.insertSorted(element, orderBy: orderBy)
         } else {
           result.append(element)
         }

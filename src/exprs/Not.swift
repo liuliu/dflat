@@ -7,7 +7,6 @@ public struct NotExpr<T: Expr>: Expr where T.ResultType == Bool {
     let val = unary.evaluate(object: object)
     return (!val.result, val.unknown)
   }
-  public var useScanToRefine: Bool { unary.useScanToRefine }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     unary.canUsePartialIndex(availableIndexes) == .full ? .full : .none
   }

@@ -13,7 +13,6 @@ private class _AnyExprBase<ResultType>: Expr {
   func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     fatalError()
   }
-  var useScanToRefine: Bool { fatalError() }
 }
 
 private class _AnyExpr<T: Expr>: _AnyExprBase<T.ResultType> {
@@ -27,7 +26,6 @@ private class _AnyExpr<T: Expr>: _AnyExprBase<T.ResultType> {
   override func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     base.canUsePartialIndex(availableIndexes)
   }
-  override var useScanToRefine: Bool { base.useScanToRefine }
 }
 
 public final class AnySQLiteExpr<ResultType>: Expr, SQLiteExpr {
@@ -49,7 +47,6 @@ public final class AnySQLiteExpr<ResultType>: Expr, SQLiteExpr {
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     base.canUsePartialIndex(availableIndexes)
   }
-  public var useScanToRefine: Bool { base.useScanToRefine }
   public func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {
     sqlBase.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
   }

@@ -33,5 +33,4 @@ public struct ValueExpr<T>: Expr where T: DflatFriendlyValue {
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     .full
   }
-  public var useScanToRefine: Bool { false }
 }

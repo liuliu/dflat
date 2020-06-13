@@ -7,7 +7,6 @@ public struct IsNullExpr<T: Expr>: Expr {
     let val = unary.evaluate(object: object)
     return (val.unknown, false)
   }
-  public var useScanToRefine: Bool { unary.useScanToRefine }
   public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
     unary.canUsePartialIndex(availableIndexes) == .full ? .full : .none
   }
