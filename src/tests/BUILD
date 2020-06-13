@@ -13,13 +13,13 @@ swift_library(
 )
 
 swift_library(
-  name = "SQLiteWorkspaceTests_lib",
+  name = "SQLiteWorkspaceCRUDTests_lib",
   srcs = [
     "monster_generated.swift",
     "Monster.swift",
     "MonsterChangeRequest.swift",
     "MonsterAttributes.swift",
-    "SQLiteWorkspaceTests.swift",
+    "SQLiteWorkspaceCRUDTests.swift",
   ],
   deps = [
     "//src:SQLiteDflat",
@@ -30,7 +30,7 @@ ios_unit_test(
   name = "Tests_ios",
   deps = [
     ":ExprTests_lib",
-    ":SQLiteWorkspaceTests_lib",
+    ":SQLiteWorkspaceCRUDTests_lib",
   ],
   minimum_os_version = "10.0",
 )

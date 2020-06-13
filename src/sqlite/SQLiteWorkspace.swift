@@ -46,12 +46,12 @@ public final class SQLiteWorkspace: Workspace {
   public func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
-      return SQLiteQueryBuilder<T>(txnContext.borrowed)
+      return SQLiteQueryBuilder<T>(txnContext.borrowed, transactionContext: txnContext)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<T>(snapshot)
+      return SQLiteQueryBuilder<T>(snapshot, transactionContext: nil)
     }
-    return SQLiteQueryBuilder<T>(readerPool.borrow())
+    return SQLiteQueryBuilder<T>(readerPool.borrow(), transactionContext: nil)
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {

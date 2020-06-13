@@ -1,11 +1,17 @@
 public protocol PersistenceToolbox {}
 
+public enum UpdatedObject {
+  case inserted(_: Atom)
+  case updated(_: Atom)
+  case deleted(_: Int64)
+}
+
 public protocol ChangeRequest {
   static var atomType: Any.Type { get }
   // Called to setup basic schema in the persistence storage
   static func setUpSchema(_: PersistenceToolbox)
   // Commit whatever you have in the ChangeRequest to be permanent in persistence storage.
-  func commit(_: PersistenceToolbox) -> Bool
+  func commit(_: PersistenceToolbox) -> UpdatedObject?
 }
 
 public enum ChangeRequestType {

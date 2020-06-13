@@ -4,7 +4,11 @@ import Foundation
 
 // This is the object per transaction. Even if we support multi-writer later, we will simply
 // have one TransactionContext per writer. No thread-safety concerns.
-final class SQLiteTransactionContext: TransactionContext {
+public final class SQLiteTransactionContext: TransactionContext {
+  public var objectRepository = SQLiteObjectRepository()
+  public var connection: SQLiteConnection {
+    toolbox.connection
+  }
   private let anyPool: Set<ObjectIdentifier>
   private let state: SQLiteWorkspaceState
   private let toolbox: SQLitePersistenceToolbox
@@ -12,7 +16,7 @@ final class SQLiteTransactionContext: TransactionContext {
     SQLiteConnectionPool.Borrowed(toolbox.connection)
   }
   
-  static private(set) var current: SQLiteTransactionContext? {
+  static private(set) public var current: SQLiteTransactionContext? {
     get {
       Thread.current.threadDictionary["SQLiteTxnCurrent"] as? SQLiteTransactionContext
     }
@@ -40,16 +44,16 @@ final class SQLiteTransactionContext: TransactionContext {
     return anyPool.contains(ObjectIdentifier(ofType))
   }
   
-  static func transactionalUpdate(toolbox: SQLitePersistenceToolbox, updater: (_: SQLitePersistenceToolbox) -> Bool) -> Bool {
+  static func transactionalUpdate(toolbox: SQLitePersistenceToolbox, updater: (_: SQLitePersistenceToolbox) -> UpdatedObject?) -> UpdatedObject? {
     let savepoint = toolbox.connection.prepareStatement("SAVEPOINT dflat_txn")
-    guard SQLITE_DONE == sqlite3_step(savepoint) else { return false }
-    let success = updater(toolbox)
-    guard success else {
+    guard SQLITE_DONE == sqlite3_step(savepoint) else { return nil }
+    let updatedObject = updater(toolbox)
+    guard updatedObject != nil else {
       let rollback = toolbox.connection.prepareStatement("ROLLBACK TO dflat_txn")
       // We cannot handle the situation where the rollback failed.
       let status = sqlite3_step(rollback)
       assert(status == SQLITE_DONE)
-      return false
+      return nil
     }
     let release = toolbox.connection.prepareStatement("RELEASE dflat_txn")
     let status = sqlite3_step(release)
@@ -58,14 +62,14 @@ final class SQLiteTransactionContext: TransactionContext {
       let rollback = toolbox.connection.prepareStatement("ROLLBACK TO dflat_txn")
       let status = sqlite3_step(rollback)
       assert(status == SQLITE_DONE)
-      return false
+      return nil
     }
     assert(status == SQLITE_DONE)
-    return true
+    return updatedObject
   }
 
   @discardableResult
-  func submit(_ changeRequest: ChangeRequest) -> Bool {
+  public func submit(_ changeRequest: ChangeRequest) -> Bool {
     let atomType = type(of: changeRequest).atomType
     precondition(contains(ofType: atomType))
     let atomTypeIdentifier = ObjectIdentifier(atomType)
@@ -73,13 +77,16 @@ final class SQLiteTransactionContext: TransactionContext {
       type(of: changeRequest).setUpSchema(toolbox)
       state.tableCreated.update(with: atomTypeIdentifier)
     }
-    return Self.transactionalUpdate(toolbox: toolbox) { toolbox in
+    let retval = Self.transactionalUpdate(toolbox: toolbox) { toolbox in
       changeRequest.commit(toolbox)
     }
+    guard let updatedObject = retval else { return false }
+    objectRepository.set(updatedObject: updatedObject, ofTypeIdentifier: atomTypeIdentifier)
+    return true
   }
 
   @discardableResult
-  func abort() -> Bool {
+  public func abort() -> Bool {
     return true
   }
 }

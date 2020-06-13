@@ -119,17 +119,25 @@ extension MyGame.Sample {
       equipped = o.equipped
       path = o.path
     }
-    static public func changeRequest(_ o: Monster) -> MonsterChangeRequest {
-      return MonsterChangeRequest(type: .update, o)
+    static public func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
+      let transactionContext = SQLiteTransactionContext.current!
+      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey(o.name)
+      let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: Monster.self, for: key)
+      return u.map { MonsterChangeRequest(type: .update, $0) }
     }
     static public func creationRequest(_ o: Monster) -> MonsterChangeRequest {
-      return MonsterChangeRequest(type: .creation, o)
+      let creationRequest = MonsterChangeRequest(type: .creation, o)
+      creationRequest._rowid = -1 // Reset the rowid back to -1.
+      return creationRequest
     }
     static public func creationRequest() -> MonsterChangeRequest {
       return MonsterChangeRequest(type: .creation)
     }
-    static public func deletionRequest(_ o: Monster) -> MonsterChangeRequest {
-      return MonsterChangeRequest(type: .deletion, o)
+    static public func deletionRequest(_ o: Monster) -> MonsterChangeRequest? {
+      let transactionContext = SQLiteTransactionContext.current!
+      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey(o.name)
+      let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: Monster.self, for: key)
+      return u.map { MonsterChangeRequest(type: .deletion, $0) }
     }
     static public func setUpSchema(_ toolbox: PersistenceToolbox) {
       guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
@@ -140,11 +148,11 @@ extension MyGame.Sample {
       atom._rowid = _rowid
       return atom
     }
-    public func commit(_ toolbox: PersistenceToolbox) -> Bool {
-      guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return false }
+    public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
+      guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
       switch _type {
       case .creation:
-        guard let insert = toolbox.connection.prepareStatement("INSERT INTO mygame__sample__monster (__pk, p) VALUES (?1, ?2)") else { return false }
+        guard let insert = toolbox.connection.prepareStatement("INSERT INTO mygame__sample__monster (__pk, p) VALUES (?1, ?2)") else { return nil }
         name.bindSQLite(insert, parameterId: 1)
         let atom = self._atom
         toolbox.flatBufferBuilder.clear()
@@ -154,11 +162,13 @@ extension MyGame.Sample {
         let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
         let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
         sqlite3_bind_blob(insert, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
-        guard SQLITE_DONE == sqlite3_step(insert) else { return false }
+        guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
         _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
         _type = .none
+        atom._rowid = _rowid
+        return .inserted(atom)
       case .update:
-        guard let update = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster set __pk=?1, p=?2 WHERE rowid=?3 LIMIT 1") else { return false }
+        guard let update = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster set __pk=?1, p=?2 WHERE rowid=?3 LIMIT 1") else { return nil }
         name.bindSQLite(update, parameterId: 1)
         let atom = self._atom
         atom._rowid = _rowid
@@ -170,17 +180,18 @@ extension MyGame.Sample {
         let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
         sqlite3_bind_blob(update, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
         _rowid.bindSQLite(update, parameterId: 3)
-        guard SQLITE_DONE == sqlite3_step(update) else { return false }
+        guard SQLITE_DONE == sqlite3_step(update) else { return nil }
         _type = .none
+        return .updated(atom)
       case .deletion:
-        guard let deletion = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster WHERE rowid=?1") else { return false }
+        guard let deletion = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster WHERE rowid=?1") else { return nil }
         _rowid.bindSQLite(deletion, parameterId: 1)
-        guard SQLITE_DONE == sqlite3_step(deletion) else { return false }
+        guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
         _type = .none
+        return .deleted(_rowid)
       case .none:
         preconditionFailure()
       }
-      return true
     }
   }
 }
