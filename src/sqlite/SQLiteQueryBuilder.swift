@@ -2,6 +2,22 @@ import Dflat
 import SQLite3
 import FlatBuffers
 
+final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
+  private let reader: SQLiteConnectionPool.Borrowed
+  public init(_ reader: SQLiteConnectionPool.Borrowed) {
+    self.reader = reader
+    super.init()
+  }
+  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
+    let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
+    var result = [Element]()
+    SQLiteQueryWhere(reader: reader, query: sqlQuery, limit: limit, orderBy: orderBy, result: &result)
+    return SQLiteFetchedResult(result, query: sqlQuery, limit: limit, orderBy: orderBy)
+  }
+}
+
+// MARK - Query
+
 extension Array where Element == OrderBy {
   func areInIncreasingOrder(_ lhs: Atom, _ rhs: Atom) -> Bool {
     for orderBy in self {
@@ -41,20 +57,34 @@ extension Array where Element: Atom {
 func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], result: inout [Element]) {
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
-  let availableIndexes = Set(["__pk"])
+  let availableIndexes = Set<String>()
   let table = SQLiteElement.table
   let canUsePartialIndex = query.canUsePartialIndex(availableIndexes)
-  let fullQuery: String
+  var sqlQuery: String
   // TODO: Need to handle OrderBy by appending DESC (ASC is the default in SQLite).
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
     query.buildWhereQuery(availableIndexes: availableIndexes, query: &statement, parameterCount: &parameterCount)
-    fullQuery = "SELECT rowid,p FROM \(table) WHERE \(statement) ORDER BY rowid"
+    sqlQuery = "SELECT rowid,p FROM \(table) WHERE \(statement) ORDER BY "
   } else {
-    fullQuery = "SELECT rowid,p FROM \(table) ORDER BY rowid"
+    sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
   }
-  guard let preparedQuery = sqlite.prepareStatement(fullQuery) else {
+  var insertSorted = false
+  for i in orderBy {
+    if i.canUsePartialIndex(availableIndexes) == .full {
+      switch i.sortingOrder {
+      case .same, .ascending:
+        sqlQuery.append("\(i.name), ")
+      case .descending:
+        sqlQuery.append("\(i.name) DESC, ")
+      }
+    } else {
+      insertSorted = true // We cannot use the order from SQLite query, therefore, we have to order ourselves.
+    }
+  }
+  sqlQuery.append("rowid")
+  guard let preparedQuery = sqlite.prepareStatement(sqlQuery) else {
     // TODO: Handle errors.
     return
   }
@@ -71,7 +101,11 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, quer
       let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let element = Element.fromFlatBuffers(bb)
       element._rowid = rowid
-      result.append(element)
+      if insertSorted {
+        result.insertSorted(element, orderBy: orderBy)
+      } else {
+        result.append(element)
+      }
     }
   case .partial, .none:
     while SQLITE_ROW == sqlite3_step(preparedQuery) {
@@ -83,26 +117,12 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, quer
       if retval.result && !retval.unknown {
         let element = Element.fromFlatBuffers(bb)
         element._rowid = rowid
-        if orderBy.count > 0 {
+        if insertSorted {
           result.insertSorted(element, orderBy: orderBy)
         } else {
           result.append(element)
         }
       }
     }
-  }
-}
-
-final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
-  private let reader: SQLiteConnectionPool.Borrowed
-  public init(_ reader: SQLiteConnectionPool.Borrowed) {
-    self.reader = reader
-    super.init()
-  }
-  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
-    let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
-    var result = [Element]()
-    SQLiteQueryWhere(reader: reader, query: sqlQuery, limit: limit, orderBy: orderBy, result: &result)
-    return SQLiteFetchedResult(result, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
 }

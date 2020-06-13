@@ -4,6 +4,9 @@ public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
   let field: FieldExpr<T>
   public var name: String { field.name }
   public let sortingOrder: SortingOrder
+  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
+    field.canUsePartialIndex(availableIndexes)
+  }
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
   public func areInSortingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> SortingOrder {
