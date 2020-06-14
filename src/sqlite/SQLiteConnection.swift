@@ -5,8 +5,9 @@ public final class SQLiteConnection {
   public var sqlite: OpaquePointer?
   private var stringPool = [String: OpaquePointer]()
   private var staticPool = [UnsafePointer<UInt8>: OpaquePointer]()
-  init?(filePath: String) {
-    guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) else { return nil }
+  init?(filePath: String, createIfMissing: Bool) {
+    let options = createIfMissing ? SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE : SQLITE_OPEN_READWRITE
+    guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) else { return nil }
     guard sqlite != nil else { return nil }
   }
   deinit {

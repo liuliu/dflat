@@ -15,7 +15,7 @@ class ObjectRepositoryTests: XCTestCase {
     objectRepository.set(updatedObject: .inserted(monster1), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
     objectRepository.set(updatedObject: .updated(monster2), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
     objectRepository.set(updatedObject: .deleted(3), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
-    guard let reader = SQLiteConnection(filePath: NSTemporaryDirectory().appending("\(UUID().uuidString).db")) else { return }
+    guard let reader = SQLiteConnection(filePath: NSTemporaryDirectory().appending("\(UUID().uuidString).db"), createIfMissing: false) else { return }
     let retMonster1 = objectRepository.object(reader, ofType: MyGame.Sample.Monster.self, for: .rowid(1) as SQLiteObjectKey<String>)
     XCTAssertEqual(retMonster1?.name, "name1")
     let retMonster2 = objectRepository.object(reader, ofType: MyGame.Sample.Monster.self, for: .rowid(2) as SQLiteObjectKey<String>)
@@ -57,7 +57,7 @@ class ObjectRepositoryTests: XCTestCase {
     objectRepository.set(fetchedObject: .fetched(monster1), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.Monster.self), for: 1)
     objectRepository.set(fetchedObject: .fetched(monster2), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.Monster.self), for: 2)
     objectRepository.set(fetchedObject: .deleted, ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.Monster.self), for: 3)
-    guard let reader = SQLiteConnection(filePath: NSTemporaryDirectory().appending("\(UUID().uuidString).db")) else { return }
+    guard let reader = SQLiteConnection(filePath: NSTemporaryDirectory().appending("\(UUID().uuidString).db"), createIfMissing: false) else { return }
     let retMonster1 = objectRepository.object(reader, ofType: MyGame.Sample.Monster.self, for: .rowid(1) as SQLiteObjectKey<String>)
     XCTAssertEqual(retMonster1?.name, "name1")
     let retMonster2 = objectRepository.object(reader, ofType: MyGame.Sample.Monster.self, for: .rowid(2) as SQLiteObjectKey<String>)

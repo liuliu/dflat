@@ -6,7 +6,7 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   private let reader: SQLiteConnectionPool.Borrowed
   private let transactionContext: SQLiteTransactionContext?
   private let changesTimestamp: Int64
-  public init(_ reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
+  public init(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
     self.reader = reader
     self.transactionContext = transactionContext
     self.changesTimestamp = changesTimestamp
@@ -59,6 +59,7 @@ extension Array where Element: Atom {
 }
 
 func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], result: inout [Element]) {
+  defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
   let availableIndexes = Set<String>()
@@ -139,4 +140,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
       }
     }
   }
+  // This will help to release memory related to the query.
+  sqlite3_reset(preparedQuery)
+  sqlite3_clear_bindings(preparedQuery)
 }

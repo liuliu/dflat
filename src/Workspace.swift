@@ -13,5 +13,5 @@ public extension Queryable {
 public protocol Workspace: Queryable {
   typealias ChangesHandler = (_ transactionContext: TransactionContext) -> Void
   typealias CompletionHandler = (_ success: Bool) -> Void
-  func performChanges(_ anyPool: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
+  func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
 }

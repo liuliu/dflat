@@ -10,11 +10,11 @@ public final class SQLiteTransactionContext: TransactionContext {
     toolbox.connection
   }
   let changesTimestamp: Int64
-  private let anyPool: Set<ObjectIdentifier>
+  private let objectTypes: Set<ObjectIdentifier>
   private let state: SQLiteWorkspaceState
   private let toolbox: SQLitePersistenceToolbox
   var borrowed: SQLiteConnectionPool.Borrowed {
-    SQLiteConnectionPool.Borrowed(toolbox.connection)
+    SQLiteConnectionPool.Borrowed(pointee: toolbox.connection)
   }
   
   static private(set) public var current: SQLiteTransactionContext? {
@@ -26,13 +26,13 @@ public final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(_ state: SQLiteWorkspaceState, anyPool: [Any.Type], writer: SQLiteConnection, changesTimestamp: Int64) {
-    var anySet = Set<ObjectIdentifier>()
-    for type in anyPool {
-      anySet.update(with: ObjectIdentifier(type))
+  init(state: SQLiteWorkspaceState, objectTypes: [Any.Type], writer: SQLiteConnection, changesTimestamp: Int64) {
+    var objectTypesSet = Set<ObjectIdentifier>()
+    for type in objectTypes {
+      objectTypesSet.update(with: ObjectIdentifier(type))
     }
     self.state = state
-    self.anyPool = anySet
+    self.objectTypes = objectTypesSet
     self.toolbox = SQLitePersistenceToolbox(connection: writer)
     self.changesTimestamp = changesTimestamp
     Self.current = self
@@ -43,7 +43,7 @@ public final class SQLiteTransactionContext: TransactionContext {
   }
 
   func contains(ofType: Any.Type) -> Bool {
-    return anyPool.contains(ObjectIdentifier(ofType))
+    return objectTypes.contains(ObjectIdentifier(ofType))
   }
   
   static func transactionalUpdate(toolbox: SQLitePersistenceToolbox, updater: (_: SQLitePersistenceToolbox) -> UpdatedObject?) -> UpdatedObject? {

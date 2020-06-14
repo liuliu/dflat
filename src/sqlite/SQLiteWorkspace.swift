@@ -30,9 +30,9 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Mutation
 
-  public func performChanges(_ anyPool: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
+  public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
     queue.async { [weak self] in
-      self?.invokeChangesHandler(anyPool, changesHandler: changesHandler, completionHandler: completionHandler)
+      self?.invokeChangesHandler(transactionalObjectTypes, changesHandler: changesHandler, completionHandler: completionHandler)
     }
   }
 
@@ -55,13 +55,13 @@ public final class SQLiteWorkspace: Workspace {
   public func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
-      return SQLiteQueryBuilder<T>(txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
+      return SQLiteQueryBuilder<T>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<T>(snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
+      return SQLiteQueryBuilder<T>(reader: snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
     }
     let changesTimestamp = state.changesTimestamp.load(order: .acquire)
-    return SQLiteQueryBuilder<T>(readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
+    return SQLiteQueryBuilder<T>(reader: readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
@@ -106,7 +106,7 @@ public final class SQLiteWorkspace: Workspace {
     dispatchPrecondition(condition: .onQueue(queue))
     // Set the flag before creating the s
     Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-    writer = SQLiteConnection(filePath: filePath)
+    writer = SQLiteConnection(filePath: filePath, createIfMissing: true)
     guard let writer = writer else { return }
     sqlite3_busy_timeout(writer.sqlite, 10_000)
     sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
@@ -114,13 +114,13 @@ public final class SQLiteWorkspace: Workspace {
     sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
   }
 
-  private func invokeChangesHandler(_ anyPool: [Any.Type], changesHandler: Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler?) {
+  private func invokeChangesHandler(_ transactionalObjectTypes: [Any.Type], changesHandler: Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler?) {
     guard let writer = writer else {
       completionHandler?(false)
       return
     }
     let changesTimestamp = state.changesTimestamp.load(order: .acquire)
-    let txnContext = SQLiteTransactionContext(state, anyPool: anyPool, writer: writer, changesTimestamp: changesTimestamp)
+    let txnContext = SQLiteTransactionContext(state: state, objectTypes: transactionalObjectTypes, writer: writer, changesTimestamp: changesTimestamp)
     let begin = writer.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       completionHandler?(false)

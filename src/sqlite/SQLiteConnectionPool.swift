@@ -3,18 +3,14 @@ import SQLite3
 
 final class SQLiteConnectionPool {
 
-  final class Borrowed {
-    public let pointee: SQLiteConnection?
+  struct Borrowed {
+    let pointee: SQLiteConnection?
     private let pool: SQLiteConnectionPool?
-    init(_ pointee: SQLiteConnection?, _ pool: SQLiteConnectionPool?) {
+    init(pointee: SQLiteConnection?, pool: SQLiteConnectionPool? = nil) {
       self.pointee = pointee
       self.pool = pool
     }
-    public init(_ pointee: SQLiteConnection?) {
-      self.pointee = pointee
-      self.pool = nil
-    }
-    deinit {
+    func `return`() {
       guard let pointee = pointee else { return }
       pool?.add(pointee)
     }
@@ -35,15 +31,15 @@ final class SQLiteConnectionPool {
     if let connection = pool.last {
       pool.removeLast()
       os_unfair_lock_unlock(&lock)
-      return Borrowed(connection, self)
+      return Borrowed(pointee: connection, pool: self)
     }
     os_unfair_lock_unlock(&lock)
-    let pointee = SQLiteConnection(filePath: filePath)
+    let pointee = SQLiteConnection(filePath: filePath, createIfMissing: false)
     if pointee == nil {
       flowControl.signal()
     }
     sqlite3_busy_timeout(pointee?.sqlite, 10_000)
-    return Borrowed(pointee, self)
+    return Borrowed(pointee: pointee, pool: self)
   }
   fileprivate func add(_ connection: SQLiteConnection) {
     os_unfair_lock_lock(&lock)
