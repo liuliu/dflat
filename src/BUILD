@@ -6,6 +6,25 @@ swift_library(
   srcs = glob(["FlatBuffers/*.swift"]),
 )
 
+objc_library(
+  name = "CAtomics",
+  hdrs = ["CAtomics/CAtomics.h"],
+  enable_modules = True,
+  module_name = "CAtomics"
+)
+
+swift_library(
+  name = "SwiftAtomics",
+  module_name = "SwiftAtomics",
+  srcs = [
+    "SwiftAtomics/AtomicInt.swift",
+    "SwiftAtomics/MemoryOrder.swift",
+  ],
+  deps = [
+    ":CAtomics",
+  ]
+)
+
 swift_library(
   name = "Dflat",
   module_name = "Dflat",
@@ -21,6 +40,7 @@ swift_library(
   ] + glob(["exprs/*.swift"]),
   deps = [
     ":FlatBuffers",
+    ":SwiftAtomics",
   ]
 )
 

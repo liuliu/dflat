@@ -5,16 +5,18 @@ import FlatBuffers
 final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   private let reader: SQLiteConnectionPool.Borrowed
   private let transactionContext: SQLiteTransactionContext?
-  public init(_ reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?) {
+  private let changesTimestamp: Int64
+  public init(_ reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
     self.reader = reader
     self.transactionContext = transactionContext
+    self.changesTimestamp = changesTimestamp
     super.init()
   }
   override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
     var result = [Element]()
-    SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, query: sqlQuery, limit: limit, orderBy: orderBy, result: &result)
-    return SQLiteFetchedResult(result, query: sqlQuery, limit: limit, orderBy: orderBy)
+    SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, result: &result)
+    return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
 }
 
@@ -56,7 +58,7 @@ extension Array where Element: Atom {
   }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], result: inout [Element]) {
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
   let availableIndexes = Set<String>()
@@ -103,6 +105,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
       let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let element = Element.fromFlatBuffers(bb)
       element._rowid = rowid
+      element._changesTimestamp = changesTimestamp
       if let transactionContext = transactionContext {
         // If there is an object repository, update them so changeRequest doesn't need to make another round-trip to the database.
         transactionContext.objectRepository.set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
@@ -123,6 +126,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
       if retval.result && !retval.unknown {
         let element = Element.fromFlatBuffers(bb)
         element._rowid = rowid
+        element._changesTimestamp = changesTimestamp
         if let transactionContext = transactionContext {
           // If there is an object repository, update them so changeRequest doesn't need to make another round-trip to the database.
           transactionContext.objectRepository.set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)

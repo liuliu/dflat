@@ -28,15 +28,24 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
+  // MARK - Mutation
+
   public func performChanges(_ anyPool: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
     queue.async { [weak self] in
       self?.invokeChangesHandler(anyPool, changesHandler: changesHandler, completionHandler: completionHandler)
     }
   }
 
-  static private var snapshot: SQLiteConnectionPool.Borrowed? {
+  // MARK - Fetching
+
+  private struct Snapshot {
+    var reader: SQLiteConnectionPool.Borrowed
+    var changesTimestamp: Int64
+  }
+
+  static private var snapshot: Snapshot? {
     get {
-      Thread.current.threadDictionary["SQLiteSnapshot"] as? SQLiteConnectionPool.Borrowed
+      Thread.current.threadDictionary["SQLiteSnapshot"] as? Snapshot
     }
     set(newSnapshot) {
       Thread.current.threadDictionary["SQLiteSnapshot"] = newSnapshot
@@ -46,12 +55,13 @@ public final class SQLiteWorkspace: Workspace {
   public func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
-      return SQLiteQueryBuilder<T>(txnContext.borrowed, transactionContext: txnContext)
+      return SQLiteQueryBuilder<T>(txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<T>(snapshot, transactionContext: nil)
+      return SQLiteQueryBuilder<T>(snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
     }
-    return SQLiteQueryBuilder<T>(readerPool.borrow(), transactionContext: nil)
+    let changesTimestamp = state.changesTimestamp.load(order: .acquire)
+    return SQLiteQueryBuilder<T>(readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
@@ -61,7 +71,8 @@ public final class SQLiteWorkspace: Workspace {
     }
     // Require a consistent snapshot by starting a transaction.
     let reader = readerPool.borrow()
-    Self.snapshot = reader
+    let changesTimestamp = state.changesTimestamp.load(order: .acquire)
+    Self.snapshot = Snapshot(reader: reader, changesTimestamp: changesTimestamp)
     guard let pointee = reader.pointee else {
       let retval = closure()
       Self.snapshot = nil
@@ -75,6 +86,10 @@ public final class SQLiteWorkspace: Workspace {
     Self.snapshot = nil
     return retval
   }
+
+  // MARK - Observation
+
+  // MARK - Internal
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
     #if !targetEnvironment(simulator)
@@ -104,7 +119,8 @@ public final class SQLiteWorkspace: Workspace {
       completionHandler?(false)
       return
     }
-    let txnContext = SQLiteTransactionContext(state, anyPool: anyPool, writer: writer)
+    let changesTimestamp = state.changesTimestamp.load(order: .acquire)
+    let txnContext = SQLiteTransactionContext(state, anyPool: anyPool, writer: writer, changesTimestamp: changesTimestamp)
     let begin = writer.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       completionHandler?(false)
@@ -122,6 +138,7 @@ public final class SQLiteWorkspace: Workspace {
       return
     }
     precondition(status == SQLITE_DONE)
+    state.changesTimestamp.increment(order: .release)
     completionHandler?(true)
   }
 }

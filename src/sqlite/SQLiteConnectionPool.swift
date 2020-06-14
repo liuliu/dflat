@@ -23,25 +23,21 @@ final class SQLiteConnectionPool {
   private var pool = [SQLiteConnection]()
   private let filePath: String
   private let flowControl: DispatchSemaphore
-  private let lock: os_unfair_lock_t
+  private var lock: os_unfair_lock_s
   init(capacity: Int, filePath: String) {
     self.filePath = filePath
     flowControl = DispatchSemaphore(value: capacity)
-    lock = os_unfair_lock_t.allocate(capacity: 1)
-    lock.initialize(to: os_unfair_lock())
-  }
-  deinit {
-    lock.deallocate()
+    lock = os_unfair_lock()
   }
   func borrow() -> Borrowed {
     flowControl.wait()
-    os_unfair_lock_lock(lock)
+    os_unfair_lock_lock(&lock)
     if let connection = pool.last {
       pool.removeLast()
-      os_unfair_lock_unlock(lock)
+      os_unfair_lock_unlock(&lock)
       return Borrowed(connection, self)
     }
-    os_unfair_lock_unlock(lock)
+    os_unfair_lock_unlock(&lock)
     let pointee = SQLiteConnection(filePath: filePath)
     if pointee == nil {
       flowControl.signal()
@@ -50,9 +46,9 @@ final class SQLiteConnectionPool {
     return Borrowed(pointee, self)
   }
   fileprivate func add(_ connection: SQLiteConnection) {
-    os_unfair_lock_lock(lock)
+    os_unfair_lock_lock(&lock)
     pool.append(connection)
-    os_unfair_lock_unlock(lock)
+    os_unfair_lock_unlock(&lock)
     flowControl.signal()
   }
 }
