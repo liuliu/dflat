@@ -3,23 +3,15 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_test")
 
 swift_library(
-  name = "ExprTests_lib",
-  srcs = [
-    "ExprTests.swift",
-  ],
-  deps = [
-    "//src:Dflat",
-  ],
-)
-
-swift_library(
-  name = "SQLiteWorkspaceCRUDTests_lib",
+  name = "Tests_lib",
   srcs = [
     "monster_generated.swift",
     "Monster.swift",
     "MonsterChangeRequest.swift",
     "MonsterAttributes.swift",
     "SQLiteWorkspaceCRUDTests.swift",
+    "ObjectRepositoryTests.swift",
+    "ExprTests.swift",
   ],
   deps = [
     "//src:SQLiteDflat",
@@ -27,18 +19,9 @@ swift_library(
 )
 
 ios_unit_test(
-  name = "Tests_ios",
-  deps = [
-    ":ExprTests_lib",
-    ":SQLiteWorkspaceCRUDTests_lib",
-  ],
-  minimum_os_version = "10.0",
-)
-
-swift_test(
   name = "Tests",
   deps = [
-    ":ExprTests_lib",
-    ":SQLiteDflatTests_lib",
+    ":Tests_lib",
   ],
+  minimum_os_version = "10.0",
 )
