@@ -17,11 +17,7 @@ public struct SQLiteObjectRepository {
   private(set) var updatedObjects = [ObjectIdentifier: [Int64: UpdatedObject]]()
 
   mutating func set(fetchedObject: SQLiteFetchedObject, ofTypeIdentifier: ObjectIdentifier, for rowid: Int64) {
-    if fetchedObjects[ofTypeIdentifier] != nil {
-      fetchedObjects[ofTypeIdentifier]![rowid] = fetchedObject
-    } else {
-      fetchedObjects[ofTypeIdentifier] = [rowid: fetchedObject]
-    }
+    fetchedObjects[ofTypeIdentifier, default: [rowid: fetchedObject]][rowid] = fetchedObject
   }
 
   mutating func set(updatedObject: UpdatedObject, ofTypeIdentifier: ObjectIdentifier) {
@@ -32,11 +28,7 @@ public struct SQLiteObjectRepository {
       case .deleted(let _rowid):
         rowid = _rowid
     }
-    if updatedObjects[ofTypeIdentifier] != nil {
-      updatedObjects[ofTypeIdentifier]![rowid] = updatedObject
-    } else {
-      updatedObjects[ofTypeIdentifier] = [rowid: updatedObject]
-    }
+    updatedObjects[ofTypeIdentifier, default: [rowid: updatedObject]][rowid] = updatedObject
     // Update updatedObject will also update fetchedObject.
     switch updatedObject {
       case .inserted(let element), .updated(let element):
