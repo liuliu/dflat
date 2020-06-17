@@ -25,4 +25,7 @@ open class QueryBuilder<Element: Atom> {
   open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     fatalError()
   }
+  open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> {
+    fatalError()
+  }
 }

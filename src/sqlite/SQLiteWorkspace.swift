@@ -93,7 +93,7 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Observation
 
-  public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription {
+  public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let identifier = ObjectIdentifier(fetchedResult)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
@@ -130,7 +130,7 @@ public final class SQLiteWorkspace: Workspace {
     return subscription
   }
 
-  public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription {
+  public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     queue.async { [weak self] in
       guard let self = self else { return }

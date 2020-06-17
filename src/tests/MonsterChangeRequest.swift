@@ -58,7 +58,7 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
 
 extension MyGame.Sample.Monster {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let pos = self.pos.map { flatBufferBuilder.create(struct: FlatBuffers_Generated.MyGame.Sample.createVec3(x: $0.x, y: $0.y, z: $0.z), type: FlatBuffers_Generated.MyGame.Sample.Vec3.self) } ?? Offset()
+    let pos = flatBufferBuilder.create(struct: FlatBuffers_Generated.MyGame.Sample.createVec3(x: self.pos.x, y: self.pos.y, z: self.pos.z), type: FlatBuffers_Generated.MyGame.Sample.Vec3.self)
     let name = flatBufferBuilder.create(string: self.name)
     let vectorOfInventory = flatBufferBuilder.createVector(self.inventory)
     var weapons = [Offset<UOffset>]()
@@ -84,7 +84,7 @@ extension MyGame.Sample {
     public static var atomType: Any.Type { Monster.self }
     private var _type: ChangeRequestType
     private var _rowid: Int64
-    public var pos: Vec3?
+    public var pos: Vec3
     public var mana: Int16
     public var hp: Int16
     public var name: String
@@ -96,7 +96,7 @@ extension MyGame.Sample {
     private init(type: ChangeRequestType) {
       _type = type
       _rowid = -1
-      pos = nil
+      pos = Vec3()
       mana = 150
       hp = 100
       name = ""

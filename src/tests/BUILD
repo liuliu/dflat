@@ -10,6 +10,7 @@ swift_library(
     "MonsterChangeRequest.swift",
     "MonsterAttributes.swift",
     "SQLiteWorkspaceCRUDTests.swift",
+    "SubscribeTests.swift",
     "ObjectRepositoryTests.swift",
     "ExprTests.swift",
   ],

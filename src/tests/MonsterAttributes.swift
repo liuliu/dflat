@@ -55,13 +55,13 @@ public extension MyGame.Sample.Monster {
 
     static private func _tr_pos__x(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
       let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
-      guard let pos = tr.pos else { return (Float(), true) }
+      guard let pos = tr.pos else { return (Float(), false) }
       return (pos.x, false)
     }
 
     static private func _or_pos__x(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      guard let pos = or.pos else { return (Float(), true) }
+      let pos = or.pos
       return (pos.x, false)
     }
 
@@ -69,13 +69,13 @@ public extension MyGame.Sample.Monster {
 
     static private func _tr_pos__y(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
       let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
-      guard let pos = tr.pos else { return (Float(), true) }
+      guard let pos = tr.pos else { return (Float(), false) }
       return (pos.y, false)
     }
 
     static private func _or_pos__y(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      guard let pos = or.pos else { return (Float(), true) }
+      let pos = or.pos
       return (pos.y, false)
     }
 
@@ -83,13 +83,13 @@ public extension MyGame.Sample.Monster {
 
     static private func _tr_pos__z(_ table: ByteBuffer) -> (result: Float, unknown: Bool) {
       let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
-      guard let pos = tr.pos else { return (Float(), true) }
+      guard let pos = tr.pos else { return (Float(), false) }
       return (pos.z, false)
     }
 
     static private func _or_pos__z(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      guard let pos = or.pos else { return (Float(), true) }
+      let pos = or.pos
       return (pos.z, false)
     }
 

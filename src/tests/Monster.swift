@@ -18,9 +18,10 @@ public enum Equipment: Equatable {
 }
 
 public struct Vec3: Equatable {
-  var x: Float
-  var y: Float
-  var z: Float
+  var x: Float = 0
+  var y: Float = 0
+  var z: Float = 0
+  public init() {}
   public init(_ vec3: FlatBuffers_Generated.MyGame.Sample.Vec3) {
     self.x = vec3.x
     self.y = vec3.y
@@ -28,7 +29,7 @@ public struct Vec3: Equatable {
   }
 }
 
-public final class Monster: Dflat.Atom {
+public final class Monster: Dflat.Atom, Equatable {
   public static func == (lhs: MyGame.Sample.Monster, rhs: MyGame.Sample.Monster) -> Bool {
     guard lhs.pos == rhs.pos else { return false }
     guard lhs.mana == rhs.mana else { return false }
@@ -42,7 +43,7 @@ public final class Monster: Dflat.Atom {
     return true
   }
     
-  let pos: Vec3?
+  let pos: Vec3
   let mana: Int16
   let hp: Int16
   let name: String // This is the primary key.
@@ -52,7 +53,7 @@ public final class Monster: Dflat.Atom {
   let equipped: Equipment?
   let path: [Vec3]
   
-  public init(pos: Vec3?, name: String, inventory: [UInt8], weapons: [Weapon], equipped: Equipment?, path: [Vec3], mana: Int16 = 150, hp: Int16 = 100, color: Color = .blue) {
+  public init(pos: Vec3, name: String, inventory: [UInt8], weapons: [Weapon], equipped: Equipment?, path: [Vec3], mana: Int16 = 150, hp: Int16 = 100, color: Color = .blue) {
     self.pos = pos
     self.mana = mana
     self.hp = hp
@@ -65,7 +66,7 @@ public final class Monster: Dflat.Atom {
   }
 
   public init(_ monster: FlatBuffers_Generated.MyGame.Sample.Monster) {
-    self.pos = monster.pos.map { Vec3($0) }
+    self.pos = monster.pos.map { Vec3($0) } ?? Vec3()
     self.mana = monster.mana
     self.hp = monster.hp
     self.name = monster.name!

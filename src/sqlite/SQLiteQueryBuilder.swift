@@ -2,6 +2,18 @@ import Dflat
 import SQLite3
 import FlatBuffers
 
+struct AllExpr: Expr, SQLiteExpr {
+  typealias ResultType = Bool
+  func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+    return (true, false)
+  }
+  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
+    return .full
+  }
+  func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {}
+  func bindWhereQuery(availableIndexes: Set<String>, query: OpaquePointer, parameterCount: inout Int32) {}
+}
+
 final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   private let reader: SQLiteConnectionPool.Borrowed
   private let transactionContext: SQLiteTransactionContext?
@@ -17,6 +29,9 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
     var result = [Element]()
     SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
     return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
+  }
+  override func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> {
+    return self.where(AllExpr(), limit: limit, orderBy: orderBy)
   }
 }
 
@@ -37,9 +52,9 @@ extension Array where Element: Atom {
   func indexSorted(_ newElement: Element, orderBy: [OrderBy]) -> Int {
     var lb = 0
     var ub = self.count - 1
-    var pivot = (ub - lb) / 2
+    var pivot = (ub - lb) / 2 + lb
     while lb < ub {
-      pivot = (ub - lb) / 2
+      pivot = (ub - lb) / 2 + lb
       if orderBy.areInIncreasingOrder(self[pivot], newElement) {
         lb = pivot + 1
       } else {
@@ -74,7 +89,11 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
     var statement = ""
     var parameterCount: Int32 = 0
     query.buildWhereQuery(availableIndexes: availableIndexes, query: &statement, parameterCount: &parameterCount)
-    sqlQuery = "SELECT rowid,p FROM \(table) WHERE \(statement) ORDER BY "
+    if statement.count > 0 {
+      sqlQuery = "SELECT rowid,p FROM \(table) WHERE \(statement) ORDER BY "
+    } else {
+      sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
+    }
   } else {
     sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
   }
