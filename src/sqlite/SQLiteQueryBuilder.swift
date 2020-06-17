@@ -15,7 +15,7 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
     var result = [Element]()
-    SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, result: &result)
+    SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
     return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
 }
@@ -34,7 +34,7 @@ extension Array where Element == OrderBy {
 }
 
 extension Array where Element: Atom {
-  mutating func insertSorted(_ newElement: Element, orderBy: [OrderBy]) {
+  func indexSorted(_ newElement: Element, orderBy: [OrderBy]) -> Int {
     var lb = 0
     var ub = self.count - 1
     var pivot = (ub - lb) / 2
@@ -47,18 +47,21 @@ extension Array where Element: Atom {
       }
     }
     if lb == self.count {
-      self.append(newElement)
+      return lb
     } else {
       if orderBy.areInIncreasingOrder(self[lb], newElement) {
-        self.insert(newElement, at: lb + 1)
+        return lb + 1
       } else {
-        self.insert(newElement, at: lb)
+        return lb
       }
     }
   }
+  mutating func insertSorted(_ newElement: Element, orderBy: [OrderBy]) {
+    self.insert(newElement, at: indexSorted(newElement, orderBy: orderBy))
+  }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], offset: Int, result: inout [Element]) {
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
@@ -89,6 +92,14 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
     }
   }
   sqlQuery.append("rowid")
+  if canUsePartialIndex == .full {
+    if case .limit(let limit) = limit {
+      sqlQuery.append(" LIMIT \(limit)")
+    }
+    if offset > 0 {
+      sqlQuery.append(" OFFSET \(offset)")
+    }
+  }
   guard let preparedQuery = sqlite.prepareStatement(sqlQuery) else {
     // TODO: Handle errors.
     return
@@ -118,6 +129,14 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
       }
     }
   case .partial, .none:
+    let actualLimit: Limit
+    switch limit {
+    case .limit(let limit):
+      actualLimit = .limit(limit + offset)
+    case .noLimit:
+      actualLimit = .noLimit
+    }
+    var actualResult = offset > 0 ? [Element]() : result
     while SQLITE_ROW == sqlite3_step(preparedQuery) {
       let blob = sqlite3_column_blob(preparedQuery, 1)
       let blobSize = sqlite3_column_bytes(preparedQuery, 1)
@@ -133,11 +152,22 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
           transactionContext.objectRepository.set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
         }
         if insertSorted {
-          result.insertSorted(element, orderBy: orderBy)
+          actualResult.insertSorted(element, orderBy: orderBy)
         } else {
-          result.append(element)
+          actualResult.append(element)
+        }
+        if case .limit(let limit) = actualLimit {
+          if actualResult.count > limit {
+            precondition(actualResult.count == limit + 1)
+            actualResult.removeLast()
+          }
         }
       }
+    }
+    if offset > 0 {
+      result += actualResult.suffix(from: offset)
+    } else {
+      result = actualResult
     }
   }
   // This will help to release memory related to the query.

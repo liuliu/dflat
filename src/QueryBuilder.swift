@@ -18,8 +18,8 @@ public enum Limit {
   case limit(_: Int)
 }
 
-// This can be converted to PAT if we can use `some`. That requires the whole Dflat object to be PAT such that the returned
-// DflatQueryBuilder can be an associated type.
+// This can be converted to PAT if we can use `some`. That requires the whole Workspace object to be PAT such that the returned
+// QueryBuilder can be an associated type.
 open class QueryBuilder<Element: Atom> {
   public init() {}
   open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {

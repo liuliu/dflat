@@ -17,6 +17,7 @@ public final class SQLiteWorkspace: Workspace {
   private var writer: SQLiteConnection?
   private let readerPool: SQLiteConnectionPool
   private let state = SQLiteWorkspaceState()
+  private var resultPublishers = [ObjectIdentifier: ResultPublisher]()
 
   public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, queue: DispatchQueue = DispatchQueue(label: "com.dflat.write", qos: .utility)) {
     self.filePath = filePath
@@ -52,16 +53,16 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  public func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T> {
+  public func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
-      return SQLiteQueryBuilder<T>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
+      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<T>(reader: snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
+      return SQLiteQueryBuilder<Element>(reader: snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
     }
     let changesTimestamp = state.changesTimestamp.load(order: .acquire)
-    return SQLiteQueryBuilder<T>(reader: readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
+    return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
@@ -88,6 +89,52 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   // MARK - Observation
+
+  public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription {
+    let identifier = ObjectIdentifier(fetchedResult)
+    let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    queue.async { [weak self] in
+      // TODO: Need to check changesTimestamp and possibly refetch in case it is updated.
+      let resultPublisher: SQLiteResultPublisher<Element>
+      if let pub = self?.resultPublishers[ObjectIdentifier(Element.self)] {
+        resultPublisher = pub as! SQLiteResultPublisher<Element>
+      } else {
+        resultPublisher = SQLiteResultPublisher()
+        self?.resultPublishers[ObjectIdentifier(Element.self)] = resultPublisher
+      }
+      resultPublisher.subscribe(fetchedResult: fetchedResult as! SQLiteFetchedResult<Element>, changeHandler: changeHandler, subscription: subscription)
+    }
+    return subscription
+  }
+
+  public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription {
+    let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    queue.async { [weak self] in
+      // TODO: Need to check _changesTimestamp and possibly refetch in case it is updated.
+      let resultPublisher: SQLiteResultPublisher<Element>
+      if let pub = self?.resultPublishers[ObjectIdentifier(Element.self)] {
+        resultPublisher = pub as! SQLiteResultPublisher<Element>
+      } else {
+        resultPublisher = SQLiteResultPublisher()
+        self?.resultPublishers[ObjectIdentifier(Element.self)] = resultPublisher
+      }
+      resultPublisher.subscribe(object: object, changeHandler: changeHandler, subscription: subscription)
+    }
+    return subscription
+  }
+  
+  func cancel(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier) {
+    queue.async { [weak self] in
+      switch ofType {
+      case let .fetchedResult(atomType, fetchedResult):
+        guard let resultPublisher = self?.resultPublishers[ObjectIdentifier(atomType)] else { return }
+        resultPublisher.cancel(fetchedResult: fetchedResult, identifier: identifier)
+      case let .object(atomType, rowid):
+        guard let resultPublisher = self?.resultPublishers[ObjectIdentifier(atomType)] else { return }
+        resultPublisher.cancel(object: rowid, identifier: identifier)
+      }
+    }
+  }
 
   // MARK - Internal
 
@@ -127,6 +174,8 @@ public final class SQLiteWorkspace: Workspace {
       return
     }
     changesHandler(txnContext)
+    let reader = txnContext.borrowed
+    let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
     let commit = writer.prepareStatement("COMMIT")
     let status = sqlite3_step(commit)
@@ -138,7 +187,11 @@ public final class SQLiteWorkspace: Workspace {
       return
     }
     precondition(status == SQLITE_DONE)
-    state.changesTimestamp.increment(order: .release)
+    let newChangesTimestamp = state.changesTimestamp.increment(order: .release) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
+    for (identifier, updates) in updatedObjects {
+      guard let resultPublisher = resultPublishers[identifier] else { continue }
+      resultPublisher.publishUpdates(updates, reader: reader, changesTimestamp: newChangesTimestamp)
+    }
     completionHandler?(true)
   }
 }

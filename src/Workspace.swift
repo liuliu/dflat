@@ -1,5 +1,7 @@
+// MARK - Queries
+
 public protocol Queryable {
-  func fetchFor<T: Atom>(_ ofType: T.Type) -> QueryBuilder<T>
+  func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element>
   func fetchWithinASnapshot<T>(_: () -> T, ofType: T.Type) -> T
 }
 
@@ -10,8 +12,22 @@ public extension Queryable {
   }
 }
 
+public protocol WorkspaceSubscription {
+  func cancel()
+}
+
+public enum SubscribedObject<Element: Atom> {
+  case updated(_: Element)
+  case deleted
+}
+
 public protocol Workspace: Queryable {
+  // MARK - Changes
   typealias ChangesHandler = (_ transactionContext: TransactionContext) -> Void
   typealias CompletionHandler = (_ success: Bool) -> Void
   func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
+  // MARK - Observations
+  typealias Subscription = WorkspaceSubscription
+  func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription
+  func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription
 }

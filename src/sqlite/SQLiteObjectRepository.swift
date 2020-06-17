@@ -65,11 +65,8 @@ public struct SQLiteObjectRepository {
     }
     let status = sqlite3_step(preparedQuery)
     if SQLITE_DONE == status { // Cannot find this object, if the key happens to be rowid, we can set it to be deleted.
-      switch key {
-      case .rowid(let rowid):
+      if case .rowid(let rowid) = key {
         set(fetchedObject: .deleted, ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
-      case .primaryKey(_):
-        break
       }
       return nil
     }

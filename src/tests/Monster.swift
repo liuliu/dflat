@@ -13,11 +13,11 @@ public enum Color: Int8, DflatFriendlyValue {
   }
 }
 
-public enum Equipment {
+public enum Equipment: Equatable {
   case weapon(_: Weapon)
 }
 
-public struct Vec3 {
+public struct Vec3: Equatable {
   var x: Float
   var y: Float
   var z: Float
@@ -28,7 +28,20 @@ public struct Vec3 {
   }
 }
 
-public final class Monster: Dflat.Atom {
+public final class Monster: Dflat.Atom, Equatable {
+  public static func == (lhs: MyGame.Sample.Monster, rhs: MyGame.Sample.Monster) -> Bool {
+    guard lhs.pos == rhs.pos else { return false }
+    guard lhs.mana == rhs.mana else { return false }
+    guard lhs.hp == rhs.hp else { return false }
+    guard lhs.name == rhs.name else { return false }
+    guard lhs.inventory == rhs.inventory else { return false }
+    guard lhs.color == rhs.color else { return false }
+    guard lhs.weapons == rhs.weapons else { return false }
+    guard lhs.equipped == rhs.equipped else { return false }
+    guard lhs.path == rhs.path else { return false }
+    return true
+  }
+    
   let pos: Vec3?
   let mana: Int16
   let hp: Int16
@@ -83,7 +96,7 @@ public final class Monster: Dflat.Atom {
   }
 }
 
-public struct Weapon {
+public struct Weapon: Equatable {
   var name: String?
   var damage: Int16
   public init(_ weapon: FlatBuffers_Generated.MyGame.Sample.Weapon) {
