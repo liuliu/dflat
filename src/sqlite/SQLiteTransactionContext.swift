@@ -9,7 +9,6 @@ public final class SQLiteTransactionContext: TransactionContext {
   public var connection: SQLiteConnection {
     toolbox.connection
   }
-  let changesTimestamp: Int64
   private let objectTypes: Set<ObjectIdentifier>
   private let state: SQLiteWorkspaceState
   private let toolbox: SQLitePersistenceToolbox
@@ -26,7 +25,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(state: SQLiteWorkspaceState, objectTypes: [Any.Type], writer: SQLiteConnection, changesTimestamp: Int64) {
+  init(state: SQLiteWorkspaceState, objectTypes: [Any.Type], writer: SQLiteConnection) {
     var objectTypesSet = Set<ObjectIdentifier>()
     for type in objectTypes {
       objectTypesSet.update(with: ObjectIdentifier(type))
@@ -34,7 +33,6 @@ public final class SQLiteTransactionContext: TransactionContext {
     self.state = state
     self.objectTypes = objectTypesSet
     self.toolbox = SQLitePersistenceToolbox(connection: writer)
-    self.changesTimestamp = changesTimestamp
     Self.current = self
   }
 

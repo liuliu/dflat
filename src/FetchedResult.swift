@@ -1,5 +1,5 @@
 // Using abstract class so we can provide implementation for array.
-open class FetchedResult<Element: Atom>: RandomAccessCollection {
+open class FetchedResult<Element: Atom>: RandomAccessCollection, Equatable {
   public let underlyingArray: [Element]
 
   public typealias Element = Element
@@ -18,4 +18,11 @@ open class FetchedResult<Element: Atom>: RandomAccessCollection {
     self.underlyingArray = array
   }
 
+  public static func == (lhs: FetchedResult<Element>, rhs: FetchedResult<Element>) -> Bool {
+    guard lhs.count == rhs.count else { return false }
+    for (i, element) in lhs.enumerated() {
+      guard element == rhs[i] else { return false }
+    }
+    return true
+  }
 }

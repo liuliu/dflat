@@ -56,7 +56,10 @@ public final class SQLiteWorkspace: Workspace {
   public func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element> {
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
-      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: txnContext.changesTimestamp)
+      // If we are in a transaction, we cannot have changesTimestamp for fetching. The reason is because this transaction may
+      // later abort, causing all changes in this transaction to rollback. We need to refetch all objects fetched in this transaction
+      // if we are going to use the changesTimestamp.
+      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: 0)
     }
     if let snapshot = Self.snapshot {
       return SQLiteQueryBuilder<Element>(reader: snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
@@ -93,10 +96,28 @@ public final class SQLiteWorkspace: Workspace {
   public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription {
     let identifier = ObjectIdentifier(fetchedResult)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     queue.async { [weak self] in
       guard let self = self else { return }
+      guard let writer = self.writer else { return }
       let identifier = ObjectIdentifier(Element.self)
-      // TODO: Need to check changesTimestamp and possibly refetch in case it is updated.
+      let changesTimestamp = self.state.tableTimestamps[identifier] ?? -1
+      var fetchedResult = fetchedResult
+      if fetchedResult.changesTimestamp < changesTimestamp {
+        let reader = SQLiteConnectionPool.Borrowed(pointee: writer)
+        let query = fetchedResult.query
+        let limit = fetchedResult.limit
+        let orderBy = fetchedResult.orderBy
+        var result = [Element]()
+        SQLiteQueryWhere(reader: reader, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
+        let newFetchedResult = SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)
+        if newFetchedResult != fetchedResult {
+          // If not equal, call changeHandler.
+          changeHandler(newFetchedResult)
+          // Update this, note that from this point on, ObjectIdentifier(fetchedResult) != resultIdentifier.
+          fetchedResult = newFetchedResult
+        }
+      }
       let resultPublisher: SQLiteResultPublisher<Element>
       if let pub = self.resultPublishers[identifier] {
         resultPublisher = pub as! SQLiteResultPublisher<Element>
@@ -104,7 +125,7 @@ public final class SQLiteWorkspace: Workspace {
         resultPublisher = SQLiteResultPublisher()
         self.resultPublishers[identifier] = resultPublisher
       }
-      resultPublisher.subscribe(fetchedResult: fetchedResult as! SQLiteFetchedResult<Element>, changeHandler: changeHandler, subscription: subscription)
+      resultPublisher.subscribe(fetchedResult: fetchedResult, resultIdentifier: identifier, changeHandler: changeHandler, subscription: subscription)
     }
     return subscription
   }
@@ -184,8 +205,7 @@ public final class SQLiteWorkspace: Workspace {
       completionHandler?(false)
       return
     }
-    let changesTimestamp = state.changesTimestamp.load(order: .acquire)
-    let txnContext = SQLiteTransactionContext(state: state, objectTypes: transactionalObjectTypes, writer: writer, changesTimestamp: changesTimestamp)
+    let txnContext = SQLiteTransactionContext(state: state, objectTypes: transactionalObjectTypes, writer: writer)
     let begin = writer.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       completionHandler?(false)

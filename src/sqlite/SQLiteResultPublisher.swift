@@ -168,8 +168,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
   }
   private var fetchedResultSubscribers = [ObjectIdentifier: SQLiteFetchedResultPublisher]()
 
-  func subscribe(fetchedResult: SQLiteFetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void, subscription: SQLiteSubscription) {
-    let resultIdentifier = ObjectIdentifier(fetchedResult)
+  func subscribe(fetchedResult: SQLiteFetchedResult<Element>, resultIdentifier: ObjectIdentifier, changeHandler: @escaping (_: FetchedResult<Element>) -> Void, subscription: SQLiteSubscription) {
     let resultPublisher: SQLiteFetchedResultPublisher
     if let pub = fetchedResultSubscribers[resultIdentifier] {
       resultPublisher = pub
