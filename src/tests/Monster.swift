@@ -28,7 +28,7 @@ public struct Vec3: Equatable {
   }
 }
 
-public final class Monster: Dflat.Atom, Equatable {
+public final class Monster: Dflat.Atom {
   public static func == (lhs: MyGame.Sample.Monster, rhs: MyGame.Sample.Monster) -> Bool {
     guard lhs.pos == rhs.pos else { return false }
     guard lhs.mana == rhs.mana else { return false }

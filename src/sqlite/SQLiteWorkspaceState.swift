@@ -4,5 +4,6 @@ import SwiftAtomics
 // this need to be re-written in thread-safe fashion.
 final class SQLiteWorkspaceState {
   var tableCreated = Set<ObjectIdentifier>()
+  var tableTimestamps = [ObjectIdentifier: Int64]()
   var changesTimestamp = AtomicInt64(0)
 }

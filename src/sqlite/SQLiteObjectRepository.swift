@@ -38,23 +38,11 @@ public struct SQLiteObjectRepository {
     }
   }
 
-  public mutating func object<Element: Atom, Key: SQLiteValue>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey<Key>) -> Element? {
+  static public func object<Element: Atom, Key: SQLiteValue>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey<Key>) -> Element? {
     let SQLiteElement = Element.self as! SQLiteAtom.Type
     let preparedQuery: OpaquePointer
     switch key {
     case .rowid(let rowid):
-      // If we use rowid to find, we can first look it up in the fetchedObject table
-      if let fetchedObjectMap = fetchedObjects[ObjectIdentifier(Element.self)] {
-        if let fetchedObject = fetchedObjectMap[rowid] {
-          switch fetchedObject {
-          case .fetched(let element):
-            return (element as! Element)
-          case .deleted:
-            return nil
-          }
-        }
-        // Otherwise, we have to make the call to the database.
-      }
       guard let statement = reader.prepareStatement("SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid=?1 LIMIT 1") else { return nil }
       preparedQuery = statement
       rowid.bindSQLite(preparedQuery, parameterId: 1)
@@ -65,9 +53,6 @@ public struct SQLiteObjectRepository {
     }
     let status = sqlite3_step(preparedQuery)
     if SQLITE_DONE == status { // Cannot find this object, if the key happens to be rowid, we can set it to be deleted.
-      if case .rowid(let rowid) = key {
-        set(fetchedObject: .deleted, ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
-      }
       return nil
     }
     guard SQLITE_ROW == status else { return nil }
@@ -77,10 +62,35 @@ public struct SQLiteObjectRepository {
     let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
     let element = Element.fromFlatBuffers(bb)
     element._rowid = rowid
-    // Since we didn't query til done, it is good to reset and clear binding at the moment, rather than later.
     sqlite3_reset(preparedQuery)
     sqlite3_clear_bindings(preparedQuery)
-    set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
+    return element
+  }
+
+  public mutating func object<Element: Atom, Key: SQLiteValue>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey<Key>) -> Element? {
+    if case .rowid(let rowid) = key {
+      // If we use rowid to find, we can first look it up in the fetchedObject table
+      if let fetchedObjectMap = fetchedObjects[ObjectIdentifier(Element.self)] {
+        if let fetchedObject = fetchedObjectMap[rowid] {
+          switch fetchedObject {
+          case .fetched(let element):
+            return (element as! Element)
+          case .deleted:
+            return nil
+          }
+        }
+      }
+    }
+    // Fetch from database.
+    let fetchedElement = Self.object(reader, ofType: ofType, for: key)
+    guard let element = fetchedElement else { // Cannot find this object, if the key happens to be rowid, we can set it to be deleted.
+      if case .rowid(let rowid) = key {
+        set(fetchedObject: .deleted, ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
+      }
+      return nil
+    }
+    // Since we didn't query til done, it is good to reset and clear binding at the moment, rather than later.
+    set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: element._rowid)
     return element
   }
 }

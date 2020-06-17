@@ -94,13 +94,15 @@ public final class SQLiteWorkspace: Workspace {
     let identifier = ObjectIdentifier(fetchedResult)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     queue.async { [weak self] in
+      guard let self = self else { return }
+      let identifier = ObjectIdentifier(Element.self)
       // TODO: Need to check changesTimestamp and possibly refetch in case it is updated.
       let resultPublisher: SQLiteResultPublisher<Element>
-      if let pub = self?.resultPublishers[ObjectIdentifier(Element.self)] {
+      if let pub = self.resultPublishers[identifier] {
         resultPublisher = pub as! SQLiteResultPublisher<Element>
       } else {
         resultPublisher = SQLiteResultPublisher()
-        self?.resultPublishers[ObjectIdentifier(Element.self)] = resultPublisher
+        self.resultPublishers[identifier] = resultPublisher
       }
       resultPublisher.subscribe(fetchedResult: fetchedResult as! SQLiteFetchedResult<Element>, changeHandler: changeHandler, subscription: subscription)
     }
@@ -110,13 +112,29 @@ public final class SQLiteWorkspace: Workspace {
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     queue.async { [weak self] in
-      // TODO: Need to check _changesTimestamp and possibly refetch in case it is updated.
+      guard let self = self else { return }
+      guard let writer = self.writer else { return }
+      let identifier = ObjectIdentifier(Element.self)
+      let changesTimestamp = self.state.tableTimestamps[identifier] ?? -1
+      if object._changesTimestamp < changesTimestamp {
+        // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
+        let fetchedObject = SQLiteObjectRepository.object(writer, ofType: Element.self, for: .rowid(object._rowid) as SQLiteObjectKey<Int64>)
+        guard let updatedObject = fetchedObject else {
+          subscription.cancelled.store(true)
+          changeHandler(.deleted)
+          return
+        }
+        if object != updatedObject { // If object changed, call update.
+          updatedObject._changesTimestamp = changesTimestamp
+          changeHandler(.updated(updatedObject))
+        }
+      }
       let resultPublisher: SQLiteResultPublisher<Element>
-      if let pub = self?.resultPublishers[ObjectIdentifier(Element.self)] {
+      if let pub = self.resultPublishers[identifier] {
         resultPublisher = pub as! SQLiteResultPublisher<Element>
       } else {
         resultPublisher = SQLiteResultPublisher()
-        self?.resultPublishers[ObjectIdentifier(Element.self)] = resultPublisher
+        self.resultPublishers[identifier] = resultPublisher
       }
       resultPublisher.subscribe(object: object, changeHandler: changeHandler, subscription: subscription)
     }
@@ -174,7 +192,6 @@ public final class SQLiteWorkspace: Workspace {
       return
     }
     changesHandler(txnContext)
-    let reader = txnContext.borrowed
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
     let commit = writer.prepareStatement("COMMIT")
@@ -187,9 +204,15 @@ public final class SQLiteWorkspace: Workspace {
       return
     }
     precondition(status == SQLITE_DONE)
+    var reader: SQLiteConnectionPool.Borrowed? = nil
     let newChangesTimestamp = state.changesTimestamp.increment(order: .release) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
     for (identifier, updates) in updatedObjects {
+      state.tableTimestamps[identifier] = newChangesTimestamp
       guard let resultPublisher = resultPublishers[identifier] else { continue }
+      if reader == nil {
+        reader = SQLiteConnectionPool.Borrowed(pointee: writer)
+      }
+      guard let reader = reader else { continue }
       resultPublisher.publishUpdates(updates, reader: reader, changesTimestamp: newChangesTimestamp)
     }
     completionHandler?(true)

@@ -1,10 +1,13 @@
 import FlatBuffers
 
-open class Atom {
+open class Atom: Equatable {
   public final var _rowid: Int64 = -1
   public final var _changesTimestamp: Int64 = -1
   public init() {}
   open class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     fatalError()
+  }
+  public static func == (lhs: Atom, rhs: Atom) -> Bool {
+    return true
   }
 }
