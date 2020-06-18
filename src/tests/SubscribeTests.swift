@@ -308,6 +308,39 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(secondaryFetchedResult[4].name, "name 3")
     XCTAssertEqual(secondaryFetchedResult[5].name, "name 2")
     XCTAssertEqual(secondaryFetchedResult[6].name, "name 5")
-    
+  }
+
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  func testObjectPublisher() {
+    guard let dflat = dflat else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
+      for i in 0..<10 {
+        let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
+        creationRequest.name = "name \(i)"
+        txnContext.submit(creationRequest)
+      }
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    XCTAssertEqual(fetchedResult.count, 10)
+    let firstMonster = fetchedResult[0]
+    XCTAssertEqual(firstMonster.name, "name 0")
+    let pubExpectation = XCTestExpectation(description: "publisher")
+    let cancellable = dflat.publisher(for: firstMonster).subscribe(on: DispatchQueue.global()).sink { newMonster in
+      pubExpectation.fulfill()
+    }
+    let firstExpectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
+      guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(firstMonster) else { return }
+      changeRequest.color = .red
+      txnContext.submit(changeRequest)
+    }) { success in
+      firstExpectation.fulfill()
+    }
+    wait(for: [firstExpectation, pubExpectation], timeout: 10.0)
+    cancellable.cancel()
   }
 }

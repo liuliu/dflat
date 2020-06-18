@@ -174,6 +174,23 @@ public final class SQLiteWorkspace: Workspace {
       }
     }
   }
+  
+  // MARK - Combine-compliant
+
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element> where Element: Equatable {
+    return SQLiteAtomPublisher<Element>(workspace: self, object: object)
+  }
+
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  public func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable {
+    return SQLiteFetchedResultPublisher<Element>()
+  }
+
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable {
+    return SQLiteQueryPublisherBuilder<Element>()
+  }
 
   // MARK - Internal
 

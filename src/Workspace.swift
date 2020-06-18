@@ -30,4 +30,11 @@ public protocol Workspace: Queryable {
   typealias Subscription = WorkspaceSubscription
   func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription where Element: Equatable
   func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription where Element: Equatable
+  // MARK - Combine-compliant
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable
+  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable
 }

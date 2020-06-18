@@ -84,7 +84,6 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
   let table = SQLiteElement.table
   let canUsePartialIndex = query.canUsePartialIndex(availableIndexes)
   var sqlQuery: String
-  // TODO: Need to handle OrderBy by appending DESC (ASC is the default in SQLite).
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
