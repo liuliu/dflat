@@ -183,13 +183,13 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  public func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable {
-    return SQLiteFetchedResultPublisher<Element>()
+  public func publisher<Element: Atom>(for fetchedResult: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable {
+    return SQLiteFetchedResultPublisher<Element>(workspace: self, fetchedResult: fetchedResult)
   }
 
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable {
-    return SQLiteQueryPublisherBuilder<Element>()
+    return SQLiteQueryPublisherBuilder<Element>(workspace: self)
   }
 
   // MARK - Internal

@@ -6,7 +6,7 @@ import Foundation
     /// Capacity of UInt8 the buffer can hold
     var capacity: Int { get set }
     func copy(from ptr: UnsafeRawPointer, count: Int)
-    func initalize(for size: Int)
+    func initialize(for size: Int)
     func reallocate(_ size: UInt32, writerSize: Int, alignment: Int)
 }
 
@@ -34,7 +34,7 @@ public struct ByteBuffer {
             memory.copyMemory(from: ptr, byteCount: count)
         }
         
-        @usableFromInline func initalize(for size: Int) {
+        @usableFromInline func initialize(for size: Int) {
             memory.initializeMemory(as: UInt8.self, repeating: 0, count: size)
         }
         
@@ -73,7 +73,7 @@ public struct ByteBuffer {
             fatalError() // Cannot copy to.
         }
         
-        @usableFromInline func initalize(for size: Int) {
+        @usableFromInline func initialize(for size: Int) {
             // No initialization
         }
         @usableFromInline func reallocate(_ size: UInt32, writerSize: Int, alignment: Int) {
@@ -134,7 +134,7 @@ public struct ByteBuffer {
     init(initialSize size: Int) {
         let size = size.convertToPowerofTwo
         _storage = InternalStorage(count: size, alignment: alignment)
-        _storage.initalize(for: size)
+        _storage.initialize(for: size)
     }
 
 #if swift(>=5.0)
@@ -286,6 +286,7 @@ public struct ByteBuffer {
         alignment = 1
         _storage.memory.deallocate()
         _storage.memory = UnsafeMutableRawPointer.allocate(byteCount: _storage.capacity, alignment: alignment)
+        _storage.initialize(for: _storage.capacity)
     }
     
     /// Resizes the buffer size
