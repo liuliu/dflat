@@ -1,4 +1,5 @@
 import Dflat
+import Dispatch
 import Combine
 
 @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -77,22 +78,17 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
   final class QuerySubscription<S: Subscriber>: Subscription where Failure == S.Failure, Output == S.Input {
     private let subscriber: S
     private weak var workspace: SQLiteWorkspace?
-    private let query: AnySQLiteExpr<Bool>
-    private let limit: Limit
-    private let orderBy: [OrderBy]
+    private let publisher: SQLiteQueryPublisher<Element>
     private var subscription: Workspace.Subscription? = nil
-    init(subscriber: S, workspace: SQLiteWorkspace?, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy]) {
+    init(subscriber: S, workspace: SQLiteWorkspace?, publisher: SQLiteQueryPublisher<Element>) {
       self.subscriber = subscriber
       self.workspace = workspace
-      self.query = query
-      self.limit = limit
-      self.orderBy = orderBy
+      self.publisher = publisher
     }
     func request(_ demand: Subscribers.Demand) {
       guard subscription == nil else { return }
       guard let workspace = workspace else { return }
-      // TODO: This can be optimized. Subscription can share publishers and use publisher to get fetchedResult.
-      let fetchedResult = workspace.fetchFor(Element.self).where(query, limit: limit, orderBy: orderBy)
+      guard let fetchedResult = publisher.initialFetchedResult else { return }
       let _ = subscriber.receive(fetchedResult)
       subscription = workspace.subscribe(fetchedResult: fetchedResult) {[weak self] updatedFetchedResult in
         guard let self = self else { return }
@@ -107,14 +103,25 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
   private let query: AnySQLiteExpr<Bool>
   private let limit: Limit
   private let orderBy: [OrderBy]
+  private var lock: os_unfair_lock_s
+  // Unfortunately, I have to use computed property such that this is thread-safe (and only once).
+  private var initialFetchedResult: FetchedResult<Element>? {
+    os_unfair_lock_lock(&lock)
+    defer { os_unfair_lock_unlock(&lock) }
+    guard _initialFetchedResult == nil else { return _initialFetchedResult }
+    _initialFetchedResult = workspace?.fetchFor(Element.self).where(query, limit: limit, orderBy: orderBy)
+    return _initialFetchedResult
+  }
+  private var _initialFetchedResult: FetchedResult<Element>? = nil
   init<T: Expr>(workspace: SQLiteWorkspace, query: T, limit: Limit, orderBy: [OrderBy]) where T.ResultType == Bool {
+    self.lock = os_unfair_lock()
     self.workspace = workspace
     self.query = AnySQLiteExpr(query, query as! SQLiteExpr)
     self.limit = limit
     self.orderBy = orderBy
   }
   override func receive<S: Subscriber>(subscriber: S) where Failure == S.Failure, Output == S.Input {
-    subscriber.receive(subscription: QuerySubscription(subscriber: subscriber, workspace: workspace, query: query, limit: limit, orderBy: orderBy))
+    subscriber.receive(subscription: QuerySubscription(subscriber: subscriber, workspace: workspace, publisher: self))
   }
 }
 
