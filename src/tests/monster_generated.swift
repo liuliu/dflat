@@ -97,7 +97,7 @@ public struct Monster: FlatBufferObject {
     public var pathCount: Int32 { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? 0 : _accessor.vector(count: o) }
     public func path(at index: Int32) -> MyGame.Sample.Vec3? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : MyGame.Sample.Vec3(_accessor.bb, o: _accessor.vector(at: o) + index * 12) }
     public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 11) }
-    public static func add(pos: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(structOffset: VTOFFSET.pos.p) }
+    public static func add(pos: UnsafeMutableRawPointer?, _ fbb: inout FlatBufferBuilder) { guard let pos = pos else { return }; fbb.create(struct: pos, type: MyGame.Sample.Vec3.self); fbb.add(structOffset: VTOFFSET.pos.p) }
     public static func add(mana: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: mana, def: 150, at: VTOFFSET.mana.p) }
     public static func add(hp: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: hp, def: 100, at: VTOFFSET.hp.p) }
     public static func add(name: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: name, at: VTOFFSET.name.p)  }
@@ -109,7 +109,7 @@ public struct Monster: FlatBufferObject {
     public static func addVectorOf(path: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: path, at: VTOFFSET.path.p)  }
     public static func endMonster(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
     public static func createMonster(_ fbb: inout FlatBufferBuilder,
-    offsetOfPos pos: Offset<UOffset> = Offset(),
+    structOfPos pos: UnsafeMutableRawPointer? = nil,
     mana: Int16 = 150,
     hp: Int16 = 100,
     offsetOfName name: Offset<String> = Offset(),
@@ -180,3 +180,4 @@ public struct Weapon: FlatBufferObject {
 }
 
 // MARK: - FlatBuffers_Generated
+

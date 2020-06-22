@@ -61,7 +61,7 @@ public extension MyGame.Sample.Monster {
 
     static private func _or_pos__x(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      let pos = or.pos
+      guard let pos = or.pos else { return (Float(), false) }
       return (pos.x, false)
     }
 
@@ -75,7 +75,7 @@ public extension MyGame.Sample.Monster {
 
     static private func _or_pos__y(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      let pos = or.pos
+      guard let pos = or.pos else { return (Float(), false) }
       return (pos.y, false)
     }
 
@@ -89,7 +89,7 @@ public extension MyGame.Sample.Monster {
 
     static private func _or_pos__z(_ object: Dflat.Atom) -> (result: Float, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
-      let pos = or.pos
+      guard let pos = or.pos else { return (Float(), false) }
       return (pos.z, false)
     }
 

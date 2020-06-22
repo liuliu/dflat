@@ -39,6 +39,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
       let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest1.name = "name1"
+      creationRequest1.pos = MyGame.Sample.Vec3(x: 10)
       creationRequest1.color = .green
       txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
@@ -53,6 +54,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     XCTAssert(fetchedResult.count == 1)
     let firstMonster = fetchedResult[0]
     XCTAssertEqual(firstMonster.name, "name1")
+    XCTAssertEqual(firstMonster.pos!.x, 10)
   }
 
   func testQueryAndSortByNonIndexedProperty() {
