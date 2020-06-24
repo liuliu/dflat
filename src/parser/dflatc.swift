@@ -84,6 +84,7 @@ struct Field: Decodable {
   var `default`: String?
   var deprecated: Bool
   var attributes: [String]
+  var key: String?
 }
 
 struct Struct: Decodable {
@@ -115,6 +116,22 @@ var SwiftType: [String: String] = [
   "string": "String?",
 ]
 
+var SQLiteType: [String: String] = [
+  "utype": "INTEGER",
+  "bool": "INTEGER",
+  "byte": "INTEGER",
+  "ubyte": "INTEGER",
+  "short": "INTEGER",
+  "ushort": "INTEGER",
+  "int": "INTEGER",
+  "uint": "INTEGER",
+  "long": "INTEGER",
+  "ulong": "INTEGER",
+  "float": "REAL",
+  "double": "REAL",
+  "string": "TEXT",
+]
+
 extension String {
   func firstLowercased() -> String {
     prefix(1).lowercased() + dropFirst()
@@ -127,6 +144,9 @@ extension String {
 extension Field {
   var isPrimary: Bool {
     attributes.contains("primary")
+  }
+  var hasIndex: Bool {
+    attributes.contains("indexed")
   }
 }
 
@@ -275,7 +295,7 @@ func GetEnumDefaultValue(_ en: String) -> String {
     return ".\(enumVal.name.firstLowercased())"
 }
 
-func GetFieldDefaultValue(_ field: Field) -> String {
+func GetFieldDefaultValue(_ field: Field, required: Bool = false) -> String {
   if let val = field.default {
     if field.type.type == .enum {
       let enumDef = enumDefs[field.type.enum!]!
@@ -284,7 +304,7 @@ func GetFieldDefaultValue(_ field: Field) -> String {
     }
     return val
   }
-  if field.isPrimary && field.type.type == .string {
+  if (field.isPrimary || required) && field.type.type == .string {
     return "\"\""
   }
   if field.type.type == .string || field.type.type == .struct ||
@@ -592,9 +612,38 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
   code += "}\n"
 }
 
+func GetTableName(_ structDef: Struct) -> String {
+  var names: [String] = structDef.namespace.map { $0.lowercased() }
+  names.append(structDef.name.lowercased())
+  return names.joined(separator: "__")
+}
+
+func GenSQLiteAtom(_ structDef: Struct, code: inout String) {
+  code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
+  code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
+  // TODO: I need to aggregate all index fields.
+  code += "  public static var indexFields: [String] { [] }\n"
+  code += "}\n"
+}
+
+func GetPrimaryKeys(_ structDef: Struct) -> [Field] {
+  var pk = [Field]()
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    if field.isPrimary {
+      pk.append(field)
+    }
+  }
+  return pk
+}
+
+func GetDataFields(_ structDef: Struct) -> [Field] {
+  return structDef.fields.filter({ IsDataField($0) })
+}
+
 func GenChangeRequest(_ structDef: Struct, code: inout String) {
   if structDef.namespace.count > 0 {
-    code += "extension \(structDef.namespace.joined(separator: ".")) {\n"
+    code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
   }
   code += "\npublic final class \(structDef.name)ChangeRequest: Dflat.ChangeRequest {\n"
   code += "  public static var atomType: Any.Type { \(structDef.name).self }\n"
@@ -619,9 +668,91 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     guard IsDataField(field) else { continue }
     code += "    \(field.name) = o.\(field.name)\n"
   }
+  let tableName = GetTableName(structDef)
+  let primaryKeys = GetPrimaryKeys(structDef)
   code += "  }\n"
+  code += "  static public func changeRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest? {\n"
+  code += "    let transactionContext = SQLiteTransactionContext.current!\n"
+  code += "    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([\(primaryKeys.map { "o." + $0.name }.joined(separator: ", "))])\n"
+  code += "    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: \(structDef.name).self, for: key)\n"
+  code += "    return u.map { \(structDef.name)ChangeRequest(type: .update, $0) }\n"
+  code += "  }\n"
+  code += "  static public func creationRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest {\n"
+  code += "    let creationRequest = \(structDef.name)ChangeRequest(type: .creation, o)\n"
+  code += "    creationRequest._rowid = -1\n"
+  code += "    return creationRequest\n"
+  code += "  }\n"
+  code += "  static public func creationRequest() -> \(structDef.name)ChangeRequest {\n"
+  code += "    return \(structDef.name)ChangeRequest(type: .creation)\n"
+  code += "  }\n"
+  code += "  static public func deletionRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest? {\n"
+  code += "    let transactionContext = SQLiteTransactionContext.current!\n"
+  code += "    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([\(primaryKeys.map { "o." + $0.name }.joined(separator: ", "))])\n"
+  code += "    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: \(structDef.name).self, for: key)\n"
+  code += "    return u.map { \(structDef.name)ChangeRequest(type: .deletion, $0) }\n"
+  code += "  }\n"
+  code += "  var _atom: \(structDef.name) {\n"
+  code += "    let atom = \(structDef.name)(\(GetDataFields(structDef).map { $0.name + ": " + $0.name }.joined(separator: ", ")))\n"
+  code += "    atom._rowid = _rowid\n"
+  code += "    return atom\n"
+  code += "  }\n"
+  code += "  static public func setUpSchema(_ toolbox: PersistenceToolbox) {\n"
+  code += "    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }\n"
+  code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName) (rowid INTEGER PRIMARY KEY AUTOINCREMENT, "
+  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset) \(SQLiteType[$0.element.type.type.rawValue]!)" }.joined(separator: ", ")), p BLOB, UNIQUE("
+  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")))\", nil, nil, nil)\n"
+  // TODO: Create table for indexes.
+  code += "  }\n"
+  code += "  public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {\n"
+  code += "    guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }\n"
+  code += "    switch _type {\n"
+  code += "    case .creation:\n"
+  code += "      guard let insert = toolbox.connection.prepareStatement(\"INSERT INTO \(tableName) (\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")), p) VALUE (?1, \(primaryKeys.enumerated().map { "?\($0.offset + 2)" }.joined(separator: ", ")))\") else { return nil }\n"
+  for (i, field) in primaryKeys.enumerated() {
+    code += "      \(field.name).bindSQLite(insert, parameterId: \(i + 1))\n"
+  }
+  code += "      let atom = self._atom\n"
+  code += "      toolbox.flatBufferBuilder.clear()\n"
+  code += "      let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)\n"
+  code += "      toolbox.flatBufferBuilder.finish(offset: offset)\n"
+  code += "      let byteBuffer = toolbox.flatBufferBuilder.buffer\n"
+  code += "      let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)\n"
+  code += "      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)\n"
+  code += "      sqlite3_bind_blob(insert, \(primaryKeys.count + 1), memory, Int32(byteBuffer.size), SQLITE_STATIC)\n"
+  code += "      guard SQLITE_DONE == sqlite3_step(insert) else { return nil }\n"
+  code += "      _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)\n"
+  code += "      _type = .none\n"
+  code += "      atom._rowid = _rowid\n"
+  code += "      return .inserted(atom)\n"
+  code += "    case .update:\n"
+  code += "      guard let update = toolbox.connection.prepareStatement(\"UPDATE \(tableName) SET \(primaryKeys.enumerated().map { "__pk\($0.offset)=?\($0.offset + 1)" }.joined(separator: ", ")), p=?\(primaryKeys.count + 1) WHERE rowid=?\(primaryKeys.count + 2) LIMIT 1\") else { return nil }\n"
+  for (i, field) in primaryKeys.enumerated() {
+    code += "      \(field.name).bindSQLite(insert, parameterId: \(i + 1))\n"
+  }
+  code += "      let atom = self._atom\n"
+  code += "      toolbox.flatBufferBuilder.clear()\n"
+  code += "      let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)\n"
+  code += "      toolbox.flatBufferBuilder.finish(offset: offset)\n"
+  code += "      let byteBuffer = toolbox.flatBufferBuilder.buffer\n"
+  code += "      let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)\n"
+  code += "      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)\n"
+  code += "      sqlite3_bind_blob(update, \(primaryKeys.count + 1), memory, Int32(byteBuffer.size), SQLITE_STATIC)\n"
+  code += "      _rowid.bindSQLite(update, parameterId: \(primaryKeys.count + 2))\n"
+  code += "      guard SQLITE_DONE == sqlite3_step(update) else { return nil }\n"
+  code += "      _type = .none\n"
+  code += "      return .updated(atom)\n"
+  code += "    case .deletion:\n"
+  code += "      guard let deletion = toolbox.connection.prepareStatement(\"DELETE FROM \(tableName) WHERE rowid=?1\") else { return nil }\n"
+  code += "      _rowid.bindSQLite(deletion, parameterId: 1)\n"
+  code += "      guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }\n"
+  code += "      _type = .none\n"
+  code += "      return .deleted(_rowid)\n"
+  code += "    case .none:\n"
+  code += "      preconditionFailure()\n"
+  code += "  }\n"
+  code += "}\n"
   if structDef.namespace.count > 0 {
-    code += "}\n"
+    code += "\n}\n"
     code += "\n// MARK - \(structDef.namespace.joined(separator: "."))\n"
   }
 }
@@ -646,13 +777,143 @@ func GenMutating(schema: Schema, outputPath: String) {
     guard !structDef.fixed else { continue }
     if structDef.name == schema.root {
       GenStructSerializer(structDef, code: &code)
+      break
     }
   }
   code += "\n// MARK - ChangeRequest\n"
   for structDef in schema.structs {
     guard !structDef.fixed else { continue }
     if structDef.name == schema.root {
+      GenSQLiteAtom(structDef, code: &code)
       GenChangeRequest(structDef, code: &code)
+      break
+    }
+  }
+}
+
+func GetKeyName(keyPaths: [Field], field: Field, pkCount: inout Int) -> String {
+  if field.isPrimary {
+    let key = "__pk\(pkCount)"
+    pkCount += 1
+    return key
+  } else {
+    return keyPaths.map { $0.name + "__" }.joined() + field.name
+  }
+}
+
+func GenQueryForField(_ structDef: Struct, keyPaths: [Field], field: Field, pkCount: inout Int, code: inout String) {
+  let key = GetKeyName(keyPaths: keyPaths, field: field, pkCount: &pkCount)
+  let expandedName = keyPaths.map { $0.name + "__" }.joined() + field.name
+  switch field.type.type {
+  case .union:
+    break
+  case .struct:
+    code += "\n  struct \(field.name) {\n"
+    let subStructDef = structDefs[field.type.struct!]!
+    let newKeyPaths = keyPaths + [field]
+    for field in subStructDef.fields {
+      guard IsDataField(field) else { continue }
+      GenQueryForField(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, code: &code)
+    }
+    code += "\n  }\n"
+    break
+  case .vector: // We cannot query vector, skip.
+    break
+  case .string:
+    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: String, unknown: Bool) {\n"
+    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let tr\(i + 1) = tr\(i).\(keyPath.name) else { return (\"\", true) }\n"
+    }
+    if !field.isPrimary {
+      code += "    guard let s = tr\(keyPaths.count).\(field.name) else { return (\"\", true) }\n"
+      code += "    return (s, false)\n"
+    } else {
+      code += "    return (tr\(keyPaths.count).\(field.name)!, false)\n"
+    }
+    code += "  }\n"
+    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {\n"
+    code += "    let or0 = object\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let or\(i + 1) = or\(i).\(keyPath.name) else { return (\"\", true) }\n"
+    }
+    if !field.isPrimary {
+      code += "    guard let s = or\(keyPaths.count).\(field.name) else { return (\"\", true) }\n"
+      code += "    return (s, false)\n"
+    } else {
+      code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+    }
+    code += "  }\n"
+    if keyPaths.count > 0 {
+      code += "  public "
+    } else {
+      code += "  "
+    }
+    code += "static let \(field.name): FieldExpr<String> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
+  case .enum:
+    let enumDef = enumDefs[field.type.enum!]!
+    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
+    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let tr\(i + 1) = tr\(i).\(keyPath.name) else { return (\(GetFieldDefaultValue(field, required: true)), true) }\n"
+    }
+    code += "    return (\(GetFullyQualifiedName(enumDef))(rawValue: tr\(keyPaths.count).\(field.name).rawValue)!, false)\n"
+    code += "  }\n"
+    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
+    code += "    let or0 = object\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let or\(i + 1) = or\(i).\(keyPath.name) else { return (\(GetFieldDefaultValue(field, required: true)), true) }\n"
+    }
+    code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+    code += "  }\n"
+    if keyPaths.count > 0 {
+      code += "  public "
+    } else {
+      code += "  "
+    }
+    code += "static let \(field.name): FieldExpr<\(GetFullyQualifiedName(enumDef))> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
+  default: // These are the simple types (string, scalar) or enum
+    let swiftType = SwiftType[field.type.type.rawValue]!
+    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
+    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let tr\(i + 1) = tr\(i).\(keyPath.name) else { return (\(GetFieldDefaultValue(field, required: true)), true) }\n"
+    }
+    code += "    return (tr\(keyPaths.count).\(field.name), false)\n"
+    code += "  }\n"
+    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(swiftType), unknown: Bool) {\n"
+    code += "    let or0 = object\n"
+    for (i, keyPath) in keyPaths.enumerated() {
+      code += "    guard let or\(i + 1) = or\(i).\(keyPath.name) else { return (\(GetFieldDefaultValue(field, required: true)), true) }\n"
+    }
+    code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+    code += "  }\n"
+    if keyPaths.count > 0 {
+      code += "  public "
+    } else {
+      code += "  "
+    }
+    code += "static let \(field.name): FieldExpr<\(swiftType)> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
+  }
+}
+
+func GenQueryRoot(_ structDef: Struct, code: inout String) {
+  code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
+  var pkCount = 0
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    GenQueryForField(structDef, keyPaths: [], field: field, pkCount: &pkCount, code: &code)
+  }
+  code += "}\n"
+}
+
+func GenQuery(schema: Schema, outputPath: String) {
+  var code = "import Dflat\nimport FlatBuffers\n"
+  for structDef in schema.structs {
+    guard !structDef.fixed else { continue }
+    if structDef.name == schema.root {
+      GenQueryRoot(structDef, code: &code)
+      break
     }
   }
   print(code)
@@ -671,6 +932,7 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   }
   GenDataModel(schema: schema, outputPath: outputPath)
   GenMutating(schema: schema, outputPath: outputPath)
+  GenQuery(schema: schema, outputPath: outputPath)
 }
 
 var outputPath: String? = nil

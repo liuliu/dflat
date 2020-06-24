@@ -101,14 +101,14 @@ public extension MyGame.Sample.Monster {
     public static func match<T: MyGame__Sample__Monster__equipped>(_ ofType: T.Type) -> FieldExpr<Bool> {
       return ofType.match__Monster__equipped
     }
-    public static func `as`<T: MyGame__Sample__Monster__equipped>(_ ofType: T.Type) -> T.AsType.Type {
-      return T.AsType.self
+    public static func `as`<T: MyGame__Sample__Monster__equipped>(_ ofType: T.Type) -> T.AsType__Monster__equipped.Type {
+      return T.AsType__Monster__equipped.self
     }
   }
 }
 
 public protocol MyGame__Sample__Monster__equipped {
-  associatedtype AsType
+  associatedtype AsType__Monster__equipped
   static var match__Monster__equipped: FieldExpr<Bool> { get }
 }
 
@@ -152,6 +152,6 @@ extension MyGame.Sample.Weapon: MyGame__Sample__Monster__equipped {
 
     public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Weapon_name", primaryKey: false, hasIndex: false, tableReader: _tr_equipped__Weapon_name, objectReader: _or_equipped__Weapon_name)
   }
-  public typealias AsType = _equipped__Weapon
+  public typealias AsType__Monster__equipped = _equipped__Weapon
 }
 
