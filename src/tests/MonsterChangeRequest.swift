@@ -52,7 +52,7 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
   var _type: FlatBuffers_Generated.MyGame.Sample.Equipment {
-    self.map { $0._type } ?? FlatBuffers_Generated.MyGame.Sample.Equipment.none_
+    self.map { $0._type } ?? .none_
   }
 }
 

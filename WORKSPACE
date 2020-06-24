@@ -1,4 +1,4 @@
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 git_repository(
@@ -23,6 +23,13 @@ git_repository(
   name = "bazel_skylib",
   remote = "https://github.com/bazelbuild/bazel-skylib.git",
   tag = "0.9.0",
+)
+
+new_git_repository(
+  name = "flatbuffers",
+  remote = "https://github.com/google/flatbuffers.git",
+  commit = "14baf45c90a076d405e75cfc41874ffff862fb72",
+  build_file = "flatbuffers.BUILD",
 )
 
 load(
