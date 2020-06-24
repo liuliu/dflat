@@ -136,18 +136,17 @@ extension MyGame.Sample.Weapon: MyGame__Sample__Monster__equipped {
 
     static private func _tr_equipped__Weapon_name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
       let tr = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
-      guard let name = tr.equipped(type: FlatBuffers_Generated.MyGame.Sample.Weapon.self)?.name else { return (String(), true) }
+      guard let tr1 = tr.equipped(type: FlatBuffers_Generated.MyGame.Sample.Weapon.self) else { return ("", true) }
+      guard let name = tr1.name else { return (String(), true) }
       return (name, false)
     }
 
     static private func _or_equipped__Weapon_name(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {
       let or = object as! MyGame.Sample.Monster
       guard let equipped = or.equipped else { return (String(), true) }
-      switch equipped {
-        case .weapon(let weapon):
-          guard let name = weapon.name else { return (String(), true) }
-          return (name, false)
-      }
+      guard case .weapon(let weapon) = equipped else { return ("", true) }
+      guard let name = weapon.name else { return (String(), true) }
+      return (name, false)
     }
 
     public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Weapon_name", primaryKey: false, hasIndex: false, tableReader: _tr_equipped__Weapon_name, objectReader: _or_equipped__Weapon_name)
