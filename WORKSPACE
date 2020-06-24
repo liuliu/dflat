@@ -27,8 +27,8 @@ git_repository(
 
 new_git_repository(
   name = "flatbuffers",
-  remote = "https://github.com/google/flatbuffers.git",
-  commit = "14baf45c90a076d405e75cfc41874ffff862fb72",
+  remote = "https://github.com/liuliu/flatbuffers.git",
+  commit = "f4b91a02ecfa4cae97bbf72cdeb92446f3e716e2",
   build_file = "flatbuffers.BUILD",
 )
 

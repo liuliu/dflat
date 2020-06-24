@@ -76,12 +76,15 @@ public struct Monster: FlatBufferObject {
         case weapons = 18
         case equippedType = 20
         case equipped = 22
-        case path = 24
+        case equipsType = 24
+        case equips = 26
+        case colors = 28
+        case path = 30
         var v: Int32 { Int32(self.rawValue) }
         var p: VOffset { self.rawValue }
     }
 
-    public var pos: MyGame.Sample.Vec3? { let o = _accessor.offset(VTOFFSET.pos.v); return o == 0 ? nil : MyGame.Sample.Vec3(_accessor.bb, o: o + _accessor.postion) }
+    public var pos: FlatBuffers_Generated.MyGame.Sample.Vec3? { let o = _accessor.offset(VTOFFSET.pos.v); return o == 0 ? nil : FlatBuffers_Generated.MyGame.Sample.Vec3(_accessor.bb, o: o + _accessor.postion) }
     public var mana: Int16 { let o = _accessor.offset(VTOFFSET.mana.v); return o == 0 ? 150 : _accessor.readBuffer(of: Int16.self, at: o) }
     public var hp: Int16 { let o = _accessor.offset(VTOFFSET.hp.v); return o == 0 ? 100 : _accessor.readBuffer(of: Int16.self, at: o) }
     public var name: String? { let o = _accessor.offset(VTOFFSET.name.v); return o == 0 ? nil : _accessor.string(at: o) }
@@ -89,23 +92,32 @@ public struct Monster: FlatBufferObject {
     public var inventoryCount: Int32 { let o = _accessor.offset(VTOFFSET.inventory.v); return o == 0 ? 0 : _accessor.vector(count: o) }
     public func inventory(at index: Int32) -> UInt8 { let o = _accessor.offset(VTOFFSET.inventory.v); return o == 0 ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1) }
     public var inventory: [UInt8] { return _accessor.getVector(at: VTOFFSET.inventory.v) ?? [] }
-    public var color: MyGame.Sample.Color { let o = _accessor.offset(VTOFFSET.color.v); return o == 0 ? .blue : MyGame.Sample.Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .blue }
+    public var color: FlatBuffers_Generated.MyGame.Sample.Color { let o = _accessor.offset(VTOFFSET.color.v); return o == 0 ? .blue : FlatBuffers_Generated.MyGame.Sample.Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .blue }
     public var weaponsCount: Int32 { let o = _accessor.offset(VTOFFSET.weapons.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func weapons(at index: Int32) -> MyGame.Sample.Weapon? { let o = _accessor.offset(VTOFFSET.weapons.v); return o == 0 ? nil : MyGame.Sample.Weapon(_accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4)) }
-    public var equippedType: MyGame.Sample.Equipment { let o = _accessor.offset(VTOFFSET.equippedType.v); return o == 0 ? .none_ : MyGame.Sample.Equipment(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
+    public func weapons(at index: Int32) -> FlatBuffers_Generated.MyGame.Sample.Weapon? { let o = _accessor.offset(VTOFFSET.weapons.v); return o == 0 ? nil : FlatBuffers_Generated.MyGame.Sample.Weapon(_accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4)) }
+    public var equippedType: FlatBuffers_Generated.MyGame.Sample.Equipment { let o = _accessor.offset(VTOFFSET.equippedType.v); return o == 0 ? .none_ : FlatBuffers_Generated.MyGame.Sample.Equipment(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
     public func equipped<T: FlatBufferObject>(type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.equipped.v); return o == 0 ? nil : _accessor.union(o) }
+    public var equipsTypeCount: Int32 { let o = _accessor.offset(VTOFFSET.equipsType.v); return o == 0 ? 0 : _accessor.vector(count: o) }
+    public func equipsType(at index: Int32) -> FlatBuffers_Generated.MyGame.Sample.Equipment? { let o = _accessor.offset(VTOFFSET.equipsType.v); return o == 0 ? FlatBuffers_Generated.MyGame.Sample.Equipment.none_ : FlatBuffers_Generated.MyGame.Sample.Equipment(rawValue: _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)) }
+    public var equipsCount: Int32 { let o = _accessor.offset(VTOFFSET.equips.v); return o == 0 ? 0 : _accessor.vector(count: o) }
+    public func equips<T: FlatBufferObject>(at index: Int32, type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.equips.v); return o == 0 ? nil : _accessor.directUnion(_accessor.vector(at: o) + index * 4) }
+    public var colorsCount: Int32 { let o = _accessor.offset(VTOFFSET.colors.v); return o == 0 ? 0 : _accessor.vector(count: o) }
+    public func colors(at index: Int32) -> FlatBuffers_Generated.MyGame.Sample.Color? { let o = _accessor.offset(VTOFFSET.colors.v); return o == 0 ? FlatBuffers_Generated.MyGame.Sample.Color.red : FlatBuffers_Generated.MyGame.Sample.Color(rawValue: _accessor.directRead(of: Int8.self, offset: _accessor.vector(at: o) + index * 1)) }
     public var pathCount: Int32 { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func path(at index: Int32) -> MyGame.Sample.Vec3? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : MyGame.Sample.Vec3(_accessor.bb, o: _accessor.vector(at: o) + index * 12) }
-    public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 11) }
-    public static func add(pos: UnsafeMutableRawPointer?, _ fbb: inout FlatBufferBuilder) { guard let pos = pos else { return }; fbb.create(struct: pos, type: MyGame.Sample.Vec3.self); fbb.add(structOffset: VTOFFSET.pos.p) }
+    public func path(at index: Int32) -> FlatBuffers_Generated.MyGame.Sample.Vec3? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : FlatBuffers_Generated.MyGame.Sample.Vec3(_accessor.bb, o: _accessor.vector(at: o) + index * 12) }
+    public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 14) }
+    public static func add(pos: UnsafeMutableRawPointer?, _ fbb: inout FlatBufferBuilder) { guard let pos = pos else { return }; fbb.create(struct: pos, type: FlatBuffers_Generated.MyGame.Sample.Vec3.self); fbb.add(structOffset: VTOFFSET.pos.p) }
     public static func add(mana: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: mana, def: 150, at: VTOFFSET.mana.p) }
     public static func add(hp: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: hp, def: 100, at: VTOFFSET.hp.p) }
     public static func add(name: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: name, at: VTOFFSET.name.p)  }
     public static func addVectorOf(inventory: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: inventory, at: VTOFFSET.inventory.p)  }
-    public static func add(color: MyGame.Sample.Color, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 2, at: VTOFFSET.color.p) }
+    public static func add(color: FlatBuffers_Generated.MyGame.Sample.Color, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 2, at: VTOFFSET.color.p) }
     public static func addVectorOf(weapons: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: weapons, at: VTOFFSET.weapons.p)  }
-    public static func add(equippedType: MyGame.Sample.Equipment, _ fbb: inout FlatBufferBuilder) { fbb.add(element: equippedType.rawValue, def: 0, at: VTOFFSET.equippedType.p) }
+    public static func add(equippedType: FlatBuffers_Generated.MyGame.Sample.Equipment, _ fbb: inout FlatBufferBuilder) { fbb.add(element: equippedType.rawValue, def: 0, at: VTOFFSET.equippedType.p) }
     public static func add(equipped: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: equipped, at: VTOFFSET.equipped.p)  }
+    public static func addVectorOf(equipsType: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: equipsType, at: VTOFFSET.equipsType.p)  }
+    public static func addVectorOf(equips: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: equips, at: VTOFFSET.equips.p)  }
+    public static func addVectorOf(colors: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: colors, at: VTOFFSET.colors.p)  }
     public static func addVectorOf(path: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: path, at: VTOFFSET.path.p)  }
     public static func endMonster(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
     public static func createMonster(_ fbb: inout FlatBufferBuilder,
@@ -114,10 +126,13 @@ public struct Monster: FlatBufferObject {
     hp: Int16 = 100,
     offsetOfName name: Offset<String> = Offset(),
     vectorOfInventory inventory: Offset<UOffset> = Offset(),
-    color: MyGame.Sample.Color = .blue,
+    color: FlatBuffers_Generated.MyGame.Sample.Color = .blue,
     vectorOfWeapons weapons: Offset<UOffset> = Offset(),
-    equippedType: MyGame.Sample.Equipment = .none_,
+    equippedType: FlatBuffers_Generated.MyGame.Sample.Equipment = .none_,
     offsetOfEquipped equipped: Offset<UOffset> = Offset(),
+    vectorOfEquipsType equipsType: Offset<UOffset> = Offset(),
+    vectorOfEquips equips: Offset<UOffset> = Offset(),
+    vectorOfColors colors: Offset<UOffset> = Offset(),
     vectorOfPath path: Offset<UOffset> = Offset()) -> Offset<UOffset> {
         let __start = Monster.startMonster(&fbb)
         Monster.add(pos: pos, &fbb)
@@ -129,6 +144,9 @@ public struct Monster: FlatBufferObject {
         Monster.addVectorOf(weapons: weapons, &fbb)
         Monster.add(equippedType: equippedType, &fbb)
         Monster.add(equipped: equipped, &fbb)
+        Monster.addVectorOf(equipsType: equipsType, &fbb)
+        Monster.addVectorOf(equips: equips, &fbb)
+        Monster.addVectorOf(colors: colors, &fbb)
         Monster.addVectorOf(path: path, &fbb)
         return Monster.endMonster(&fbb, start: __start)
     }
@@ -180,4 +198,5 @@ public struct Weapon: FlatBufferObject {
 }
 
 // MARK: - FlatBuffers_Generated
+
 

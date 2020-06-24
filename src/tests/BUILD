@@ -5,9 +5,9 @@ swift_library(
   name = "Tests_lib",
   srcs = [
     "monster_generated.swift",
-    "Monster.swift",
-    "MonsterChangeRequest.swift",
-    "MonsterAttributes.swift",
+    "monster_data_model_generated.swift",
+    "monster_mutating_generated.swift",
+    "monster_query_generated.swift",
     "SQLiteWorkspaceCRUDTests.swift",
     "SubscribeTests.swift",
     "ObjectRepositoryTests.swift",
