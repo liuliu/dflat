@@ -139,7 +139,7 @@ public final class SQLiteWorkspace: Workspace {
       let changesTimestamp = self.state.tableTimestamps[identifier] ?? -1
       if object._changesTimestamp < changesTimestamp {
         // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
-        let fetchedObject = SQLiteObjectRepository.object(writer, ofType: Element.self, for: .rowid(object._rowid) as SQLiteObjectKey<Int64>)
+        let fetchedObject = SQLiteObjectRepository.object(writer, ofType: Element.self, for: .rowid(object._rowid))
         guard let updatedObject = fetchedObject else {
           subscription.cancelled.store(true)
           changeHandler(.deleted)

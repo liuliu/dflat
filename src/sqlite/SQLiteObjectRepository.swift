@@ -7,9 +7,9 @@ enum SQLiteFetchedObject {
   case deleted
 }
 
-public enum SQLiteObjectKey<Key: SQLiteValue> {
+public enum SQLiteObjectKey {
   case rowid(_: Int64)
-  case primaryKey(_: Key)
+  case primaryKey(_: [SQLiteBinding])
 }
 
 public struct SQLiteObjectRepository {
@@ -38,7 +38,7 @@ public struct SQLiteObjectRepository {
     }
   }
 
-  static public func object<Element: Atom, Key: SQLiteValue>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey<Key>) -> Element? {
+  static public func object<Element: Atom>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey) -> Element? {
     let SQLiteElement = Element.self as! SQLiteAtom.Type
     let preparedQuery: OpaquePointer
     switch key {
@@ -47,9 +47,27 @@ public struct SQLiteObjectRepository {
       preparedQuery = statement
       rowid.bindSQLite(preparedQuery, parameterId: 1)
     case .primaryKey(let primaryKey):
-      guard let statement = reader.prepareStatement("SELECT rowid,p FROM \(SQLiteElement.table) WHERE __pk=?1 LIMIT 1") else { return nil }
-      preparedQuery = statement
-      primaryKey.bindSQLite(preparedQuery, parameterId: 1)
+      precondition(primaryKey.count > 0)
+      if primaryKey.count == 1 {
+        guard let statement = reader.prepareStatement("SELECT rowid,p FROM \(SQLiteElement.table) WHERE __pk0=?1 LIMIT 1") else { return nil }
+        preparedQuery = statement
+        primaryKey[0].bindSQLite(preparedQuery, parameterId: 1)
+      } else {
+        var query = "SELECT rowid,p FROM \(SQLiteElement.table) WHERE "
+        for (i, _) in primaryKey.enumerated() {
+          if i == 0 {
+            query += "__pk0=?1 "
+          } else {
+            query += "AND __pk\(i)=?\(i + 1) "
+          }
+        }
+        query += "LIMIT 1"
+        guard let statement = reader.prepareStatement(query) else { return nil }
+        preparedQuery = statement
+        for (i, pk) in primaryKey.enumerated() {
+          pk.bindSQLite(preparedQuery, parameterId: Int32(i + 1))
+        }
+      }
     }
     let status = sqlite3_step(preparedQuery)
     if SQLITE_DONE == status { // Cannot find this object, if the key happens to be rowid, we can set it to be deleted.
@@ -67,7 +85,7 @@ public struct SQLiteObjectRepository {
     return element
   }
 
-  public mutating func object<Element: Atom, Key: SQLiteValue>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey<Key>) -> Element? {
+  public mutating func object<Element: Atom>(_ reader: SQLiteConnection, ofType: Element.Type, for key: SQLiteObjectKey) -> Element? {
     if case .rowid(let rowid) = key {
       // If we use rowid to find, we can first look it up in the fetchedObject table
       if let fetchedObjectMap = fetchedObjects[ObjectIdentifier(Element.self)] {
