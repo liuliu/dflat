@@ -81,7 +81,7 @@ extension MyGame.Sample.Monster {
     let or0 = object as! MyGame.Sample.Monster
     return (or0.color, false)
   }
-  static let color: FieldExpr<MyGame.Sample.Color> = FieldExpr(name: "color", primaryKey: false, hasIndex: false, tableReader: _tr__color, objectReader: _or__color)
+  static let color: FieldExpr<MyGame.Sample.Color> = FieldExpr(name: "__pk1", primaryKey: true, hasIndex: false, tableReader: _tr__color, objectReader: _or__color)
 
   struct equipped {
 
@@ -103,6 +103,8 @@ extension MyGame.Sample.Monster {
     switch o {
     case .weapon:
       return (1, false)
+    case .orb:
+      return (2, false)
     }
   }
   public static let _type: FieldExpr<Int32> = FieldExpr(name: "equipped__type", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__type, objectReader: _or__equipped__type)
@@ -147,5 +149,40 @@ extension MyGame.Sample.Weapon: MyGame__Sample__Monster__equipped {
   public static let damage: FieldExpr<Int16> = FieldExpr(name: "equipped__Weapon__damage", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__Weapon__damage, objectReader: _or__equipped__Weapon__damage)
   }
   public typealias AsType__Monster__equipped = _equipped__Weapon
+
+}
+
+extension MyGame.Sample.Orb: MyGame__Sample__Monster__equipped {
+  public static let match__Monster__equipped: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (MyGame.Sample.Monster.equipped._type == 2)
+
+  public struct _equipped__Orb {
+
+  static private func _tr__equipped__Orb__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
+    let tr0 = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: FlatBuffers_Generated.MyGame.Sample.Orb.self) else { return ("", true) }
+    guard let s = tr1.name else { return ("", true) }
+    return (s, false)
+  }
+  static private func _or__equipped__Orb__name(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {
+    let or0 = object as! MyGame.Sample.Monster
+    guard case let .orb(or1) = or0.equipped else { return ("", true) }
+    guard let s = or1.name else { return ("", true) }
+    return (s, false)
+  }
+  public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Orb__name", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__Orb__name, objectReader: _or__equipped__Orb__name)
+
+  static private func _tr__equipped__Orb__color(_ table: ByteBuffer) -> (result: MyGame.Sample.Color, unknown: Bool) {
+    let tr0 = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: FlatBuffers_Generated.MyGame.Sample.Orb.self) else { return (.red, true) }
+    return (MyGame.Sample.Color(rawValue: tr1.color.rawValue)!, false)
+  }
+  static private func _or__equipped__Orb__color(_ object: Dflat.Atom) -> (result: MyGame.Sample.Color, unknown: Bool) {
+    let or0 = object as! MyGame.Sample.Monster
+    guard case let .orb(or1) = or0.equipped else { return (.red, true) }
+    return (or1.color, false)
+  }
+  public static let color: FieldExpr<MyGame.Sample.Color> = FieldExpr(name: "equipped__Orb__color", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__Orb__color, objectReader: _or__equipped__Orb__color)
+  }
+  public typealias AsType__Monster__equipped = _equipped__Orb
 
 }

@@ -8,9 +8,9 @@ class ObjectRepositoryTests: XCTestCase {
 
   func testSetUpdatedObjects() {
     var objectRepository = SQLiteObjectRepository()
-    let monster1 = MyGame.Sample.Monster(name: "name1", pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
+    let monster1 = MyGame.Sample.Monster(name: "name1", color: .blue, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
     monster1._rowid = 1
-    let monster2 = MyGame.Sample.Monster(name: "name2", pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
+    let monster2 = MyGame.Sample.Monster(name: "name2", color: .blue, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
     monster2._rowid = 2
     objectRepository.set(updatedObject: .inserted(monster1), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
     objectRepository.set(updatedObject: .updated(monster2), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
@@ -50,9 +50,9 @@ class ObjectRepositoryTests: XCTestCase {
 
   func testSetFetchedObjects() {
     var objectRepository = SQLiteObjectRepository()
-    let monster1 = MyGame.Sample.Monster(name: "name1", pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
+    let monster1 = MyGame.Sample.Monster(name: "name1", color: .blue, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
     monster1._rowid = 1
-    let monster2 = MyGame.Sample.Monster(name: "name2", pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
+    let monster2 = MyGame.Sample.Monster(name: "name2", color: .blue, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [], equipped: nil, path: [])
     monster2._rowid = 2
     objectRepository.set(fetchedObject: .fetched(monster1), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.Monster.self), for: 1)
     objectRepository.set(fetchedObject: .fetched(monster2), ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.Monster.self), for: 2)

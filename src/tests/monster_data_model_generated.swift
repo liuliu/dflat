@@ -16,6 +16,7 @@ public enum Color: Int8, DflatFriendlyValue {
 
 public enum Equipment: Equatable {
   case weapon(_: Weapon)
+  case orb(_: Orb)
 }
 
 public struct Vec3: Equatable {
@@ -47,17 +48,30 @@ public struct Weapon: Equatable {
   }
 }
 
+public struct Orb: Equatable {
+  var name: String?
+  var color: Color
+  public init(name: String? = nil, color: Color = .red) {
+    self.name = name
+    self.color = color
+  }
+  public init(_ obj: FlatBuffers_Generated.MyGame.Sample.Orb) {
+    self.name = obj.name
+    self.color = Color(rawValue: obj.color.rawValue) ?? .red
+  }
+}
+
 public final class Monster: Dflat.Atom, Equatable {
   public static func == (lhs: Monster, rhs: Monster) -> Bool {
     guard lhs.pos == rhs.pos else { return false }
     guard lhs.mana == rhs.mana else { return false }
     guard lhs.hp == rhs.hp else { return false }
     guard lhs.name == rhs.name else { return false }
-    guard lhs.inventory == rhs.inventory else { return false }
     guard lhs.color == rhs.color else { return false }
+    guard lhs.inventory == rhs.inventory else { return false }
+    guard lhs.bag == rhs.bag else { return false }
     guard lhs.weapons == rhs.weapons else { return false }
     guard lhs.equipped == rhs.equipped else { return false }
-    guard lhs.equips == rhs.equips else { return false }
     guard lhs.colors == rhs.colors else { return false }
     guard lhs.path == rhs.path else { return false }
     return true
@@ -66,23 +80,23 @@ public final class Monster: Dflat.Atom, Equatable {
   let mana: Int16
   let hp: Int16
   let name: String
-  let inventory: [UInt8]
   let color: Color
+  let inventory: [UInt8]
+  let bag: [Equipment]
   let weapons: [Weapon]
   let equipped: Equipment?
-  let equips: [Equipment]
   let colors: [Color]
   let path: [Vec3]
-  public init(name: String, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], color: Color = .blue, weapons: [Weapon] = [], equipped: Equipment? = nil, equips: [Equipment] = [], colors: [Color] = [], path: [Vec3] = []) {
+  public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = []) {
     self.pos = pos
     self.mana = mana
     self.hp = hp
     self.name = name
-    self.inventory = inventory
     self.color = color
+    self.inventory = inventory
+    self.bag = bag
     self.weapons = weapons
     self.equipped = equipped
-    self.equips = equips
     self.colors = colors
     self.path = path
   }
@@ -91,8 +105,23 @@ public final class Monster: Dflat.Atom, Equatable {
     self.mana = obj.mana
     self.hp = obj.hp
     self.name = obj.name!
-    self.inventory = obj.inventory
     self.color = Color(rawValue: obj.color.rawValue) ?? .blue
+    self.inventory = obj.inventory
+    var __bag = [Equipment]()
+    for i: Int32 in 0..<obj.bagCount {
+      guard let ot = obj.bagType(at: i) else { break }
+      switch ot {
+      case .none_:
+        fatalError()
+      case .weapon:
+        guard let oe = obj.bag(at: i, type: FlatBuffers_Generated.MyGame.Sample.Weapon.self) else { break }
+        __bag.append(.weapon(Weapon(oe)))
+      case .orb:
+        guard let oe = obj.bag(at: i, type: FlatBuffers_Generated.MyGame.Sample.Orb.self) else { break }
+        __bag.append(.orb(Orb(oe)))
+      }
+    }
+    self.bag = __bag
     var __weapons = [Weapon]()
     for i: Int32 in 0..<obj.weaponsCount {
       guard let o = obj.weapons(at: i) else { break }
@@ -104,19 +133,9 @@ public final class Monster: Dflat.Atom, Equatable {
       self.equipped = nil
     case .weapon:
       self.equipped = obj.equipped(type: FlatBuffers_Generated.MyGame.Sample.Weapon.self).map { .weapon(Weapon($0)) }
+    case .orb:
+      self.equipped = obj.equipped(type: FlatBuffers_Generated.MyGame.Sample.Orb.self).map { .orb(Orb($0)) }
     }
-    var __equips = [Equipment]()
-    for i: Int32 in 0..<obj.equipsCount {
-      guard let ot = obj.equipsType(at: i) else { break }
-      switch ot {
-      case .none_:
-        fatalError()
-      case .weapon:
-        guard let oe = obj.equips(at: i, type: FlatBuffers_Generated.MyGame.Sample.Weapon.self) else { break }
-        __equips.append(.weapon(Weapon(oe)))
-      }
-    }
-    self.equips = __equips
     var __colors = [Color]()
     for i: Int32 in 0..<obj.colorsCount {
       guard let o = obj.colors(at: i) else { break }

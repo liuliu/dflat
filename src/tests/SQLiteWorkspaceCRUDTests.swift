@@ -164,6 +164,46 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     XCTAssertEqual(fetchedResult[2].name, "name2")
     XCTAssertEqual(fetchedResult[3].name, "name1")
   }
+  
+  func testQueryByUnionType() {
+    guard let dflat = dflat else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name3"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      creationRequest1.equipped = .orb(MyGame.Sample.Orb(name: "myOrb", color: .green))
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      creationRequest2.equipped = .weapon(MyGame.Sample.Weapon(name: "sword", damage: 16))
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name1"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      creationRequest3.equipped = .orb(MyGame.Sample.Orb(name: "red", color: .red))
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).color == .green)
+    XCTAssert(fetchedResult.count == 1)
+    XCTAssertEqual(fetchedResult[0].name, "name3")
+    let allOrbs = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.equipped.match(MyGame.Sample.Orb.self), orderBy: [MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.descending])
+    XCTAssert(allOrbs.count == 2)
+    XCTAssertEqual(allOrbs[0].name, "name1")
+    XCTAssertEqual(allOrbs[1].name, "name3")
+  }
 
   func testChangeRequestCaptureLatestUpdate() {
     guard let dflat = dflat else { return }

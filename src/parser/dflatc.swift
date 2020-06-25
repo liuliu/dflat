@@ -118,6 +118,7 @@ var SwiftType: [String: String] = [
 
 var SQLiteType: [String: String] = [
   "utype": "INTEGER",
+  "enum": "INTEGER",
   "bool": "INTEGER",
   "byte": "INTEGER",
   "ubyte": "INTEGER",
