@@ -107,7 +107,7 @@ extension MyGame.Sample.Monster {
       return (2, false)
     }
   }
-  public static let _type: FieldExpr<Int32> = FieldExpr(name: "equipped__type", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__type, objectReader: _or__equipped__type)
+  public static let _type: FieldExpr<Int32> = FieldExpr(name: "equipped__type", primaryKey: false, hasIndex: true, tableReader: _tr__equipped__type, objectReader: _or__equipped__type)
 
   }
 }
@@ -169,7 +169,7 @@ extension MyGame.Sample.Orb: MyGame__Sample__Monster__equipped {
     guard let s = or1.name else { return ("", true) }
     return (s, false)
   }
-  public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Orb__name", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__Orb__name, objectReader: _or__equipped__Orb__name)
+  public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Orb__name", primaryKey: false, hasIndex: true, tableReader: _tr__equipped__Orb__name, objectReader: _or__equipped__Orb__name)
 
   static private func _tr__equipped__Orb__color(_ table: ByteBuffer) -> (result: MyGame.Sample.Color, unknown: Bool) {
     let tr0 = FlatBuffers_Generated.MyGame.Sample.Monster.getRootAsMonster(bb: table)

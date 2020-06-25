@@ -29,7 +29,7 @@ table Monster {
   inventory:[ubyte];
   bag:[Equipment];
   weapons:[Weapon];
-  equipped:Equipment;
+  equipped:Equipment (indexed);
   colors:[Color];
   path:[Vec3];
 }
@@ -40,7 +40,7 @@ table Weapon {
 }
 
 table Orb {
-  name:string;
+  name:string (indexed);
   color:Color;
 }
 
