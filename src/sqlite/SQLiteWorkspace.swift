@@ -101,7 +101,7 @@ public final class SQLiteWorkspace: Workspace {
       guard let self = self else { return }
       guard let writer = self.writer else { return }
       let identifier = ObjectIdentifier(Element.self)
-      let changesTimestamp = self.state.tableTimestamps[identifier] ?? -1
+      let changesTimestamp = self.state.tableTimestamp(for: identifier)
       var fetchedResult = fetchedResult
       if fetchedResult.changesTimestamp < changesTimestamp {
         let reader = SQLiteConnectionPool.Borrowed(pointee: writer)
@@ -136,7 +136,7 @@ public final class SQLiteWorkspace: Workspace {
       guard let self = self else { return }
       guard let writer = self.writer else { return }
       let identifier = ObjectIdentifier(Element.self)
-      let changesTimestamp = self.state.tableTimestamps[identifier] ?? -1
+      let changesTimestamp = self.state.tableTimestamp(for: identifier)
       if object._changesTimestamp < changesTimestamp {
         // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
         let fetchedObject = SQLiteObjectRepository.object(writer, ofType: Element.self, for: .rowid(object._rowid))
@@ -222,7 +222,9 @@ public final class SQLiteWorkspace: Workspace {
       completionHandler?(false)
       return
     }
-    let txnContext = SQLiteTransactionContext(state: state, objectTypes: transactionalObjectTypes, writer: writer)
+    let identifier = ObjectIdentifier(transactionalObjectTypes[0])
+    let tableState = state.tableState(for: identifier)
+    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, writer: writer)
     let begin = writer.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       completionHandler?(false)
@@ -251,8 +253,8 @@ public final class SQLiteWorkspace: Workspace {
     precondition(status == SQLITE_DONE)
     var reader: SQLiteConnectionPool.Borrowed? = nil
     let newChangesTimestamp = state.changesTimestamp.increment(order: .release) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
+    state.setTableTimestamp(newChangesTimestamp, for: updatedObjects.keys)
     for (identifier, updates) in updatedObjects {
-      state.tableTimestamps[identifier] = newChangesTimestamp
       guard let resultPublisher = resultPublishers[identifier] else { continue }
       if reader == nil {
         reader = SQLiteConnectionPool.Borrowed(pointee: writer)

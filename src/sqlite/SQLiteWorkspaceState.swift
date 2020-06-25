@@ -1,9 +1,38 @@
 import SwiftAtomics
+import Dispatch
 
-// This is a state shared for a workspace. If later we decide to have multi-writer,
-// this need to be re-written in thread-safe fashion.
+// This is a state shared for a workspace.
 final class SQLiteWorkspaceState {
-  var tableCreated = Set<ObjectIdentifier>()
-  var tableTimestamps = [ObjectIdentifier: Int64]()
+  private var lock = os_unfair_lock()
+  private var tableStates = [ObjectIdentifier: SQLiteTableState]()
+  private var tableTimestamps = [ObjectIdentifier: Int64]()
   var changesTimestamp = AtomicInt64(0)
+
+  func tableState(for identifier: ObjectIdentifier) -> SQLiteTableState {
+    os_unfair_lock_lock(&lock)
+    if let tableState = tableStates[identifier] {
+      os_unfair_lock_unlock(&lock)
+      return tableState
+    } else {
+      let tableState = SQLiteTableState()
+      tableStates[identifier] = tableState
+      os_unfair_lock_unlock(&lock)
+      return tableState
+    }
+  }
+
+  func setTableTimestamp<S: Sequence>(_ timestamp: Int64, for identifiers: S) where S.Element == ObjectIdentifier {
+    os_unfair_lock_lock(&lock)
+    for identifier in identifiers {
+      tableTimestamps[identifier] = timestamp
+    }
+    os_unfair_lock_unlock(&lock)
+  }
+
+  func tableTimestamp(for identifier: ObjectIdentifier) -> Int64 {
+    os_unfair_lock_lock(&lock)
+    let tableTimestamp = tableTimestamps[identifier] ?? -1
+    os_unfair_lock_unlock(&lock)
+    return tableTimestamp
+  }
 }

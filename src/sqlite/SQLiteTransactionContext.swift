@@ -10,7 +10,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     toolbox.connection
   }
   private let objectTypes: Set<ObjectIdentifier>
-  private let state: SQLiteWorkspaceState
+  private let state: SQLiteTableState
   private let toolbox: SQLitePersistenceToolbox
   private var tableCreated = Set<ObjectIdentifier>()
   var borrowed: SQLiteConnectionPool.Borrowed {
@@ -27,7 +27,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(state: SQLiteWorkspaceState, objectTypes: [Any.Type], writer: SQLiteConnection) {
+  init(state: SQLiteTableState, objectTypes: [Any.Type], writer: SQLiteConnection) {
     var objectTypesSet = Set<ObjectIdentifier>()
     for type in objectTypes {
       objectTypesSet.update(with: ObjectIdentifier(type))
