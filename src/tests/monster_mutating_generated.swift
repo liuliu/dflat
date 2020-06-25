@@ -127,7 +127,7 @@ extension Optional where Wrapped == MyGame.Sample.Monster {
 
 extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
   public static var table: String { "mygame__sample__monster" }
-  public static var indexFields: [String] { [] }
+  public static var indexFields: [String] { ["mana"] }
 }
 
 extension MyGame.Sample {
@@ -205,6 +205,8 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   static public func setUpSchema(_ toolbox: PersistenceToolbox) {
     guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__mana (rowid INTEGER PRIMARY KEY, mana INTEGER)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX index__mygame__sample__monster__mana ON mygame__sample__monster__mana (mana)", nil, nil, nil)
   }
   public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
@@ -223,6 +225,15 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       sqlite3_bind_blob(insert, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
       _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
+      guard let i0 = toolbox.connection.prepareStatement("INSERT INTO mygame__sample__monster__mana (rowid, mana) VALUES (?1, ?2)") else { return nil }
+      _rowid.bindSQLite(i0, parameterId: 1)
+      let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
+      if r0.unknown {
+        sqlite3_bind_null(i0, 2)
+      } else {
+        r0.result.bindSQLite(i0, parameterId: 2)
+      }
+      guard SQLITE_DONE == sqlite3_step(i0) else { return nil }
       _type = .none
       atom._rowid = _rowid
       return .inserted(atom)
@@ -240,12 +251,24 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       sqlite3_bind_blob(update, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       _rowid.bindSQLite(update, parameterId: 4)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
+      guard let u0 = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster__mana SET mana=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
+      _rowid.bindSQLite(u0, parameterId: 2)
+      let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
+      if r0.unknown {
+        sqlite3_bind_null(u0, 1)
+      } else {
+        r0.result.bindSQLite(u0, parameterId: 1)
+      }
+      guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
       _type = .none
       return .updated(atom)
     case .deletion:
       guard let deletion = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster WHERE rowid=?1") else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
+      guard let d0 = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster__mana WHERE rowid=?1") else { return nil }
+      _rowid.bindSQLite(d0, parameterId: 1)
+      guard SQLITE_DONE == sqlite3_step(d0) else { return nil }
       _type = .none
       return .deleted(_rowid)
     case .none:

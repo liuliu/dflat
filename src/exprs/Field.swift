@@ -4,8 +4,11 @@ public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
   let field: FieldExpr<T>
   public var name: String { field.name }
   public let sortingOrder: SortingOrder
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
-    field.canUsePartialIndex(availableIndexes)
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+    field.canUsePartialIndex(indexSurvey)
+  }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {
+    field.existingIndex(&existingIndexes)
   }
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
@@ -52,14 +55,25 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
       return objectReader(atom)
     }
   }
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     if primaryKey {
       return .full
     }
     if hasIndex {
-      return availableIndexes.contains(name) ? .full : .none
+      if indexSurvey.full.contains(name) {
+        return .full
+      } else if indexSurvey.partial.contains(name) {
+        return .partial
+      } else {
+        return .none
+      }
     }
     return .none
+  }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {
+    if hasIndex {
+      existingIndexes.insert(name)
+    }
   }
   public var ascending: OrderByField<T> { OrderByField(field: self, sortingOrder: .ascending) }
   public var descending: OrderByField<T> { OrderByField(field: self, sortingOrder: .descending) }}

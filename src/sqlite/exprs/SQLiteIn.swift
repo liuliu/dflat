@@ -1,10 +1,10 @@
 import Dflat
 
 extension InExpr: SQLiteExpr where T: SQLiteExpr, T.ResultType: SQLiteValue {
-  public func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {
-    guard self.canUsePartialIndex(availableIndexes) == .full else { return }
+  public func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {
+    guard self.canUsePartialIndex(indexSurvey) == .full else { return }
     query.append("(")
-    unary.buildWhereQuery(availableIndexes: availableIndexes, query: &query, parameterCount: &parameterCount)
+    unary.buildWhereQuery(indexSurvey: indexSurvey, query: &query, parameterCount: &parameterCount)
     query.append(") IN (")
     let count = set.count
     if count > 0 {
@@ -17,9 +17,9 @@ extension InExpr: SQLiteExpr where T: SQLiteExpr, T.ResultType: SQLiteValue {
     }
     query.append(")")
   }
-  public func bindWhereQuery(availableIndexes: Set<String>, query: OpaquePointer, parameterCount: inout Int32) {
-    guard self.canUsePartialIndex(availableIndexes) == .full else { return }
-    unary.bindWhereQuery(availableIndexes: availableIndexes, query: query, parameterCount: &parameterCount)
+  public func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {
+    guard self.canUsePartialIndex(indexSurvey) == .full else { return }
+    unary.bindWhereQuery(indexSurvey: indexSurvey, query: query, parameterCount: &parameterCount)
     for i in set {
       parameterCount += 1
       i.bindSQLite(query, parameterId: parameterCount)

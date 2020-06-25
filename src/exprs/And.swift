@@ -36,15 +36,19 @@ public struct AndExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType
    * operator will binarize .partial into .none. So a NOT operator over AND of .partial state will return .none,
    * and we won't apply the index for field1. All is good.
    */
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
-    let lval = left.canUsePartialIndex(availableIndexes)
-    let rval = right.canUsePartialIndex(availableIndexes)
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+    let lval = left.canUsePartialIndex(indexSurvey)
+    let rval = right.canUsePartialIndex(indexSurvey)
     if lval == .full && rval == .full {
       return .full
     } else if lval != .none || rval != .none {
       return .partial
     }
     return .none
+  }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {
+    left.existingIndex(&existingIndexes)
+    right.existingIndex(&existingIndexes)
   }
 }
 

@@ -9,11 +9,15 @@ public struct NotEqualToExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.Res
     let rval = right.evaluate(object: object)
     return (lval.result != rval.result, lval.unknown || rval.unknown)
   }
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
-    if left.canUsePartialIndex(availableIndexes) == .full && right.canUsePartialIndex(availableIndexes) == .full {
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+    if left.canUsePartialIndex(indexSurvey) == .full && right.canUsePartialIndex(indexSurvey) == .full {
       return .full
     }
     return .none
+  }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {
+    left.existingIndex(&existingIndexes)
+    right.existingIndex(&existingIndexes)
   }
 }
 

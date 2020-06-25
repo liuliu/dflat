@@ -10,7 +10,8 @@ public protocol OrderBy {
   var name: String { get }
   var sortingOrder: SortingOrder { get }
   func areInSortingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> SortingOrder
-  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness
+  func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness
+  func existingIndex(_ existingIndexes: inout Set<String>)
 }
 
 public enum Limit {

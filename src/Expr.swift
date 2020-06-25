@@ -12,8 +12,15 @@ public enum Evaluable {
   case object(_: Atom)
 }
 
+public struct IndexSurvey {
+  public var full = Set<String>()
+  public var partial = Set<String>()
+  public init() {}
+}
+
 public protocol Expr {
   associatedtype ResultType
   func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool)
-  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness
+  func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness
+  func existingIndex(_ existingIndexes: inout Set<String>)
 }

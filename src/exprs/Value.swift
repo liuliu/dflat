@@ -30,7 +30,8 @@ public struct ValueExpr<T>: Expr where T: DflatFriendlyValue {
   public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
     (value, false)
   }
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     .full
   }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {}
 }

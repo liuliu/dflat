@@ -9,8 +9,11 @@ public struct NotInExpr<T: Expr>: Expr where T.ResultType: Hashable, T.ResultTyp
     guard (!val.unknown) else { return (false, true) }
     return (!set.contains(val.result), false)
   }
-  public func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
-    unary.canUsePartialIndex(availableIndexes) == .full ? .full : .none
+  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+    unary.canUsePartialIndex(indexSurvey) == .full ? .full : .none
+  }
+  public func existingIndex(_ existingIndexes: inout Set<String>) {
+    unary.existingIndex(&existingIndexes)
   }
 }
 

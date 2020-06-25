@@ -7,11 +7,12 @@ struct AllExpr: Expr, SQLiteExpr {
   func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
     return (true, false)
   }
-  func canUsePartialIndex(_ availableIndexes: Set<String>) -> IndexUsefulness {
+  func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     return .full
   }
-  func buildWhereQuery(availableIndexes: Set<String>, query: inout String, parameterCount: inout Int32) {}
-  func bindWhereQuery(availableIndexes: Set<String>, query: OpaquePointer, parameterCount: inout Int32) {}
+  func existingIndex(_ existingIndexes: inout Set<String>) {}
+  func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {}
+  func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {}
 }
 
 final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
@@ -80,16 +81,37 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
-  let availableIndexes = Set<String>()
+  var existingIndexes = Set<String>()
+  query.existingIndex(&existingIndexes)
+  let queryExistingIndexes = existingIndexes
+  for i in orderBy {
+    i.existingIndex(&existingIndexes)
+  }
   let table = SQLiteElement.table
-  let canUsePartialIndex = query.canUsePartialIndex(availableIndexes)
+  let indexSurvey = sqlite.indexSurvey(existingIndexes, table: table)
+  let canUsePartialIndex = query.canUsePartialIndex(indexSurvey)
   var sqlQuery: String
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
-    query.buildWhereQuery(availableIndexes: availableIndexes, query: &statement, parameterCount: &parameterCount)
+    query.buildWhereQuery(indexSurvey: indexSurvey, query: &statement, parameterCount: &parameterCount)
     if statement.count > 0 {
-      sqlQuery = "SELECT rowid,p FROM \(table) WHERE \(statement) ORDER BY "
+      var joinedTables = table
+      for index in indexSurvey.full {
+        joinedTables += " INNER JOIN \(table)__\(index) USING (rowid)"
+      }
+      if indexSurvey.partial.count > 0 {
+        statement = "(\(statement))"
+        for index in indexSurvey.partial {
+          // A partial index for orderBy is not useful. Only LEFT JOIN when it is a partial index
+          // in query.
+          if queryExistingIndexes.contains(index) {
+            joinedTables += " LEFT JOIN \(table)__\(index) USING (rowid)"
+            statement += " OR \(index) ISNULL"
+          }
+        }
+      }
+      sqlQuery = "SELECT rowid,p FROM \(joinedTables) WHERE \(statement) ORDER BY "
     } else {
       sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
     }
@@ -98,7 +120,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
   }
   var insertSorted = false
   for i in orderBy {
-    if i.canUsePartialIndex(availableIndexes) == .full {
+    if i.canUsePartialIndex(indexSurvey) == .full {
       switch i.sortingOrder {
       case .same, .ascending:
         sqlQuery.append("\(i.name), ")
@@ -124,7 +146,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
   }
   if canUsePartialIndex != .none {
     var parameterCount: Int32 = 0
-    query.bindWhereQuery(availableIndexes: availableIndexes, query: preparedQuery, parameterCount: &parameterCount)
+    query.bindWhereQuery(indexSurvey: indexSurvey, query: preparedQuery, parameterCount: &parameterCount)
   }
   switch canUsePartialIndex {
   case .full:
