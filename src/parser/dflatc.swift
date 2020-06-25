@@ -629,18 +629,119 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
   code += "}\n"
 }
 
+enum KeyPath {
+  case field(_: Field)
+  case union(_: Field, _: EnumVal)
+  var name: String {
+    switch self {
+    case .field(let field):
+      return field.name
+    case .union(let field, let union):
+      return field.name + "__" + union.name
+    }
+  }
+}
+
+func GetKeyName(keyPaths: [KeyPath], field: Field, pkCount: inout Int) -> String {
+  if field.isPrimary {
+    let key = "__pk\(pkCount)"
+    pkCount += 1
+    return key
+  } else {
+    return keyPaths.map { $0.name + "__" }.joined() + field.name
+  }
+}
+
+func GetTraverseKeyFlatBuffers(_ keyPaths: [KeyPath], defaultValue: String) -> String {
+  var code = ""
+  for (i, keyPath) in keyPaths.enumerated() {
+    switch keyPath {
+    case .field(let field):
+      code += "    guard let tr\(i + 1) = tr\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+    case .union(let field, let union):
+      let subStructDef = structDefs[union.struct!]!
+      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self) else { return (\(defaultValue), true) }\n"
+    }
+  }
+  return code
+}
+
+func GetTraverseKeyDflat(_ keyPaths: [KeyPath], defaultValue: String) -> String {
+  var code = ""
+  for (i, keyPath) in keyPaths.enumerated() {
+    switch keyPath {
+    case .field(let field):
+      code += "    guard let or\(i + 1) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+    case .union(let field, let union):
+      code += "    guard case let .\(union.name.firstLowercased())(or\(i + 1)) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+    }
+  }
+  return code
+}
+
+func GetKeyPathQuery(_ keyPaths: [KeyPath], field: Field) -> String {
+  return (keyPaths.map {
+    switch $0 {
+    case .field(let field):
+      return field.name
+    case .union(let field, let union):
+      let structDef = structDefs[union.struct!]!
+      return field.name + ".as(\(GetFullyQualifiedName(structDef)).self)"
+    }
+  } + [field.name]).joined(separator: ".")
+}
+
+struct IndexedField {
+  var keyPaths: [KeyPath]
+  var field: Field
+}
+
+func GetIndexForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pkCount: inout Int, indexedFields: inout [IndexedField]) {
+  let key = GetKeyName(keyPaths: keyPaths, field: field, pkCount: &pkCount)
+  let expandedName = keyPaths.map { $0.name + "__" }.joined() + field.name
+  if field.hasIndex {
+    precondition(field.type.type != .struct && field.type.type != .vector)
+    indexedFields.append(IndexedField(keyPath: keyPaths, field: field))
+  }
+  switch field.type.type {
+  case .union:
+    let unionDef = enumDefs[field.type.union!]!
+    for enumVal in unionDef.fields {
+      guard enumVal.name != "NONE" else { continue }
+      let newKeyPaths = keyPaths + [KeyPath.union(field, enumVal)]
+      let subStructDef = structDefs[enumVal.struct!]!
+      for field in subStructDef.fields {
+        guard IsDataField(field) else { continue }
+        GetIndexedFields(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
+      }
+    }
+    break
+  case .struct:
+    let subStructDef = structDefs[field.type.struct!]!
+    let newKeyPaths = keyPaths + [KeyPath.field(field)]
+    for field in subStructDef.fields {
+      guard IsDataField(field) else { continue }
+      GetIndexedFields(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
+    }
+    break
+  default: // These are the simple types (string, scalar) or enum
+  }
+}
+
+func GetIndexedFields(_ structDef: Struct) -> [IndexedField] {
+  var indexedFields = [IndexedField]()
+  var pkCount = 0
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    GetIndexForField(structDef, keyPaths: [], field: field, pkCount: &pkCount, indexedFields: &indexedFields)
+  }
+  return indexedFields
+}
+
 func GetTableName(_ structDef: Struct) -> String {
   var names: [String] = structDef.namespace.map { $0.lowercased() }
   names.append(structDef.name.lowercased())
   return names.joined(separator: "__")
-}
-
-func GenSQLiteAtom(_ structDef: Struct, code: inout String) {
-  code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
-  code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
-  // TODO: I need to aggregate all index fields.
-  code += "  public static var indexFields: [String] { [] }\n"
-  code += "}\n"
 }
 
 func GetPrimaryKeys(_ structDef: Struct) -> [Field] {
@@ -654,11 +755,20 @@ func GetPrimaryKeys(_ structDef: Struct) -> [Field] {
   return pk
 }
 
+func GetExpandedName(keyPaths: [KeyPath], field: Field) -> String {
+  return keyPaths.map { $0.name + "__" }.joined() + field.name
+}
+
 func GetDataFields(_ structDef: Struct) -> [Field] {
   return structDef.fields.filter({ IsDataField($0) && $0.isPrimary }) + structDef.fields.filter({ IsDataField($0) && !$0.isPrimary })
 }
 
 func GenChangeRequest(_ structDef: Struct, code: inout String) {
+  let indexedFields = GetIndexedFields(structDef)
+  code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
+  code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
+  code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\(GetExpandedName(keyPaths: $0.keyPaths, field: $0.field))\"" }.joined(separator: ", "))] }\n"
+  code += "}\n"
   if structDef.namespace.count > 0 {
     code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
   }
@@ -802,7 +912,6 @@ func GenMutating(schema: Schema, outputPath: String) {
   for structDef in schema.structs {
     guard !structDef.fixed else { continue }
     if structDef.name == schema.root {
-      GenSQLiteAtom(structDef, code: &code)
       GenChangeRequest(structDef, code: &code)
       break
     }
@@ -810,71 +919,9 @@ func GenMutating(schema: Schema, outputPath: String) {
   try! code.write(to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
 }
 
-enum KeyPath {
-  case field(_: Field)
-  case union(_: Field, _: EnumVal)
-  var name: String {
-    switch self {
-    case .field(let field):
-      return field.name
-    case .union(let field, let union):
-      return field.name + "__" + union.name
-    }
-  }
-}
-
-func GetKeyName(keyPaths: [KeyPath], field: Field, pkCount: inout Int) -> String {
-  if field.isPrimary {
-    let key = "__pk\(pkCount)"
-    pkCount += 1
-    return key
-  } else {
-    return keyPaths.map { $0.name + "__" }.joined() + field.name
-  }
-}
-
-func GetTraverseKeyFlatBuffers(_ keyPaths: [KeyPath], defaultValue: String) -> String {
-  var code = ""
-  for (i, keyPath) in keyPaths.enumerated() {
-    switch keyPath {
-    case .field(let field):
-      code += "    guard let tr\(i + 1) = tr\(i).\(field.name) else { return (\(defaultValue), true) }\n"
-    case .union(let field, let union):
-      let subStructDef = structDefs[union.struct!]!
-      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self) else { return (\(defaultValue), true) }\n"
-    }
-  }
-  return code
-}
-
-func GetTraverseKeyDflat(_ keyPaths: [KeyPath], defaultValue: String) -> String {
-  var code = ""
-  for (i, keyPath) in keyPaths.enumerated() {
-    switch keyPath {
-    case .field(let field):
-      code += "    guard let or\(i + 1) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
-    case .union(let field, let union):
-      code += "    guard case let .\(union.name.firstLowercased())(or\(i + 1)) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
-    }
-  }
-  return code
-}
-
-func GetKeyPathQuery(_ keyPaths: [KeyPath], field: Field) -> String {
-  return (keyPaths.map {
-    switch $0 {
-    case .field(let field):
-      return field.name
-    case .union(let field, let union):
-      let structDef = structDefs[union.struct!]!
-      return field.name + ".as(\(GetFullyQualifiedName(structDef)).self)"
-    }
-  } + [field.name]).joined(separator: ".")
-}
-
 func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pkCount: inout Int, code: inout String, addon: inout String) {
   let key = GetKeyName(keyPaths: keyPaths, field: field, pkCount: &pkCount)
-  let expandedName = keyPaths.map { $0.name + "__" }.joined() + field.name
+  let expandedName = GetExpandedName(keyPaths: keyPaths, field: field)
   let structProtocolName: String
   if structDef.namespace.count > 0 {
     structProtocolName = structDef.namespace.joined(separator: "__") + "__" + structDef.name

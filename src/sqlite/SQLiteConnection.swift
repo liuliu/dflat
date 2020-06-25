@@ -69,7 +69,10 @@ public final class SQLiteConnection {
 }
 
 extension SQLiteConnection {
-  public func indexSurvey(_ existingIndexes: Set<String>, table: String) -> IndexSurvey {
+  public func clearIndexStatus(for table: String) {
+    tableIndexStatus[table] = [String: TableIndexStatus]()
+  }
+  public func indexSurvey<S: Sequence>(_ existingIndexes: S, table: String) -> IndexSurvey where S.Element == String {
     var indexStatus = tableIndexStatus[table] ?? [String: TableIndexStatus]()
     var indexSurvey = IndexSurvey()
     var savepoint: Bool = false

@@ -87,6 +87,6 @@ public final class SQLiteTransactionContext: TransactionContext {
 
   @discardableResult
   public func abort() -> Bool {
-    return true
+    fatalError()
   }
 }
