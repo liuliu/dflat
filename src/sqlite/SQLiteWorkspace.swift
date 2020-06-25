@@ -231,6 +231,14 @@ public final class SQLiteWorkspace: Workspace {
     changesHandler(txnContext)
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
+    // This transaction is aborted by user. rollback.
+    if txnContext.aborted {
+      let rollback = writer.prepareStatement("ROLLBACK")
+      let status = sqlite3_step(rollback)
+      precondition(status == SQLITE_DONE)
+      completionHandler?(false)
+      return
+    }
     let commit = writer.prepareStatement("COMMIT")
     let status = sqlite3_step(commit)
     if SQLITE_FULL == status {

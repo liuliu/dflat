@@ -12,9 +12,11 @@ public final class SQLiteTransactionContext: TransactionContext {
   private let objectTypes: Set<ObjectIdentifier>
   private let state: SQLiteWorkspaceState
   private let toolbox: SQLitePersistenceToolbox
+  private var tableCreated = Set<ObjectIdentifier>()
   var borrowed: SQLiteConnectionPool.Borrowed {
     SQLiteConnectionPool.Borrowed(pointee: toolbox.connection)
   }
+  var aborted: Bool = false
   
   static private(set) public var current: SQLiteTransactionContext? {
     get {
@@ -72,10 +74,12 @@ public final class SQLiteTransactionContext: TransactionContext {
   public func submit(_ changeRequest: ChangeRequest) -> Bool {
     let atomType = type(of: changeRequest).atomType
     precondition(contains(ofType: atomType))
+    guard !aborted else { return false }
     let atomTypeIdentifier = ObjectIdentifier(atomType)
     if !state.tableCreated.contains(atomTypeIdentifier) {
       type(of: changeRequest).setUpSchema(toolbox)
-      state.tableCreated.update(with: atomTypeIdentifier)
+      state.tableCreated.insert(atomTypeIdentifier)
+      tableCreated.insert(atomTypeIdentifier)
     }
     let retval = Self.transactionalUpdate(toolbox: toolbox) { toolbox in
       changeRequest.commit(toolbox)
@@ -87,6 +91,9 @@ public final class SQLiteTransactionContext: TransactionContext {
 
   @discardableResult
   public func abort() -> Bool {
-    fatalError()
+    guard !aborted else { return false }
+    aborted = true
+    state.tableCreated.subtract(tableCreated)
+    return true
   }
 }

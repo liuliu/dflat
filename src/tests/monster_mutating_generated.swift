@@ -191,6 +191,12 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   static public func creationRequest() -> MonsterChangeRequest {
     return MonsterChangeRequest(type: .creation)
   }
+  static public func upsertRequest(_ o: Monster) -> MonsterChangeRequest {
+    guard let changeRequest = Self.changeRequest(o) else {
+      return Self.creationRequest(o)
+    }
+    return changeRequest
+  }
   static public func deletionRequest(_ o: Monster) -> MonsterChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
