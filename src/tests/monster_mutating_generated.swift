@@ -206,7 +206,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__mana (rowid INTEGER PRIMARY KEY, mana INTEGER)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE INDEX index__mygame__sample__monster__mana ON mygame__sample__monster__mana (mana)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__mana ON mygame__sample__monster__mana (mana)", nil, nil, nil)
     sqlite.clearIndexStatus(for: Monster.table)
   }
   public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
@@ -272,9 +272,10 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       guard let deletion = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster WHERE rowid=?1") else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
-      guard let d0 = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster__mana WHERE rowid=?1") else { return nil }
-      _rowid.bindSQLite(d0, parameterId: 1)
-      sqlite3_step(d0)
+      if let d0 = toolbox.connection.prepareStatement("DELETE FROM mygame__sample__monster__mana WHERE rowid=?1") {
+        _rowid.bindSQLite(d0, parameterId: 1)
+        sqlite3_step(d0)
+      }
       _type = .none
       return .deleted(_rowid)
     case .none:

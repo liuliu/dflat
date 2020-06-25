@@ -118,6 +118,7 @@ var SwiftType: [String: String] = [
 
 var SQLiteType: [String: String] = [
   "utype": "INTEGER",
+  "union": "INTEGER",
   "enum": "INTEGER",
   "bool": "INTEGER",
   "byte": "INTEGER",
@@ -694,14 +695,21 @@ func GetKeyPathQuery(_ keyPaths: [KeyPath], field: Field) -> String {
 struct IndexedField {
   var keyPaths: [KeyPath]
   var field: Field
+  var keyName: String
+}
+
+func GetExpandedName(keyPaths: [KeyPath], field: Field) -> String {
+  return keyPaths.map { $0.name + "__" }.joined() + field.name
 }
 
 func GetIndexForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pkCount: inout Int, indexedFields: inout [IndexedField]) {
-  let key = GetKeyName(keyPaths: keyPaths, field: field, pkCount: &pkCount)
-  let expandedName = keyPaths.map { $0.name + "__" }.joined() + field.name
   if field.hasIndex {
     precondition(field.type.type != .struct && field.type.type != .vector)
-    indexedFields.append(IndexedField(keyPath: keyPaths, field: field))
+    var keyName = GetExpandedName(keyPaths: keyPaths, field: field)
+    if field.type.type == .union { // If we mark a union field as indexed, that means we can speed the query by matching types.
+      keyName += "__type"
+    }
+    indexedFields.append(IndexedField(keyPaths: keyPaths, field: field, keyName: keyName))
   }
   switch field.type.type {
   case .union:
@@ -712,19 +720,18 @@ func GetIndexForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       let subStructDef = structDefs[enumVal.struct!]!
       for field in subStructDef.fields {
         guard IsDataField(field) else { continue }
-        GetIndexedFields(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
+        GetIndexForField(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
       }
     }
-    break
   case .struct:
     let subStructDef = structDefs[field.type.struct!]!
     let newKeyPaths = keyPaths + [KeyPath.field(field)]
     for field in subStructDef.fields {
       guard IsDataField(field) else { continue }
-      GetIndexedFields(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
+      GetIndexForField(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, indexedFields: &indexedFields)
     }
-    break
   default: // These are the simple types (string, scalar) or enum
+    break
   }
 }
 
@@ -755,19 +762,24 @@ func GetPrimaryKeys(_ structDef: Struct) -> [Field] {
   return pk
 }
 
-func GetExpandedName(keyPaths: [KeyPath], field: Field) -> String {
-  return keyPaths.map { $0.name + "__" }.joined() + field.name
-}
-
 func GetDataFields(_ structDef: Struct) -> [Field] {
   return structDef.fields.filter({ IsDataField($0) && $0.isPrimary }) + structDef.fields.filter({ IsDataField($0) && !$0.isPrimary })
+}
+
+func GetIndexedFieldExpr(_ structDef: Struct, indexedField: IndexedField) -> String {
+  var field = GetKeyPathQuery(indexedField.keyPaths, field: indexedField.field)
+  field = GetFullyQualifiedName(structDef) + "." + field
+  if indexedField.field.type.type == .union {
+    return field + "._type"
+  }
+  return field
 }
 
 func GenChangeRequest(_ structDef: Struct, code: inout String) {
   let indexedFields = GetIndexedFields(structDef)
   code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
   code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
-  code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\(GetExpandedName(keyPaths: $0.keyPaths, field: $0.field))\"" }.joined(separator: ", "))] }\n"
+  code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\($0.keyName)\"" }.joined(separator: ", "))] }\n"
   code += "}\n"
   if structDef.namespace.count > 0 {
     code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
@@ -829,9 +841,17 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "\(primaryKeys.enumerated().map { "__pk\($0.offset) \(SQLiteType[$0.element.type.type.rawValue]!)" }.joined(separator: ", ")), p BLOB, UNIQUE("
   code += "\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", "))))\", nil, nil, nil)\n"
   // TODO: Create table for indexes.
+  for indexedField in indexedFields {
+    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName)__\(indexedField.keyName) (rowid INTEGER PRIMARY KEY, \(indexedField.keyName) \(SQLiteType[indexedField.field.type.type.rawValue]!))\", nil, nil, nil)\n"
+    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE INDEX IF NOT EXISTS index__\(tableName)__\(indexedField.keyName) ON \(tableName)__\(indexedField.keyName) (\(indexedField.keyName))\", nil, nil, nil)\n"
+  }
+  if indexedFields.count > 0 {
+    code += "    sqlite.clearIndexStatus(for: \(structDef.name).table)\n"
+  }
   code += "  }\n"
   code += "  public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {\n"
   code += "    guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }\n"
+  code += "    let indexSurvey = toolbox.connection.indexSurvey(\(structDef.name).indexFields, table: \(structDef.name).table)\n"
   code += "    switch _type {\n"
   code += "    case .creation:\n"
   code += "      guard let insert = toolbox.connection.prepareStatement(\"INSERT INTO \(tableName) (\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")), p) VALUES (?1, \(primaryKeys.enumerated().map { "?\($0.offset + 2)" }.joined(separator: ", ")))\") else { return nil }\n"
@@ -848,6 +868,19 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      sqlite3_bind_blob(insert, \(primaryKeys.count + 1), memory, Int32(byteBuffer.size), SQLITE_STATIC)\n"
   code += "      guard SQLITE_DONE == sqlite3_step(insert) else { return nil }\n"
   code += "      _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)\n"
+  for (i, indexedField) in indexedFields.enumerated() {
+    code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
+    code += "        guard let i\(i) = toolbox.connection.prepareStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
+    code += "        _rowid.bindSQLite(i\(i), parameterId: 1)\n"
+    code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
+    code += "        if r\(i).unknown {\n"
+    code += "          sqlite3_bind_null(i\(i), 2)\n"
+    code += "        } else {\n"
+    code += "          r\(i).result.bindSQLite(i\(i), parameterId: 2)\n"
+    code += "        }\n"
+    code += "        guard SQLITE_DONE == sqlite3_step(i\(i)) else { return nil }\n"
+    code += "      }\n"
+  }
   code += "      _type = .none\n"
   code += "      atom._rowid = _rowid\n"
   code += "      return .inserted(atom)\n"
@@ -866,12 +899,31 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      sqlite3_bind_blob(update, \(primaryKeys.count + 1), memory, Int32(byteBuffer.size), SQLITE_STATIC)\n"
   code += "      _rowid.bindSQLite(update, parameterId: \(primaryKeys.count + 2))\n"
   code += "      guard SQLITE_DONE == sqlite3_step(update) else { return nil }\n"
+  for (i, indexedField) in indexedFields.enumerated() {
+    code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
+    code += "        guard let u\(i) = toolbox.connection.prepareStatement(\"UPDATE \(tableName)__\(indexedField.keyName) SET \(indexedField.keyName)=?1 WHERE rowid=?2 LIMIT 1\") else { return nil }\n"
+    code += "        _rowid.bindSQLite(u\(i), parameterId: 2)\n"
+    code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
+    code += "        if r\(i).unknown {\n"
+    code += "          sqlite3_bind_null(u\(i), 1)\n"
+    code += "        } else {\n"
+    code += "          r\(i).result.bindSQLite(u\(i), parameterId: 1)\n"
+    code += "        }\n"
+    code += "        guard SQLITE_DONE == sqlite3_step(u\(i)) else { return nil }\n"
+    code += "      }\n"
+  }
   code += "      _type = .none\n"
   code += "      return .updated(atom)\n"
   code += "    case .deletion:\n"
   code += "      guard let deletion = toolbox.connection.prepareStatement(\"DELETE FROM \(tableName) WHERE rowid=?1\") else { return nil }\n"
   code += "      _rowid.bindSQLite(deletion, parameterId: 1)\n"
   code += "      guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }\n"
+  for (i, indexedField) in indexedFields.enumerated() {
+    code += "      if let d\(i) = toolbox.connection.prepareStatement(\"DELETE FROM \(tableName)__\(indexedField.keyName) WHERE rowid=?1\") {\n"
+    code += "        _rowid.bindSQLite(d\(i), parameterId: 1)\n"
+    code += "        sqlite3_step(d\(i))\n"
+    code += "      }\n"
+  }
   code += "      _type = .none\n"
   code += "      return .deleted(_rowid)\n"
   code += "    case .none:\n"
@@ -978,7 +1030,6 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       addon += "\n}\n"
       addon += newAddon
     }
-    break
   case .struct:
     code += "\n  struct \(field.name) {\n"
     let subStructDef = structDefs[field.type.struct!]!
@@ -988,7 +1039,6 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       GenQueryForField(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, code: &code, addon: &addon)
     }
     code += "\n  }\n"
-    break
   case .vector: // We cannot query vector, skip.
     break
   case .string:
