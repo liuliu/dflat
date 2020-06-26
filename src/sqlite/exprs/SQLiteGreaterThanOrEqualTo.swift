@@ -10,7 +10,7 @@ extension GreaterThanOrEqualToExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExp
     query.append(")")
   }
   public func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {
-    guard self.canUsePartialIndex(indexSurvey) == .full else { return }
+    guard self.canUsePartialIndex(indexSurvey) != .none else { return }
     left.bindWhereQuery(indexSurvey: indexSurvey, query: query, parameterCount: &parameterCount)
     right.bindWhereQuery(indexSurvey: indexSurvey, query: query, parameterCount: &parameterCount)
   }
