@@ -13,6 +13,13 @@ objc_library(
   module_name = "CAtomics"
 )
 
+objc_library(
+  name = "SQLiteDflatObjC",
+  hdrs = ["sqlite/Bridge.h"],
+  enable_modules = True,
+  module_name = "SQLiteDflatObjC"
+)
+
 swift_library(
   name = "SwiftAtomics",
   module_name = "SwiftAtomics",
@@ -67,6 +74,7 @@ swift_library(
     "sqlite/SQLiteWorkspaceState.swift",
   ] + glob(["sqlite/exprs/*.swift"]),
   deps = [
-    ":Dflat"
+    ":Dflat",
+    ":SQLiteDflatObjC"
   ]
 )

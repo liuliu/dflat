@@ -3,6 +3,7 @@ import SQLite3
 import Dispatch
 import Foundation
 import FlatBuffers
+import SQLiteDflatObjC
 
 public final class SQLiteWorkspace: Workspace {
 
@@ -268,11 +269,11 @@ public final class SQLiteWorkspace: Workspace {
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
     #if !targetEnvironment(simulator)
-    let fd = open_dprotected_np(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 0666)
+    let fd = open_dprotected_np_sb(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(fd)
-    let wal = open_dprotected_np(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 0666)
+    let wal = open_dprotected_np_sb(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(wal)
-    let shm = open_dprotected_np(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 0666)
+    let shm = open_dprotected_np_sb(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(shm)
     #endif
   }
