@@ -311,4 +311,124 @@ class SchemaUpgradeTests: XCTestCase {
     XCTAssertEqual(finalFetchedResult[1].name, "name2")
     XCTAssertEqual(finalFetchedResult[2].name, "name1")
   }
+
+  func testUpgradeFromV1ToV2() {
+    guard var dflat = dflat else { return }
+    guard let filePath = filePath else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    // Now delete the index, we know the table name.
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__Orb__name RENAME TO mygame__samplev2__monster__equipped__Orb__name", nil, nil, nil)
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let fetchedResult = dflat.fetchFor(MyGame.SampleV2.Monster.self).where(MyGame.SampleV2.Monster.mana + MyGame.SampleV2.Monster.hp > 150, orderBy: [MyGame.SampleV2.Monster.mana.descending])
+    XCTAssert(fetchedResult.count == 2)
+    XCTAssertEqual(fetchedResult[0].name, "name4")
+    XCTAssertEqual(fetchedResult[1].name, "name1")
+    let indexExpectation = XCTestExpectation(description: "index done")
+    dflat.performChanges([MyGame.SampleV2.Monster.self], changesHandler: {txnContext in
+    }) { success in
+      indexExpectation.fulfill()
+    }
+    wait(for: [indexExpectation], timeout: 10.0)
+    var query1: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__hp", -1, &query1, nil)
+    sqlite3_step(query1!)
+    let count1 = sqlite3_column_int64(query1!, 0) // The hp index should finished.
+    XCTAssertEqual(count1, 4)
+    var query2: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__wear__Orb__name", -1, &query2, nil)
+    sqlite3_step(query2!)
+    let count2 = sqlite3_column_int64(query2!, 0) // The Orb name index should finished.
+    XCTAssertEqual(count2, 4)
+    connection?.close()
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let finalFetchedResult = dflat.fetchFor(MyGame.SampleV2.Monster.self).where(MyGame.SampleV2.Monster.mana + MyGame.SampleV2.Monster.hp > 150, orderBy: [MyGame.SampleV2.Monster.mana.descending])
+    XCTAssert(finalFetchedResult.count == 2)
+    XCTAssertEqual(finalFetchedResult[0].name, "name4")
+    XCTAssertEqual(finalFetchedResult[1].name, "name1")
+  }
+
+  func testUpgradeFromV1ToV2NoMissingIndexForUpgrade() {
+    // This test a case when we upgrade schema, if we don't use the newly indexed field, we actually won't build them.
+    guard var dflat = dflat else { return }
+    guard let filePath = filePath else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    // Now delete the index, we know the table name.
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__Orb__name RENAME TO mygame__samplev2__monster__equipped__Orb__name", nil, nil, nil)
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let fetchedResult = dflat.fetchFor(MyGame.SampleV2.Monster.self).where(MyGame.SampleV2.Monster.mana > 50, orderBy: [MyGame.SampleV2.Monster.mana.descending])
+    XCTAssert(fetchedResult.count == 2)
+    XCTAssertEqual(fetchedResult[0].name, "name4")
+    XCTAssertEqual(fetchedResult[1].name, "name1")
+    let indexExpectation = XCTestExpectation(description: "index done")
+    dflat.performChanges([MyGame.SampleV2.Monster.self], changesHandler: {txnContext in
+    }) { success in
+      indexExpectation.fulfill()
+    }
+    wait(for: [indexExpectation], timeout: 10.0)
+    var query1: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__hp", -1, &query1, nil)
+    XCTAssertNil(query1)
+    var query2: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__wear__Orb__name", -1, &query2, nil)
+    XCTAssertNil(query2)
+    connection?.close()
+  }
 }

@@ -91,22 +91,36 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
   }
   let table = SQLiteElement.table
   let indexSurvey = sqlite.indexSurvey(existingIndexes, table: table)
+  var insertSorted = false
+  var orderByQuery = ""
+  for i in orderBy {
+    if i.canUsePartialIndex(indexSurvey) == .full {
+      switch i.sortingOrder {
+      case .same, .ascending:
+        orderByQuery.append("\(i.name), ")
+      case .descending:
+        orderByQuery.append("\(i.name) DESC, ")
+      }
+    } else {
+      insertSorted = true // We cannot use the order from SQLite query, therefore, we have to order ourselves.
+    }
+  }
   let canUsePartialIndex = query.canUsePartialIndex(indexSurvey)
   var sqlQuery: String
+  var joinedTables = table
+  // Full index can be innert joined, and it is useful for both WHERE and ORDER BY
+  for index in indexSurvey.full {
+    joinedTables += " INNER JOIN \(table)__\(index) USING (rowid)"
+  }
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
     query.buildWhereQuery(indexSurvey: indexSurvey, query: &statement, parameterCount: &parameterCount)
     if statement.count > 0 {
-      var joinedTables = table
-      for index in indexSurvey.full {
-        joinedTables += " INNER JOIN \(table)__\(index) USING (rowid)"
-      }
       if indexSurvey.partial.count > 0 {
         statement = "(\(statement))"
         for index in indexSurvey.partial {
-          // A partial index for orderBy is not useful. Only LEFT JOIN when it is a partial index
-          // in query.
+          // A partial index is not useful for ORDER BY. Only LEFT JOIN when it is a partial index in WHERE.
           if queryExistingIndexes.contains(index) {
             joinedTables += " LEFT JOIN \(table)__\(index) USING (rowid)"
             statement += " OR \(index) ISNULL"
@@ -115,25 +129,12 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
       }
       sqlQuery = "SELECT rowid,p FROM \(joinedTables) WHERE \(statement) ORDER BY "
     } else {
-      sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
+      sqlQuery = "SELECT rowid,p FROM \(joinedTables) ORDER BY "
     }
   } else {
-    sqlQuery = "SELECT rowid,p FROM \(table) ORDER BY "
+    sqlQuery = "SELECT rowid,p FROM \(joinedTables) ORDER BY "
   }
-  var insertSorted = false
-  for i in orderBy {
-    if i.canUsePartialIndex(indexSurvey) == .full {
-      switch i.sortingOrder {
-      case .same, .ascending:
-        sqlQuery.append("\(i.name), ")
-      case .descending:
-        sqlQuery.append("\(i.name) DESC, ")
-      }
-    } else {
-      insertSorted = true // We cannot use the order from SQLite query, therefore, we have to order ourselves.
-    }
-  }
-  sqlQuery.append("rowid")
+  sqlQuery.append("\(orderByQuery)rowid")
   if canUsePartialIndex == .full {
     if case .limit(let limit) = limit {
       sqlQuery.append(" LIMIT \(limit)")
