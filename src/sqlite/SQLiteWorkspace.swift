@@ -11,30 +11,64 @@ public final class SQLiteWorkspace: Workspace {
     case completeFileProtectionUnlessOpen = 2 // Class B
     case completeFileProtectionUntilFirstUserAuthentication = 3 // Class C
   }
+  public enum WriteConcurrency {
+    case concurrent
+    case serial
+  }
   private let filePath: String
   private let fileProtectionLevel: FileProtectionLevel
-  private let queue: DispatchQueue
-  private var writer: SQLiteConnection?
+  private let targetQueue: DispatchQueue
   private let readerPool: SQLiteConnectionPool
+  private let writeConcurrency: WriteConcurrency
+  private var writer: SQLiteConnection?
+  private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
-  private var resultPublishers = [ObjectIdentifier: ResultPublisher]()
 
-  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, queue: DispatchQueue = DispatchQueue(label: "com.dflat.write", qos: .utility)) {
+  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .utility, attributes: .concurrent)) {
     self.filePath = filePath
     self.fileProtectionLevel = fileProtectionLevel
-    self.queue = queue
+    self.writeConcurrency = writeConcurrency
+    self.targetQueue = targetQueue
     self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
-    queue.async { [weak self] in
-      self?.prepareData()
-    }
   }
 
   // MARK - Mutation
 
   public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
-    queue.async { [weak self] in
-      self?.invokeChangesHandler(transactionalObjectTypes, changesHandler: changesHandler, completionHandler: completionHandler)
+    precondition(transactionalObjectTypes.count > 0)
+    var transactionalObjectIdentifiers = transactionalObjectTypes.map { ObjectIdentifier($0) }
+    transactionalObjectIdentifiers.sort()
+    var tableSpaces = [SQLiteTableSpace]()
+    state.serial {
+      for identifier in transactionalObjectIdentifiers {
+        if let tableSpace = self.tableSpaces[identifier] {
+          tableSpaces.append(tableSpace)
+        } else {
+          let tableSpace = self.newTableSpace()
+          self.tableSpaces[identifier] = tableSpace
+          tableSpaces.append(tableSpace)
+        }
+      }
     }
+    tableSpaces[0].queue.async(execute:
+      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+        guard let self = self else { return }
+        guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
+          completionHandler?(false)
+          return
+        }
+        var resultPublishers = [ObjectIdentifier: ResultPublisher]()
+        for (i, tableSpace) in tableSpaces.enumerated() {
+          resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
+          tableSpace.lock()
+        }
+        let succeed = self.invokeChangesHandler(transactionalObjectIdentifiers, connection: connection, resultPublishers: resultPublishers, changesHandler: changesHandler)
+        for tableSpace in tableSpaces.reversed() {
+          tableSpace.unlock()
+        }
+        completionHandler?(succeed)
+      }
+    )
   }
 
   // MARK - Fetching
@@ -97,79 +131,134 @@ public final class SQLiteWorkspace: Workspace {
     let identifier = ObjectIdentifier(fetchedResult)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
-    queue.async { [weak self] in
-      guard let self = self else { return }
-      guard let writer = self.writer else { return }
-      let identifier = ObjectIdentifier(Element.self)
-      let changesTimestamp = self.state.tableTimestamp(for: identifier)
-      var fetchedResult = fetchedResult
-      if fetchedResult.changesTimestamp < changesTimestamp {
-        let reader = SQLiteConnectionPool.Borrowed(pointee: writer)
-        let query = fetchedResult.query
-        let limit = fetchedResult.limit
-        let orderBy = fetchedResult.orderBy
-        var result = [Element]()
-        SQLiteQueryWhere(reader: reader, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
-        let newFetchedResult = SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)
-        if newFetchedResult != fetchedResult {
-          // If not equal, call changeHandler.
-          changeHandler(newFetchedResult)
-          // Update this, note that from this point on, ObjectIdentifier(fetchedResult) != resultIdentifier.
-          fetchedResult = newFetchedResult
-        }
-      }
-      let resultPublisher: SQLiteResultPublisher<Element>
-      if let pub = self.resultPublishers[identifier] {
-        resultPublisher = pub as! SQLiteResultPublisher<Element>
-      } else {
-        resultPublisher = SQLiteResultPublisher()
-        self.resultPublishers[identifier] = resultPublisher
-      }
-      resultPublisher.subscribe(fetchedResult: fetchedResult, resultIdentifier: identifier, changeHandler: changeHandler, subscription: subscription)
+    let objectType = ObjectIdentifier(Element.self)
+    let tableSpace: SQLiteTableSpace = state.serial {
+     if let tableSpace = tableSpaces[objectType] {
+       return tableSpace
+     } else {
+       let tableSpace = self.newTableSpace()
+       tableSpaces[identifier] = tableSpace
+       return tableSpace
+     }
     }
+    tableSpace.queue.async(execute:
+      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+        guard let self = self else { return }
+        guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+        tableSpace.lock()
+        defer { tableSpace.unlock() }
+        let identifier = ObjectIdentifier(Element.self)
+        let changesTimestamp = self.state.tableTimestamp(for: identifier)
+        var fetchedResult = fetchedResult
+        if fetchedResult.changesTimestamp < changesTimestamp {
+          let reader = SQLiteConnectionPool.Borrowed(pointee: connection)
+          let query = fetchedResult.query
+          let limit = fetchedResult.limit
+          let orderBy = fetchedResult.orderBy
+          var result = [Element]()
+          SQLiteQueryWhere(reader: reader, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
+          let newFetchedResult = SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)
+          if newFetchedResult != fetchedResult {
+            // If not equal, call changeHandler.
+            changeHandler(newFetchedResult)
+            // Update this, note that from this point on, ObjectIdentifier(fetchedResult) != resultIdentifier.
+            fetchedResult = newFetchedResult
+          }
+        }
+        let resultPublisher: SQLiteResultPublisher<Element>
+        if let pub = tableSpace.resultPublisher {
+          resultPublisher = pub as! SQLiteResultPublisher<Element>
+        } else {
+          resultPublisher = SQLiteResultPublisher()
+          tableSpace.resultPublisher = resultPublisher
+        }
+        resultPublisher.subscribe(fetchedResult: fetchedResult, resultIdentifier: identifier, changeHandler: changeHandler, subscription: subscription)
+      }
+    )
     return subscription
   }
 
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
-    queue.async { [weak self] in
-      guard let self = self else { return }
-      guard let writer = self.writer else { return }
-      let identifier = ObjectIdentifier(Element.self)
-      let changesTimestamp = self.state.tableTimestamp(for: identifier)
-      if object._changesTimestamp < changesTimestamp {
-        // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
-        let fetchedObject = SQLiteObjectRepository.object(writer, ofType: Element.self, for: .rowid(object._rowid))
-        guard let updatedObject = fetchedObject else {
-          subscription.cancelled.store(true)
-          changeHandler(.deleted)
-          return
-        }
-        if object != updatedObject { // If object changed, call update.
-          updatedObject._changesTimestamp = changesTimestamp
-          changeHandler(.updated(updatedObject))
-        }
-      }
-      let resultPublisher: SQLiteResultPublisher<Element>
-      if let pub = self.resultPublishers[identifier] {
-        resultPublisher = pub as! SQLiteResultPublisher<Element>
-      } else {
-        resultPublisher = SQLiteResultPublisher()
-        self.resultPublishers[identifier] = resultPublisher
-      }
-      resultPublisher.subscribe(object: object, changeHandler: changeHandler, subscription: subscription)
+    let objectType = ObjectIdentifier(Element.self)
+    let tableSpace: SQLiteTableSpace = state.serial {
+     if let tableSpace = tableSpaces[objectType] {
+       return tableSpace
+     } else {
+       let tableSpace = self.newTableSpace()
+       tableSpaces[objectType] = tableSpace
+       return tableSpace
+     }
     }
+    tableSpace.queue.async(execute:
+      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+        guard let self = self else { return }
+        guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+        tableSpace.lock()
+        defer { tableSpace.unlock() }
+        let changesTimestamp = self.state.tableTimestamp(for: objectType)
+        if object._changesTimestamp < changesTimestamp {
+          // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
+          let fetchedObject = SQLiteObjectRepository.object(connection, ofType: Element.self, for: .rowid(object._rowid))
+          guard let updatedObject = fetchedObject else {
+            subscription.cancelled.store(true)
+            changeHandler(.deleted)
+            return
+          }
+          if object != updatedObject { // If object changed, call update.
+            updatedObject._changesTimestamp = changesTimestamp
+            changeHandler(.updated(updatedObject))
+          }
+        }
+        let resultPublisher: SQLiteResultPublisher<Element>
+        if let pub = tableSpace.resultPublisher {
+          resultPublisher = pub as! SQLiteResultPublisher<Element>
+        } else {
+          resultPublisher = SQLiteResultPublisher()
+          tableSpace.resultPublisher = resultPublisher
+        }
+        resultPublisher.subscribe(object: object, changeHandler: changeHandler, subscription: subscription)
+      }
+    )
     return subscription
   }
   
   func cancel(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier) {
-    queue.async { [weak self] in
-      switch ofType {
-      case let .fetchedResult(atomType, fetchedResult):
-        guard let resultPublisher = self?.resultPublishers[ObjectIdentifier(atomType)] else { return }
+    switch ofType {
+    case let .fetchedResult(atomType, fetchedResult):
+      let objectType = ObjectIdentifier(atomType)
+      let tableSpace: SQLiteTableSpace = state.serial {
+       if let tableSpace = tableSpaces[objectType] {
+         return tableSpace
+       } else {
+         let tableSpace = self.newTableSpace()
+         tableSpaces[identifier] = tableSpace
+         return tableSpace
+       }
+      }
+      // We don't need to prioritize this.
+      tableSpace.queue.async {
+        tableSpace.lock()
+        defer { tableSpace.unlock() }
+        guard let resultPublisher = tableSpace.resultPublisher else { return }
         resultPublisher.cancel(fetchedResult: fetchedResult, identifier: identifier)
-      case let .object(atomType, rowid):
-        guard let resultPublisher = self?.resultPublishers[ObjectIdentifier(atomType)] else { return }
+      }
+    case let .object(atomType, rowid):
+      let objectType = ObjectIdentifier(atomType)
+      let tableSpace: SQLiteTableSpace = state.serial {
+       if let tableSpace = tableSpaces[objectType] {
+         return tableSpace
+       } else {
+         let tableSpace = self.newTableSpace()
+         tableSpaces[identifier] = tableSpace
+         return tableSpace
+       }
+      }
+      // We don't need to prioritize this.
+      tableSpace.queue.async {
+        tableSpace.lock()
+        defer { tableSpace.unlock() }
+        guard let resultPublisher = tableSpace.resultPublisher else { return }
         resultPublisher.cancel(object: rowid, identifier: identifier)
       }
     }
@@ -204,51 +293,69 @@ public final class SQLiteWorkspace: Workspace {
     close(shm)
     #endif
   }
+
+  // MARK - Concurrency Control Related Methods
+
+  private func newTableSpace() -> SQLiteTableSpace {
+    switch writeConcurrency {
+    case .concurrent:
+      return ConcurrentSQLiteTableSpace(queue: DispatchQueue(label: "dflat.subq", target: targetQueue))
+    case .serial:
+      return SerialSQLiteTableSpace(queue: targetQueue)
+    }
+  }
   
-  private func prepareData() {
-    dispatchPrecondition(condition: .onQueue(queue))
-    // Set the flag before creating the s
-    Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-    writer = SQLiteConnection(filePath: filePath, createIfMissing: true)
-    guard let writer = writer else { return }
-    sqlite3_busy_timeout(writer.sqlite, 10_000)
-    sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
-    sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
-    sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
+  private func newConnection() -> SQLiteConnection? {
+    dispatchPrecondition(condition: .onQueue(targetQueue))
+    switch writeConcurrency {
+    case .concurrent:
+      // Set the flag before creating the s
+      Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
+      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true) else { return nil }
+      sqlite3_busy_timeout(writer.sqlite, 10_000)
+      sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
+      sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
+      sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
+      return writer
+    case .serial:
+      guard self.writer == nil else { return self.writer }
+      // Set the flag before creating the s
+      Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
+      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true) else { return nil }
+      sqlite3_busy_timeout(writer.sqlite, 10_000)
+      sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
+      sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
+      sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
+      self.writer = writer
+      return writer
+    }
   }
 
-  private func invokeChangesHandler(_ transactionalObjectTypes: [Any.Type], changesHandler: Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler?) {
-    guard let writer = writer else {
-      completionHandler?(false)
-      return
-    }
-    let identifier = ObjectIdentifier(transactionalObjectTypes[0])
+  private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], changesHandler: Workspace.ChangesHandler) -> Bool {
+    let identifier = transactionalObjectTypes[0]
     let tableState = state.tableState(for: identifier)
-    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, writer: writer)
-    let begin = writer.prepareStatement("BEGIN")
+    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, connection: connection)
+    let begin = connection.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
-      completionHandler?(false)
-      return
+      return false
     }
     changesHandler(txnContext)
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
     // This transaction is aborted by user. rollback.
     if txnContext.aborted {
-      let rollback = writer.prepareStatement("ROLLBACK")
+      let rollback = connection.prepareStatement("ROLLBACK")
       let status = sqlite3_step(rollback)
       precondition(status == SQLITE_DONE)
-      completionHandler?(false)
-      return
+      return false
     }
-    let commit = writer.prepareStatement("COMMIT")
+    let commit = connection.prepareStatement("COMMIT")
     let status = sqlite3_step(commit)
     if SQLITE_FULL == status {
-      let rollback = writer.prepareStatement("ROLLBACK")
+      let rollback = connection.prepareStatement("ROLLBACK")
       let status = sqlite3_step(rollback)
       precondition(status == SQLITE_DONE)
-      completionHandler?(false)
-      return
+      return false
     }
     precondition(status == SQLITE_DONE)
     var reader: SQLiteConnectionPool.Borrowed? = nil
@@ -257,11 +364,11 @@ public final class SQLiteWorkspace: Workspace {
     for (identifier, updates) in updatedObjects {
       guard let resultPublisher = resultPublishers[identifier] else { continue }
       if reader == nil {
-        reader = SQLiteConnectionPool.Borrowed(pointee: writer)
+        reader = SQLiteConnectionPool.Borrowed(pointee: connection)
       }
       guard let reader = reader else { continue }
       resultPublisher.publishUpdates(updates, reader: reader, changesTimestamp: newChangesTimestamp)
     }
-    completionHandler?(true)
+    return true
   }
 }

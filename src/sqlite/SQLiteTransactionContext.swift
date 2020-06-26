@@ -2,8 +2,8 @@ import Dflat
 import SQLite3
 import Foundation
 
-// This is the object per transaction. Even if we support multi-writer later, we will simply
-// have one TransactionContext per writer. No thread-safety concerns.
+// This is the object per transaction. Even if we support multi-connection later, we will simply
+// have one TransactionContext per connection. No thread-safety concerns.
 public final class SQLiteTransactionContext: TransactionContext {
   public var objectRepository = SQLiteObjectRepository()
   public var connection: SQLiteConnection {
@@ -27,14 +27,14 @@ public final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(state: SQLiteTableState, objectTypes: [Any.Type], writer: SQLiteConnection) {
+  init(state: SQLiteTableState, objectTypes: [ObjectIdentifier], connection: SQLiteConnection) {
     var objectTypesSet = Set<ObjectIdentifier>()
     for type in objectTypes {
-      objectTypesSet.update(with: ObjectIdentifier(type))
+      objectTypesSet.update(with: type)
     }
     self.state = state
     self.objectTypes = objectTypesSet
-    self.toolbox = SQLitePersistenceToolbox(connection: writer)
+    self.toolbox = SQLitePersistenceToolbox(connection: connection)
     Self.current = self
   }
 

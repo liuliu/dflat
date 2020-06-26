@@ -60,6 +60,7 @@ swift_library(
     "sqlite/SQLitePublisher.swift",
     "sqlite/SQLiteQueryBuilder.swift",
     "sqlite/SQLiteResultPublisher.swift",
+    "sqlite/SQLiteTableSpace.swift",
     "sqlite/SQLiteTableState.swift",
     "sqlite/SQLiteTransactionContext.swift",
     "sqlite/SQLiteWorkspace.swift",
