@@ -248,6 +248,7 @@ int main(int argc, const char **argv) {
     parser.reset(new flatbuffers::Parser(opts));
     parser->known_attributes_["primary"] = true;
     parser->known_attributes_["indexed"] = true;
+    parser->known_attributes_["unique"] = true;
     ParseFile(*parser.get(), filename, contents, include_directories);
 
     std::string filebase =

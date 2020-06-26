@@ -219,7 +219,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__type (rowid INTEGER PRIMARY KEY, equipped__type INTEGER)", nil, nil, nil)
     sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__type ON mygame__sample__monster__equipped__type (equipped__type)", nil, nil, nil)
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__Orb__name (rowid INTEGER PRIMARY KEY, equipped__Orb__name TEXT)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__Orb__name ON mygame__sample__monster__equipped__Orb__name (equipped__Orb__name)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__Orb__name ON mygame__sample__monster__equipped__Orb__name (equipped__Orb__name)", nil, nil, nil)
     sqlite.clearIndexStatus(for: Monster.table)
   }
   public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {

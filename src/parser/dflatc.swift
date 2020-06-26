@@ -147,8 +147,11 @@ extension Field {
   var isPrimary: Bool {
     attributes.contains("primary")
   }
+  var isUnique: Bool {
+    attributes.contains("unique")
+  }
   var hasIndex: Bool {
-    attributes.contains("indexed")
+    attributes.contains("indexed") || attributes.contains("unique")
   }
 }
 
@@ -852,7 +855,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   // TODO: Create table for indexes.
   for indexedField in indexedFields {
     code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName)__\(indexedField.keyName) (rowid INTEGER PRIMARY KEY, \(indexedField.keyName) \(SQLiteType[indexedField.field.type.type.rawValue]!))\", nil, nil, nil)\n"
-    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE INDEX IF NOT EXISTS index__\(tableName)__\(indexedField.keyName) ON \(tableName)__\(indexedField.keyName) (\(indexedField.keyName))\", nil, nil, nil)\n"
+    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE\(indexedField.field.isUnique ? " UNIQUE" : "") INDEX IF NOT EXISTS index__\(tableName)__\(indexedField.keyName) ON \(tableName)__\(indexedField.keyName) (\(indexedField.keyName))\", nil, nil, nil)\n"
   }
   if indexedFields.count > 0 {
     code += "    sqlite.clearIndexStatus(for: \(structDef.name).table)\n"

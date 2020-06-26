@@ -40,7 +40,7 @@ table Weapon {
 }
 
 table Orb {
-  name:string (indexed);
+  name:string (unique);
   color:Color;
 }
 
