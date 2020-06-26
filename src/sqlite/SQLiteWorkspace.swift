@@ -411,13 +411,14 @@ extension SQLiteWorkspace {
       // It is OK to create connection, etc. before acquiring the lock as long as we don't do mutation.
       tableSpace.lock()
       defer { tableSpace.unlock() }
-      let indexSurvey = connection.indexSurvey(fields, table: table)
-      var limit = Self.RebuildIndexBatchLimit
-      var fields = indexSurvey.partial
-      if fields.count > 0 && !tableSpace.state.tableCreated.contains(objectType) {
+      // Make sure the table exists before we query.
+      if !tableSpace.state.tableCreated.contains(objectType) {
         SQLiteElement.setUpSchema(toolbox)
         tableSpace.state.tableCreated.insert(objectType)
       }
+      let indexSurvey = connection.indexSurvey(fields, table: table)
+      var limit = Self.RebuildIndexBatchLimit
+      var fields = indexSurvey.partial
       for field in indexSurvey.partial {
         let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
         limit -= retval.insertedRows

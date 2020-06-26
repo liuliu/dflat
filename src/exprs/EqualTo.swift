@@ -9,9 +9,16 @@ public struct EqualToExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.Result
     let rval = right.evaluate(object: object)
     return (lval.result == rval.result, lval.unknown || rval.unknown)
   }
+  // See discussion in And.swift. For Comparable, we can get correct answer if any of them is partial. Thus,
+  // if the value on both side exist, we will get correct answer, otherwise we will get UNKNOWN, and it is OK
+  // because additional OR (field ISNULL) will cover that case and we will evaluate later.
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
-    if left.canUsePartialIndex(indexSurvey) == .full && right.canUsePartialIndex(indexSurvey) == .full {
+    let lval = left.canUsePartialIndex(indexSurvey)
+    let rval = right.canUsePartialIndex(indexSurvey)
+    if lval == .full && rval == .full {
       return .full
+    } else if lval != .none && rval != .none {
+      return .partial
     }
     return .none
   }
