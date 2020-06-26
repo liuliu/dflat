@@ -37,6 +37,7 @@ final class SQLiteConnectionPool {
     let pointee = SQLiteConnection(filePath: filePath, createIfMissing: false)
     if pointee == nil {
       flowControl.signal()
+      return Borrowed(pointee: pointee, pool: nil)
     }
     sqlite3_busy_timeout(pointee?.sqlite, 10_000)
     return Borrowed(pointee: pointee, pool: self)
