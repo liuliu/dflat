@@ -5,6 +5,7 @@ swift_library(
   name = "Tests_lib",
   srcs = [
     "ExprTests.swift",
+    "FetchTests.swift",
     "namespace.swift",
     "monster_generated.swift",
     "monster_data_model_generated.swift",

@@ -129,8 +129,8 @@ public final class SQLiteWorkspace: Workspace {
     let begin = pointee.prepareStatement("BEGIN")
     sqlite3_step(begin)
     let retval = closure()
-    let release = pointee.prepareStatement("RELEASE")
-    sqlite3_step(release)
+    let commit = pointee.prepareStatement("COMMIT")
+    sqlite3_step(commit)
     Self.snapshot = nil
     return retval
   }
