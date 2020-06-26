@@ -79,7 +79,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     guard !aborted else { return false }
     let atomTypeIdentifier = ObjectIdentifier(atomType)
     if !state.tableCreated.contains(atomTypeIdentifier) {
-      type(of: changeRequest).setUpSchema(toolbox)
+      (atomType as! SQLiteAtom.Type).setUpSchema(toolbox)
       state.tableCreated.insert(atomTypeIdentifier)
       tableCreated.insert(atomTypeIdentifier)
     }

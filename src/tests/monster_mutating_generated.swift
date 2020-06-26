@@ -129,7 +129,15 @@ extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
   public static var table: String { "mygame__sample__monster" }
   public static var indexFields: [String] { ["mana", "equipped__type", "equipped__Orb__name"] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    MyGame.Sample.MonsterChangeRequest.setUpSchema(toolbox)
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__mana (rowid INTEGER PRIMARY KEY, mana INTEGER)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__mana ON mygame__sample__monster__mana (mana)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__type (rowid INTEGER PRIMARY KEY, equipped__type INTEGER)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__type ON mygame__sample__monster__equipped__type (equipped__type)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__Orb__name (rowid INTEGER PRIMARY KEY, equipped__Orb__name TEXT)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__Orb__name ON mygame__sample__monster__equipped__Orb__name (equipped__Orb__name)", nil, nil, nil)
+    sqlite.clearIndexStatus(for: Self.table)
   }
   public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
     guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return false }
@@ -248,17 +256,6 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path)
     atom._rowid = _rowid
     return atom
-  }
-  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__mana (rowid INTEGER PRIMARY KEY, mana INTEGER)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__mana ON mygame__sample__monster__mana (mana)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__type (rowid INTEGER PRIMARY KEY, equipped__type INTEGER)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__type ON mygame__sample__monster__equipped__type (equipped__type)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__equipped__Orb__name (rowid INTEGER PRIMARY KEY, equipped__Orb__name TEXT)", nil, nil, nil)
-    sqlite3_exec(sqlite.sqlite, "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__sample__monster__equipped__Orb__name ON mygame__sample__monster__equipped__Orb__name (equipped__Orb__name)", nil, nil, nil)
-    sqlite.clearIndexStatus(for: Monster.table)
   }
   public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }

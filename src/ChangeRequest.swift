@@ -8,8 +8,6 @@ public enum UpdatedObject {
 
 public protocol ChangeRequest {
   static var atomType: Any.Type { get }
-  // Called to setup basic schema in the persistence storage
-  static func setUpSchema(_: PersistenceToolbox)
   // Commit whatever you have in the ChangeRequest to be permanent in persistence storage.
   func commit(_: PersistenceToolbox) -> UpdatedObject?
 }

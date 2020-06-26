@@ -59,10 +59,14 @@ public final class SQLiteWorkspace: Workspace {
           completionHandler?(false)
           return
         }
+        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+        for tableSpace in tableSpaces {
+          tableSpace.lock()
+        }
+        // We need to fetch the resultPublisher only after acquired the lock.
         var resultPublishers = [ObjectIdentifier: ResultPublisher]()
         for (i, tableSpace) in tableSpaces.enumerated() {
           resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
-          tableSpace.lock()
         }
         let succeed = self.invokeChangesHandler(transactionalObjectIdentifiers, connection: connection, resultPublishers: resultPublishers, tableState: tableSpaces[0].state, changesHandler: changesHandler)
         for tableSpace in tableSpaces.reversed() {
@@ -137,24 +141,17 @@ public final class SQLiteWorkspace: Workspace {
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let objectType = ObjectIdentifier(Element.self)
-    let tableSpace: SQLiteTableSpace = state.serial {
-     if let tableSpace = tableSpaces[objectType] {
-       return tableSpace
-     } else {
-       let tableSpace = self.newTableSpace()
-       tableSpaces[objectType] = tableSpace
-       return tableSpace
-     }
-    }
+    let tableSpace = self.tableSpace(for: objectType)
     tableSpace.queue.async(execute:
       DispatchWorkItem(flags: .enforceQoS) { [weak self] in
         guard let self = self else { return }
         guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
-        tableSpace.lock()
-        defer { tableSpace.unlock() }
         let identifier = ObjectIdentifier(Element.self)
         let changesTimestamp = self.state.tableTimestamp(for: identifier)
         var fetchedResult = fetchedResult
+        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+        tableSpace.lock()
+        defer { tableSpace.unlock() }
         if fetchedResult.changesTimestamp < changesTimestamp {
           let reader = SQLiteConnectionPool.Borrowed(pointee: connection)
           let query = fetchedResult.query
@@ -170,6 +167,7 @@ public final class SQLiteWorkspace: Workspace {
             fetchedResult = newFetchedResult
           }
         }
+        // The publisher is manipulated after acquiring the lock.
         let resultPublisher: SQLiteResultPublisher<Element>
         if let pub = tableSpace.resultPublisher {
           resultPublisher = pub as! SQLiteResultPublisher<Element>
@@ -186,22 +184,15 @@ public final class SQLiteWorkspace: Workspace {
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     let objectType = ObjectIdentifier(Element.self)
-    let tableSpace: SQLiteTableSpace = state.serial {
-     if let tableSpace = tableSpaces[objectType] {
-       return tableSpace
-     } else {
-       let tableSpace = self.newTableSpace()
-       tableSpaces[objectType] = tableSpace
-       return tableSpace
-     }
-    }
+    let tableSpace = self.tableSpace(for: objectType)
     tableSpace.queue.async(execute:
       DispatchWorkItem(flags: .enforceQoS) { [weak self] in
         guard let self = self else { return }
         guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+        let changesTimestamp = self.state.tableTimestamp(for: objectType)
+        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
         tableSpace.lock()
         defer { tableSpace.unlock() }
-        let changesTimestamp = self.state.tableTimestamp(for: objectType)
         if object._changesTimestamp < changesTimestamp {
           // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
           let fetchedObject = SQLiteObjectRepository.object(connection, ofType: Element.self, for: .rowid(object._rowid))
@@ -215,6 +206,7 @@ public final class SQLiteWorkspace: Workspace {
             changeHandler(.updated(updatedObject))
           }
         }
+        // The publisher is manipulated after acquiring the lock.
         let resultPublisher: SQLiteResultPublisher<Element>
         if let pub = tableSpace.resultPublisher {
           resultPublisher = pub as! SQLiteResultPublisher<Element>
@@ -232,33 +224,18 @@ public final class SQLiteWorkspace: Workspace {
     switch ofType {
     case let .fetchedResult(atomType, fetchedResult):
       let objectType = ObjectIdentifier(atomType)
-      let tableSpace: SQLiteTableSpace = state.serial {
-       if let tableSpace = tableSpaces[objectType] {
-         return tableSpace
-       } else {
-         let tableSpace = self.newTableSpace()
-         tableSpaces[objectType] = tableSpace
-         return tableSpace
-       }
-      }
+      let tableSpace = self.tableSpace(for: objectType)
       // We don't need to prioritize this.
       tableSpace.queue.async {
         tableSpace.lock()
         defer { tableSpace.unlock() }
+        // The publisher is manipulated after acquiring the lock.
         guard let resultPublisher = tableSpace.resultPublisher else { return }
         resultPublisher.cancel(fetchedResult: fetchedResult, identifier: identifier)
       }
     case let .object(atomType, rowid):
       let objectType = ObjectIdentifier(atomType)
-      let tableSpace: SQLiteTableSpace = state.serial {
-       if let tableSpace = tableSpaces[objectType] {
-         return tableSpace
-       } else {
-         let tableSpace = self.newTableSpace()
-         tableSpaces[objectType] = tableSpace
-         return tableSpace
-       }
-      }
+      let tableSpace = self.tableSpace(for: objectType)
       // We don't need to prioritize this.
       tableSpace.queue.async {
         tableSpace.lock()
@@ -300,6 +277,19 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   // MARK - Concurrency Control Related Methods
+
+  private func tableSpace(for objectType: ObjectIdentifier) -> SQLiteTableSpace {
+    let tableSpace: SQLiteTableSpace = state.serial {
+      if let tableSpace = tableSpaces[objectType] {
+        return tableSpace
+      } else {
+        let tableSpace = self.newTableSpace()
+        tableSpaces[objectType] = tableSpace
+        return tableSpace
+      }
+    }
+    return tableSpace
+  }
 
   private func newTableSpace() -> SQLiteTableSpace {
     switch writeConcurrency {
@@ -410,26 +400,24 @@ extension SQLiteWorkspace {
 
   func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
     let objectType = ObjectIdentifier(Element.self)
-    let tableSpace: SQLiteTableSpace = state.serial {
-     if let tableSpace = tableSpaces[objectType] {
-       return tableSpace
-     } else {
-       let tableSpace = self.newTableSpace()
-       tableSpaces[objectType] = tableSpace
-       return tableSpace
-     }
-    }
+    let tableSpace = self.tableSpace(for: objectType)
     // We don't need to bump the priority for this.
     tableSpace.queue.async { [weak self] in
       guard let self = self else { return }
       guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
       let SQLiteElement = Element.self as! SQLiteAtom.Type
+      let toolbox = SQLitePersistenceToolbox(connection: connection)
+      let table = SQLiteElement.table
+      // It is OK to create connection, etc. before acquiring the lock as long as we don't do mutation.
       tableSpace.lock()
       defer { tableSpace.unlock() }
-      let toolbox = SQLitePersistenceToolbox(connection: connection)
-      let indexSurvey = connection.indexSurvey(fields, table: SQLiteElement.table)
+      let indexSurvey = connection.indexSurvey(fields, table: table)
       var limit = Self.RebuildIndexBatchLimit
       var fields = indexSurvey.partial
+      if fields.count > 0 && !tableSpace.state.tableCreated.contains(objectType) {
+        SQLiteElement.setUpSchema(toolbox)
+        tableSpace.state.tableCreated.insert(objectType)
+      }
       for field in indexSurvey.partial {
         let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
         limit -= retval.insertedRows
