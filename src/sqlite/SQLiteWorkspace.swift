@@ -62,7 +62,7 @@ public final class SQLiteWorkspace: Workspace {
           resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
           tableSpace.lock()
         }
-        let succeed = self.invokeChangesHandler(transactionalObjectIdentifiers, connection: connection, resultPublishers: resultPublishers, changesHandler: changesHandler)
+        let succeed = self.invokeChangesHandler(transactionalObjectIdentifiers, connection: connection, resultPublishers: resultPublishers, tableState: tableSpaces[0].state, changesHandler: changesHandler)
         for tableSpace in tableSpaces.reversed() {
           tableSpace.unlock()
         }
@@ -331,9 +331,7 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], changesHandler: Workspace.ChangesHandler) -> Bool {
-    let identifier = transactionalObjectTypes[0]
-    let tableState = state.tableState(for: identifier)
+  private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
     let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, connection: connection)
     let begin = connection.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {

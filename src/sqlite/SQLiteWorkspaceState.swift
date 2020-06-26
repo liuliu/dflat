@@ -4,22 +4,8 @@ import Dispatch
 // This is a state shared for a workspace.
 final class SQLiteWorkspaceState {
   private var lock = os_unfair_lock()
-  private var tableStates = [ObjectIdentifier: SQLiteTableState]()
   private var tableTimestamps = [ObjectIdentifier: Int64]()
   var changesTimestamp = AtomicInt64(0)
-
-  func tableState(for identifier: ObjectIdentifier) -> SQLiteTableState {
-    os_unfair_lock_lock(&lock)
-    if let tableState = tableStates[identifier] {
-      os_unfair_lock_unlock(&lock)
-      return tableState
-    } else {
-      let tableState = SQLiteTableState()
-      tableStates[identifier] = tableState
-      os_unfair_lock_unlock(&lock)
-      return tableState
-    }
-  }
 
   func serial<T>(_ closure: () -> T) -> T {
     os_unfair_lock_lock(&lock)

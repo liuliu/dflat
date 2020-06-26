@@ -2,6 +2,7 @@ import Dispatch
 
 protocol SQLiteTableSpace: AnyObject {
   var queue: DispatchQueue { get }
+  var state: SQLiteTableState { get }
   var resultPublisher: ResultPublisher? { get set }
   func shutdown()
   func connect(_ closure: () -> SQLiteConnection?) -> SQLiteConnection?
@@ -11,6 +12,7 @@ protocol SQLiteTableSpace: AnyObject {
 
 final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
   let queue: DispatchQueue
+  let state = SQLiteTableState()
   var resultPublisher: ResultPublisher? = nil
   private var connection: SQLiteConnection? = nil
   private var _shutdown: Bool = false
@@ -37,6 +39,7 @@ final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
 
 final class SerialSQLiteTableSpace: SQLiteTableSpace {
   let queue: DispatchQueue
+  let state = SQLiteTableState()
   var resultPublisher: ResultPublisher? = nil
   private var connection: SQLiteConnection? = nil
   private var _shutdown: Bool = false
