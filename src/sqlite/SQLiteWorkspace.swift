@@ -112,7 +112,7 @@ public final class SQLiteWorkspace: Workspace {
     return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), workspace: self, transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
-  public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
+  public func fetchWithinASnapshot<T>(_ closure: () -> T) -> T {
     // If I am in a write transaction, it is a consistent view already.
     if SQLiteTransactionContext.current != nil {
       return closure()

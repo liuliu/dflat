@@ -2,14 +2,7 @@
 
 public protocol Queryable {
   func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element>
-  func fetchWithinASnapshot<T>(_: () -> T, ofType: T.Type) -> T
-}
-
-public extension Queryable {
-  // Provide default implementation for cases we don't want to return values.
-  func fetchWithinASnapshot(_ closure: () -> Void) -> Void {
-    fetchWithinASnapshot(closure, ofType: Void.self)
-  }
+  func fetchWithinASnapshot<T>(_: () -> T) -> T
 }
 
 public protocol WorkspaceSubscription {
