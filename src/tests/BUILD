@@ -4,14 +4,20 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 swift_library(
   name = "Tests_lib",
   srcs = [
+    "ExprTests.swift",
+    "namespace.swift",
     "monster_generated.swift",
     "monster_data_model_generated.swift",
     "monster_mutating_generated.swift",
     "monster_query_generated.swift",
+    "monster_v2_generated.swift",
+    "monster_v2_data_model_generated.swift",
+    "monster_v2_mutating_generated.swift",
+    "monster_v2_query_generated.swift",
+    "ObjectRepositoryTests.swift",
+    "SchemaUpgradeTests.swift",
     "SQLiteWorkspaceCRUDTests.swift",
     "SubscribeTests.swift",
-    "ObjectRepositoryTests.swift",
-    "ExprTests.swift",
   ],
   deps = [
     "//src:SQLiteDflat",

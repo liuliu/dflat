@@ -1,7 +1,7 @@
 import Dflat
 import FlatBuffers
 
-extension MyGame.Sample {
+extension MyGame.SampleV2 {
 
 public enum Color: Int8, DflatFriendlyValue {
   case red = 0
@@ -26,7 +26,7 @@ public struct Vec3: Equatable {
     self.y = y
     self.z = z
   }
-  public init(_ obj: DflatGen__MyGame__Sample.MyGame.Sample.Vec3) {
+  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Vec3) {
     self.x = obj.x
     self.y = obj.y
     self.z = obj.z
@@ -40,7 +40,7 @@ public struct Weapon: Equatable {
     self.name = name
     self.damage = damage
   }
-  public init(_ obj: DflatGen__MyGame__Sample.MyGame.Sample.Weapon) {
+  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon) {
     self.name = obj.name
     self.damage = obj.damage
   }
@@ -53,7 +53,7 @@ public struct Orb: Equatable {
     self.name = name
     self.color = color
   }
-  public init(_ obj: DflatGen__MyGame__Sample.MyGame.Sample.Orb) {
+  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb) {
     self.name = obj.name
     self.color = Color(rawValue: obj.color.rawValue) ?? .red
   }
@@ -67,11 +67,11 @@ public final class Monster: Dflat.Atom, Equatable {
     guard lhs.name == rhs.name else { return false }
     guard lhs.color == rhs.color else { return false }
     guard lhs.inventory == rhs.inventory else { return false }
-    guard lhs.bag == rhs.bag else { return false }
     guard lhs.weapons == rhs.weapons else { return false }
     guard lhs.equipped == rhs.equipped else { return false }
     guard lhs.colors == rhs.colors else { return false }
     guard lhs.path == rhs.path else { return false }
+    guard lhs.wear == rhs.wear else { return false }
     return true
   }
   let pos: Vec3?
@@ -80,46 +80,31 @@ public final class Monster: Dflat.Atom, Equatable {
   let name: String
   let color: Color
   let inventory: [UInt8]
-  let bag: [Equipment]
   let weapons: [Weapon]
   let equipped: Equipment?
   let colors: [Color]
   let path: [Vec3]
-  public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = []) {
+  let wear: Equipment?
+  public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], wear: Equipment? = nil) {
     self.pos = pos
     self.mana = mana
     self.hp = hp
     self.name = name
     self.color = color
     self.inventory = inventory
-    self.bag = bag
     self.weapons = weapons
     self.equipped = equipped
     self.colors = colors
     self.path = path
+    self.wear = wear
   }
-  public init(_ obj: DflatGen__MyGame__Sample.MyGame.Sample.Monster) {
+  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster) {
     self.pos = obj.pos.map { Vec3($0) }
     self.mana = obj.mana
     self.hp = obj.hp
     self.name = obj.name!
     self.color = Color(rawValue: obj.color.rawValue) ?? .blue
     self.inventory = obj.inventory
-    var __bag = [Equipment]()
-    for i: Int32 in 0..<obj.bagCount {
-      guard let ot = obj.bagType(at: i) else { break }
-      switch ot {
-      case .none_:
-        fatalError()
-      case .weapon:
-        guard let oe = obj.bag(at: i, type: DflatGen__MyGame__Sample.MyGame.Sample.Weapon.self) else { break }
-        __bag.append(.weapon(Weapon(oe)))
-      case .orb:
-        guard let oe = obj.bag(at: i, type: DflatGen__MyGame__Sample.MyGame.Sample.Orb.self) else { break }
-        __bag.append(.orb(Orb(oe)))
-      }
-    }
-    self.bag = __bag
     var __weapons = [Weapon]()
     for i: Int32 in 0..<obj.weaponsCount {
       guard let o = obj.weapons(at: i) else { break }
@@ -130,9 +115,9 @@ public final class Monster: Dflat.Atom, Equatable {
     case .none_:
       self.equipped = nil
     case .weapon:
-      self.equipped = obj.equipped(type: DflatGen__MyGame__Sample.MyGame.Sample.Weapon.self).map { .weapon(Weapon($0)) }
+      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
     case .orb:
-      self.equipped = obj.equipped(type: DflatGen__MyGame__Sample.MyGame.Sample.Orb.self).map { .orb(Orb($0)) }
+      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
     }
     var __colors = [Color]()
     for i: Int32 in 0..<obj.colorsCount {
@@ -146,12 +131,20 @@ public final class Monster: Dflat.Atom, Equatable {
       __path.append(Vec3(o))
     }
     self.path = __path
+    switch obj.wearType {
+    case .none_:
+      self.wear = nil
+    case .weapon:
+      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
+    case .orb:
+      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
+    }
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    Self(DflatGen__MyGame__Sample.MyGame.Sample.Monster.getRootAsMonster(bb: bb))
+    Self(DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: bb))
   }
 }
 
 }
 
-// MARK: - MyGame.Sample
+// MARK: - MyGame.SampleV2

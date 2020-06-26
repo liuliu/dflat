@@ -15,6 +15,7 @@
  */
 
 #include "flatbuffers/idl.h"
+#include "flatbuffers/code_generators.h"
 
 #include <list>
 
@@ -251,18 +252,23 @@ int main(int argc, const char **argv) {
     parser->known_attributes_["unique"] = true;
     ParseFile(*parser.get(), filename, contents, include_directories);
 
+    if (parser->root_struct_def_->fixed) {
+      Error("root type must be a table");
+    }
+
     std::string filebase =
         flatbuffers::StripPath(flatbuffers::StripExtension(filename));
 
     flatbuffers::EnsureDirExists(output_path);
     GenerateJSONAdapter(*parser.get(), output_path, filebase);
-    // Attach additional namespace to it.
-    InsertNamespace(*parser.get(), "FlatBuffers_Generated");
-    flatbuffers::GenerateSwift(*parser.get(), output_path, filebase);
-
-    if (parser->root_struct_def_->fixed) {
-      Error("root type must be a table");
+    std::string prefix = "DflatGen";
+    std::vector<std::string> ns = parser->root_struct_def_->defined_namespace->components;
+    for (auto &name: ns) {
+        prefix += "__" + name;
     }
+    // Attach additional namespace to it.
+    InsertNamespace(*parser.get(), prefix);
+    flatbuffers::GenerateSwift(*parser.get(), output_path, filebase);
 
     // We do not want to generate code for the definitions in this file
     // in any files coming up next.

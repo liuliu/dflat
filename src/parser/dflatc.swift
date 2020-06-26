@@ -168,15 +168,16 @@ extension Enum {
 
 var enumDefs = [String: Enum]()
 var structDefs = [String: Struct]()
+var DflatGenNamespace = ""
 
 func SetNamespace(_ namespace: [String], previous pns: inout [String], code: inout String) {
   guard namespace != pns else { return }
-  for ns in pns {
-    code += "\n}\n\n// MARK: - \(ns)\n"
+  if pns.count > 0 {
+    code += "\n}\n\n// MARK: - \(pns.joined(separator: "."))\n"
   }
   // This is actually not right. If we previously declared, we need to use extension Namespace1.Namespace2 instead.
-  for ns in namespace {
-    code += "\npublic enum \(ns) {\n"
+  if namespace.count > 0 {
+    code += "\nextension \(namespace.joined(separator: ".")) {\n"
   }
   pns = namespace
 }
@@ -367,7 +368,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
               guard enumVal.name != "NONE" else { continue }
               code += "      case .\(enumVal.name.firstLowercased()):\n"
               let subStructDef = structDefs[enumVal.struct!]!
-              code += "        guard let oe = obj.\(field.name)(at: i, type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self) else { break }\n"
+              code += "        guard let oe = obj.\(field.name)(at: i, type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self) else { break }\n"
               code += "        __\(field.name).append(.\(enumVal.name.firstLowercased())(\(enumVal.name)(oe)))\n"
             }
             code += "      }\n"
@@ -389,7 +390,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
         guard enumVal.name != "NONE" else { continue }
         code += "    case .\(enumVal.name.firstLowercased()):\n"
         let subStructDef = structDefs[enumVal.struct!]!
-        code += "      self.\(field.name) = obj.\(field.name)(type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self).map { .\(enumVal.name.firstLowercased())(\(enumVal.name)($0)) }\n"
+        code += "      self.\(field.name) = obj.\(field.name)(type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self).map { .\(enumVal.name.firstLowercased())(\(enumVal.name)($0)) }\n"
       }
       code += "    }\n"
     case .enum:
@@ -419,7 +420,7 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
     code += "    self.\(field.name) = \(field.name)\n"
   }
   code += "  }\n"
-  code += "  public init(_ obj: FlatBuffers_Generated.\(GetFullyQualifiedName(structDef))) {\n"
+  code += "  public init(_ obj: \(DflatGenNamespace).\(GetFullyQualifiedName(structDef))) {\n"
   code += GetStructDeserializer(structDef)
   code += "  }\n"
   code += "}\n"
@@ -444,11 +445,11 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
     code += "    self.\(field.name) = \(field.name)\n"
   }
   code += "  }\n"
-  code += "  public init(_ obj: FlatBuffers_Generated.\(GetFullyQualifiedName(structDef))) {\n"
+  code += "  public init(_ obj: \(DflatGenNamespace).\(GetFullyQualifiedName(structDef))) {\n"
   code += GetStructDeserializer(structDef)
   code += "  }\n"
   code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
-  code += "    Self(FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
+  code += "    Self(\(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
   code += "  }\n"
   code += "}\n"
 }
@@ -500,12 +501,12 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   }
   code += "    }\n"
   code += "  }\n"
-  code += "  var _type: FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef)) {\n"
+  code += "  var _type: \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef)) {\n"
   code += "    switch self {\n"
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
     code += "    case .\(enumVal.name.firstLowercased())(_):\n"
-    code += "      return FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef)).\(enumVal.name.firstLowercased())\n"
+    code += "      return \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef)).\(enumVal.name.firstLowercased())\n"
   }
   code += "    }\n"
   code += "  }\n"
@@ -514,7 +515,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
   code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()\n"
   code += "  }\n"
-  code += "  var _type: FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef)) {\n"
+  code += "  var _type: \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef)) {\n"
   code += "    self.map { $0._type } ?? .none_\n"
   code += "  }\n"
   code += "}\n"
@@ -555,7 +556,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
             code += "    for i in self.\(field.name) {\n"
             code += "      __\(field.name).append(i.toRawMemory())\n"
             code += "    }\n"
-            code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(structs: __\(field.name), type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self)\n"
+            code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(structs: __\(field.name), type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self)\n"
             parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
             break
           }
@@ -570,7 +571,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
         case .utype:
           let enumDef = enumDefs[field.type.element!.utype!]!
           let fieldName = field.name.prefix(field.name.count - 5) + "Type"
-          code += "    var __\(fieldName) = [FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef))]()\n"
+          code += "    var __\(fieldName) = [\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))]()\n"
           code += "    for i in self.\(field.name.prefix(field.name.count - 5)) {\n"
           code += "      __\(fieldName).append(i._type)\n"
           code += "    }\n"
@@ -585,9 +586,9 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
         case .enum:
           let enumDef = enumDefs[field.type.element!.enum!]!
-          code += "    var __\(field.name) = [FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef))]()\n"
+          code += "    var __\(field.name) = [\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))]()\n"
           code += "    for i in self.\(field.name) {\n"
-          code += "      __\(field.name).append(FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef))(rawValue: i.rawValue) ?? \(GetEnumDefaultValue(field.type.element!.enum!)))\n"
+          code += "      __\(field.name).append(\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: i.rawValue) ?? \(GetEnumDefaultValue(field.type.element!.enum!)))\n"
           code += "    }\n"
           code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(__\(field.name))\n"
           parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
@@ -601,7 +602,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
       parameters.append("\(fieldName): __\(fieldName)")
     case .enum:
       let enumDef = enumDefs[field.type.enum!]!
-      code += "    let __\(field.name) = FlatBuffers_Generated.\(GetFullyQualifiedName(enumDef))(rawValue: self.\(field.name).rawValue) ?? \(GetFieldDefaultValue(field))\n"
+      code += "    let __\(field.name) = \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: self.\(field.name).rawValue) ?? \(GetFieldDefaultValue(field))\n"
       parameters.append("\(field.name): __\(field.name)")
     case .string:
       if field.isPrimary {
@@ -615,9 +616,9 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     }
   }
   if structDef.fixed {
-    code += "    return FlatBuffers_Generated.\(structDef.namespace.joined(separator: ".")).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
+    code += "    return \(DflatGenNamespace).\(structDef.namespace.joined(separator: ".")).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
   } else {
-    code += "    return FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
+    code += "    return \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
   }
   code += "  }\n"
   code += "}\n"
@@ -664,7 +665,7 @@ func GetTraverseKeyFlatBuffers(_ keyPaths: [KeyPath], defaultValue: String) -> S
       code += "    guard let tr\(i + 1) = tr\(i).\(field.name) else { return (\(defaultValue), true) }\n"
     case .union(let field, let union):
       let subStructDef = structDefs[union.struct!]!
-      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: FlatBuffers_Generated.\(GetFullyQualifiedName(subStructDef)).self) else { return (\(defaultValue), true) }\n"
+      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self) else { return (\(defaultValue), true) }\n"
     }
   }
   return code
@@ -1023,7 +1024,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "    return ofType.AsType__\(structDef.name)__\(expandedName).self\n"
     code += "  }\n"
     code += "\n  static private func _tr__\(expandedName)__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {\n"
-    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "-1")
     code += "    return (Int32(tr\(keyPaths.count).\(field.name)Type.rawValue), false)\n"
     code += "  }\n"
@@ -1075,7 +1076,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     break
   case .string:
     code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: String, unknown: Bool) {\n"
-    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "\"\"")
     if !field.isPrimary {
       code += "    guard let s = tr\(keyPaths.count).\(field.name) else { return (\"\", true) }\n"
@@ -1103,7 +1104,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   case .enum:
     let enumDef = enumDefs[field.type.enum!]!
     code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
-    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (\(GetFullyQualifiedName(enumDef))(rawValue: tr\(keyPaths.count).\(field.name).rawValue)!, false)\n"
     code += "  }\n"
@@ -1121,7 +1122,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   default: // These are the simple types (string, scalar) or enum
     let swiftType = SwiftType[field.type.type.rawValue]!
     code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
-    code += "    let tr0 = FlatBuffers_Generated.\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
+    code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (tr\(keyPaths.count).\(field.name), false)\n"
     code += "  }\n"
@@ -1177,6 +1178,8 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   let fileComponents = filePath.split(separator: "/")
   let filename = fileComponents.last!
   let filebase = filename.prefix(filename.count - "_generated.json".count)
+  let rootStructDef = structDefs[schema.root]!
+  DflatGenNamespace = (["DflatGen"] + rootStructDef.namespace).joined(separator: "__")
   GenDataModel(schema: schema, outputPath: outputPath + "/" + filebase + "_data_model_generated.swift")
   GenMutating(schema: schema, outputPath: outputPath + "/" + filebase + "_mutating_generated.swift")
   GenQuery(schema: schema, outputPath: outputPath + "/" + filebase + "_query_generated.swift")

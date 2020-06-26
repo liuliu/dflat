@@ -299,75 +299,6 @@ public final class SQLiteWorkspace: Workspace {
     #endif
   }
 
-  // MARK - Build Index
-
-  func buildIndex<Element: Atom>(_ ofType: Element.Type, field: String, toolbox: SQLitePersistenceToolbox, limit: Int) -> (insertedRows: Int, done: Bool) {
-    dispatchPrecondition(condition: .onQueue(targetQueue))
-    guard let sqlite = toolbox.connection.sqlite else { return (0, false) }
-    let SQLiteElement = Element.self as! SQLiteAtom.Type
-    var _query: OpaquePointer? = nil
-    guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid > IFNULL((SELECT MAX(rowid) FROM \(SQLiteElement.table)__\(field)),0)", -1, &_query, nil) else { return (0, false) }
-    guard let query = _query else { return (0, false) }
-    var insertedRows = 0
-    var done = true
-    while SQLITE_ROW == sqlite3_step(query) {
-      let blob = sqlite3_column_blob(query, 1)
-      let blobSize = sqlite3_column_bytes(query, 1)
-      let rowid = sqlite3_column_int64(query, 0)
-      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
-      if SQLiteElement.insertIndex(toolbox, field: field, rowid: rowid, table: bb) {
-        insertedRows += 1
-        if insertedRows >= limit {
-          done = false
-          break
-        }
-      } else {
-        // TODO: Handle unique constraint violation: SQLITE_CONSTRAINT_UNIQUE
-      }
-    }
-    sqlite3_finalize(query)
-    return (insertedRows, done)
-  }
-
-  func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
-    let objectType = ObjectIdentifier(Element.self)
-    let tableSpace: SQLiteTableSpace = state.serial {
-     if let tableSpace = tableSpaces[objectType] {
-       return tableSpace
-     } else {
-       let tableSpace = self.newTableSpace()
-       tableSpaces[objectType] = tableSpace
-       return tableSpace
-     }
-    }
-    // We don't need to bump the priority for this.
-    tableSpace.queue.async { [weak self] in
-      guard let self = self else { return }
-      guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
-      let SQLiteElement = Element.self as! SQLiteAtom.Type
-      tableSpace.lock()
-      defer { tableSpace.unlock() }
-      let toolbox = SQLitePersistenceToolbox(connection: connection)
-      let indexSurvey = connection.indexSurvey(fields, table: SQLiteElement.table)
-      var limit = Self.RebuildIndexBatchLimit
-      var fields = indexSurvey.partial
-      for field in indexSurvey.partial {
-        let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
-        limit -= retval.insertedRows
-        if retval.done {
-          fields.remove(field)
-        }
-        if limit <= 0 {
-          break
-        }
-      }
-      if fields.count > 0 {
-        // Re-enqueue to process the remaining indexes.
-        self.beginRebuildIndex(Element.self, fields: fields)
-      }
-    }
-  }
-
   // MARK - Concurrency Control Related Methods
 
   private func newTableSpace() -> SQLiteTableSpace {
@@ -443,4 +374,77 @@ public final class SQLiteWorkspace: Workspace {
     }
     return true
   }
+}
+
+// MARK - Build Index
+
+extension SQLiteWorkspace {
+
+  func buildIndex<Element: Atom>(_ ofType: Element.Type, field: String, toolbox: SQLitePersistenceToolbox, limit: Int) -> (insertedRows: Int, done: Bool) {
+    dispatchPrecondition(condition: .onQueue(targetQueue))
+    guard let sqlite = toolbox.connection.sqlite else { return (0, false) }
+    let SQLiteElement = Element.self as! SQLiteAtom.Type
+    var _query: OpaquePointer? = nil
+    guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid > IFNULL((SELECT MAX(rowid) FROM \(SQLiteElement.table)__\(field)),0)", -1, &_query, nil) else { return (0, false) }
+    guard let query = _query else { return (0, false) }
+    var insertedRows = 0
+    var done = true
+    while SQLITE_ROW == sqlite3_step(query) {
+      let blob = sqlite3_column_blob(query, 1)
+      let blobSize = sqlite3_column_bytes(query, 1)
+      let rowid = sqlite3_column_int64(query, 0)
+      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
+      if SQLiteElement.insertIndex(toolbox, field: field, rowid: rowid, table: bb) {
+        insertedRows += 1
+        if insertedRows >= limit {
+          done = false
+          break
+        }
+      } else {
+        // TODO: Handle unique constraint violation: SQLITE_CONSTRAINT_UNIQUE
+      }
+    }
+    sqlite3_finalize(query)
+    return (insertedRows, done)
+  }
+
+  func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
+    let objectType = ObjectIdentifier(Element.self)
+    let tableSpace: SQLiteTableSpace = state.serial {
+     if let tableSpace = tableSpaces[objectType] {
+       return tableSpace
+     } else {
+       let tableSpace = self.newTableSpace()
+       tableSpaces[objectType] = tableSpace
+       return tableSpace
+     }
+    }
+    // We don't need to bump the priority for this.
+    tableSpace.queue.async { [weak self] in
+      guard let self = self else { return }
+      guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+      let SQLiteElement = Element.self as! SQLiteAtom.Type
+      tableSpace.lock()
+      defer { tableSpace.unlock() }
+      let toolbox = SQLitePersistenceToolbox(connection: connection)
+      let indexSurvey = connection.indexSurvey(fields, table: SQLiteElement.table)
+      var limit = Self.RebuildIndexBatchLimit
+      var fields = indexSurvey.partial
+      for field in indexSurvey.partial {
+        let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
+        limit -= retval.insertedRows
+        if retval.done {
+          fields.remove(field)
+        }
+        if limit <= 0 {
+          break
+        }
+      }
+      if fields.count > 0 {
+        // Re-enqueue to process the remaining indexes.
+        self.beginRebuildIndex(Element.self, fields: fields)
+      }
+    }
+  }
+
 }
