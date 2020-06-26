@@ -135,4 +135,180 @@ class SchemaUpgradeTests: XCTestCase {
     XCTAssertEqual(fetchedResult[1].name, "name2")
     connection?.close()
   }
+
+  func testBuildIndexWhenTableDropped() {
+    guard var dflat = dflat else { return }
+    guard let filePath = filePath else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    // Now delete the index, we know the table name.
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__mana", nil, nil, nil)
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(fetchedResult.count == 2)
+    XCTAssertEqual(fetchedResult[0].name, "name3")
+    XCTAssertEqual(fetchedResult[1].name, "name2")
+    // Above fetching will trigger index rebuild. The rebuild will be scheduled on the queue. Therefore, empty performChanges will do.
+    let indexExpectation = XCTestExpectation(description: "index done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+    }) { success in
+      indexExpectation.fulfill()
+    }
+    wait(for: [indexExpectation], timeout: 10.0)
+    var query: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_step(query!)
+    let count = sqlite3_column_int64(query!, 0)
+    XCTAssertEqual(count, 4)
+    connection?.close()
+    // Fetch again, now with index.
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(finalFetchedResult.count == 2)
+    XCTAssertEqual(finalFetchedResult[0].name, "name3")
+    XCTAssertEqual(finalFetchedResult[1].name, "name2")
+  }
+
+  func testBuildIndexWhenIndexMissing() {
+    guard var dflat = dflat else { return }
+    guard let filePath = filePath else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    // Now delete the index, we know the table name.
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana", nil, nil, nil)
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(fetchedResult.count == 2)
+    XCTAssertEqual(fetchedResult[0].name, "name3")
+    XCTAssertEqual(fetchedResult[1].name, "name2")
+    // Above fetching will trigger index rebuild. The rebuild will be scheduled on the queue. Therefore, empty performChanges will do.
+    let indexExpectation = XCTestExpectation(description: "index done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+    }) { success in
+      indexExpectation.fulfill()
+    }
+    wait(for: [indexExpectation], timeout: 10.0)
+    var query: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_step(query!)
+    let count = sqlite3_column_int64(query!, 0)
+    XCTAssertEqual(count, 4)
+    connection?.close()
+    // Fetch again, now with index.
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(finalFetchedResult.count == 2)
+    XCTAssertEqual(finalFetchedResult[0].name, "name3")
+    XCTAssertEqual(finalFetchedResult[1].name, "name2")
+  }
+
+  func testBuildIndexWithPartialIndex() {
+    guard var dflat = dflat else { return }
+    guard let filePath = filePath else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name2"
+      creationRequest2.mana = 50
+      creationRequest2.color = .green
+      txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      txnContext.submit(creationRequest4)
+    }) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    // Now delete the index, we know the table name.
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana WHERE rowid >= 3", nil, nil, nil)
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(fetchedResult.count == 3)
+    XCTAssertEqual(fetchedResult[0].name, "name3")
+    XCTAssertEqual(fetchedResult[1].name, "name2")
+    XCTAssertEqual(fetchedResult[2].name, "name1")
+    // Above fetching will trigger index rebuild. The rebuild will be scheduled on the queue. Therefore, empty performChanges will do.
+    let indexExpectation = XCTestExpectation(description: "index done")
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+    }) { success in
+      indexExpectation.fulfill()
+    }
+    wait(for: [indexExpectation], timeout: 10.0)
+    var query: OpaquePointer? = nil
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_step(query!)
+    let count = sqlite3_column_int64(query!, 0)
+    XCTAssertEqual(count, 4)
+    connection?.close()
+    // Fetch now with index.
+    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    XCTAssert(finalFetchedResult.count == 3)
+    XCTAssertEqual(finalFetchedResult[0].name, "name3")
+    XCTAssertEqual(finalFetchedResult[1].name, "name2")
+    XCTAssertEqual(finalFetchedResult[2].name, "name1")
+  }
 }
