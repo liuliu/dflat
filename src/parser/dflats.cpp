@@ -266,6 +266,7 @@ int main(int argc, const char **argv) {
     for (auto &name: ns) {
         prefix += "__" + name;
     }
+    prefix += "__" + parser->root_struct_def_->name;
     // Attach additional namespace to it.
     InsertNamespace(*parser.get(), prefix);
     flatbuffers::GenerateSwift(*parser.get(), output_path, filebase);

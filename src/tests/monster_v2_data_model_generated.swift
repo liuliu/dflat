@@ -26,7 +26,7 @@ public struct Vec3: Equatable {
     self.y = y
     self.z = z
   }
-  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Vec3) {
+  public init(_ obj: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Vec3) {
     self.x = obj.x
     self.y = obj.y
     self.z = obj.z
@@ -40,7 +40,7 @@ public struct Weapon: Equatable {
     self.name = name
     self.damage = damage
   }
-  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon) {
+  public init(_ obj: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon) {
     self.name = obj.name
     self.damage = obj.damage
   }
@@ -53,7 +53,7 @@ public struct Orb: Equatable {
     self.name = name
     self.color = color
   }
-  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb) {
+  public init(_ obj: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb) {
     self.name = obj.name
     self.color = Color(rawValue: obj.color.rawValue) ?? .red
   }
@@ -98,7 +98,7 @@ public final class Monster: Dflat.Atom, Equatable {
     self.path = path
     self.wear = wear
   }
-  public init(_ obj: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster) {
+  public init(_ obj: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster) {
     self.pos = obj.pos.map { Vec3($0) }
     self.mana = obj.mana
     self.hp = obj.hp
@@ -115,9 +115,9 @@ public final class Monster: Dflat.Atom, Equatable {
     case .none_:
       self.equipped = nil
     case .weapon:
-      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
+      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
     case .orb:
-      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
+      self.equipped = obj.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
     }
     var __colors = [Color]()
     for i: Int32 in 0..<obj.colorsCount {
@@ -135,13 +135,13 @@ public final class Monster: Dflat.Atom, Equatable {
     case .none_:
       self.wear = nil
     case .weapon:
-      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
+      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
     case .orb:
-      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
+      self.wear = obj.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
     }
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    Self(DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: bb))
+    Self(DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: bb))
   }
 }
 

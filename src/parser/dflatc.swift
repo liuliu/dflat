@@ -1179,7 +1179,7 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   let filename = fileComponents.last!
   let filebase = filename.prefix(filename.count - "_generated.json".count)
   let rootStructDef = structDefs[schema.root]!
-  DflatGenNamespace = (["DflatGen"] + rootStructDef.namespace).joined(separator: "__")
+  DflatGenNamespace = (["DflatGen"] + rootStructDef.namespace + [rootStructDef.name]).joined(separator: "__")
   GenDataModel(schema: schema, outputPath: outputPath + "/" + filebase + "_data_model_generated.swift")
   GenMutating(schema: schema, outputPath: outputPath + "/" + filebase + "_mutating_generated.swift")
   GenQuery(schema: schema, outputPath: outputPath + "/" + filebase + "_query_generated.swift")

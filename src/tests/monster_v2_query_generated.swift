@@ -6,7 +6,7 @@ extension MyGame.SampleV2.Monster {
   struct pos {
 
   static private func _tr__pos__x(_ table: ByteBuffer) -> (result: Float32, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     guard let tr1 = tr0.pos else { return (0.0, true) }
     return (tr1.x, false)
   }
@@ -18,7 +18,7 @@ extension MyGame.SampleV2.Monster {
   public static let x: FieldExpr<Float32> = FieldExpr(name: "pos__x", primaryKey: false, hasIndex: false, tableReader: _tr__pos__x, objectReader: _or__pos__x)
 
   static private func _tr__pos__y(_ table: ByteBuffer) -> (result: Float32, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     guard let tr1 = tr0.pos else { return (0.0, true) }
     return (tr1.y, false)
   }
@@ -30,7 +30,7 @@ extension MyGame.SampleV2.Monster {
   public static let y: FieldExpr<Float32> = FieldExpr(name: "pos__y", primaryKey: false, hasIndex: false, tableReader: _tr__pos__y, objectReader: _or__pos__y)
 
   static private func _tr__pos__z(_ table: ByteBuffer) -> (result: Float32, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     guard let tr1 = tr0.pos else { return (0.0, true) }
     return (tr1.z, false)
   }
@@ -44,7 +44,7 @@ extension MyGame.SampleV2.Monster {
   }
 
   static private func _tr__mana(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (tr0.mana, false)
   }
   static private func _or__mana(_ object: Dflat.Atom) -> (result: Int16, unknown: Bool) {
@@ -54,7 +54,7 @@ extension MyGame.SampleV2.Monster {
   static let mana: FieldExpr<Int16> = FieldExpr(name: "mana", primaryKey: false, hasIndex: true, tableReader: _tr__mana, objectReader: _or__mana)
 
   static private func _tr__hp(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (tr0.hp, false)
   }
   static private func _or__hp(_ object: Dflat.Atom) -> (result: Int16, unknown: Bool) {
@@ -64,7 +64,7 @@ extension MyGame.SampleV2.Monster {
   static let hp: FieldExpr<Int16> = FieldExpr(name: "hp", primaryKey: false, hasIndex: true, tableReader: _tr__hp, objectReader: _or__hp)
 
   static private func _tr__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (tr0.name!, false)
   }
   static private func _or__name(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {
@@ -74,7 +74,7 @@ extension MyGame.SampleV2.Monster {
   static let name: FieldExpr<String> = FieldExpr(name: "__pk0", primaryKey: true, hasIndex: false, tableReader: _tr__name, objectReader: _or__name)
 
   static private func _tr__color(_ table: ByteBuffer) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (MyGame.SampleV2.Color(rawValue: tr0.color.rawValue)!, false)
   }
   static private func _or__color(_ object: Dflat.Atom) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
@@ -93,7 +93,7 @@ extension MyGame.SampleV2.Monster {
   }
 
   static private func _tr__equipped__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (Int32(tr0.equippedType.rawValue), false)
   }
 
@@ -121,7 +121,7 @@ extension MyGame.SampleV2.Monster {
   }
 
   static private func _tr__wear__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
     return (Int32(tr0.wearType.rawValue), false)
   }
 
@@ -151,8 +151,8 @@ extension MyGame.SampleV2.Weapon: MyGame__SampleV2__Monster__equipped {
   public struct _equipped__Weapon {
 
   static private func _tr__equipped__Weapon__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self) else { return ("", true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self) else { return ("", true) }
     guard let s = tr1.name else { return ("", true) }
     return (s, false)
   }
@@ -165,8 +165,8 @@ extension MyGame.SampleV2.Weapon: MyGame__SampleV2__Monster__equipped {
   public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Weapon__name", primaryKey: false, hasIndex: false, tableReader: _tr__equipped__Weapon__name, objectReader: _or__equipped__Weapon__name)
 
   static private func _tr__equipped__Weapon__damage(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self) else { return (0, true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self) else { return (0, true) }
     return (tr1.damage, false)
   }
   static private func _or__equipped__Weapon__damage(_ object: Dflat.Atom) -> (result: Int16, unknown: Bool) {
@@ -186,8 +186,8 @@ extension MyGame.SampleV2.Orb: MyGame__SampleV2__Monster__equipped {
   public struct _equipped__Orb {
 
   static private func _tr__equipped__Orb__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self) else { return ("", true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self) else { return ("", true) }
     guard let s = tr1.name else { return ("", true) }
     return (s, false)
   }
@@ -200,8 +200,8 @@ extension MyGame.SampleV2.Orb: MyGame__SampleV2__Monster__equipped {
   public static let name: FieldExpr<String> = FieldExpr(name: "equipped__Orb__name", primaryKey: false, hasIndex: true, tableReader: _tr__equipped__Orb__name, objectReader: _or__equipped__Orb__name)
 
   static private func _tr__equipped__Orb__color(_ table: ByteBuffer) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self) else { return (.red, true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.equipped(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self) else { return (.red, true) }
     return (MyGame.SampleV2.Color(rawValue: tr1.color.rawValue)!, false)
   }
   static private func _or__equipped__Orb__color(_ object: Dflat.Atom) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
@@ -226,8 +226,8 @@ extension MyGame.SampleV2.Weapon: MyGame__SampleV2__Monster__wear {
   public struct _wear__Weapon {
 
   static private func _tr__wear__Weapon__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self) else { return ("", true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self) else { return ("", true) }
     guard let s = tr1.name else { return ("", true) }
     return (s, false)
   }
@@ -240,8 +240,8 @@ extension MyGame.SampleV2.Weapon: MyGame__SampleV2__Monster__wear {
   public static let name: FieldExpr<String> = FieldExpr(name: "wear__Weapon__name", primaryKey: false, hasIndex: false, tableReader: _tr__wear__Weapon__name, objectReader: _or__wear__Weapon__name)
 
   static private func _tr__wear__Weapon__damage(_ table: ByteBuffer) -> (result: Int16, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Weapon.self) else { return (0, true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self) else { return (0, true) }
     return (tr1.damage, false)
   }
   static private func _or__wear__Weapon__damage(_ object: Dflat.Atom) -> (result: Int16, unknown: Bool) {
@@ -261,8 +261,8 @@ extension MyGame.SampleV2.Orb: MyGame__SampleV2__Monster__wear {
   public struct _wear__Orb {
 
   static private func _tr__wear__Orb__name(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self) else { return ("", true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self) else { return ("", true) }
     guard let s = tr1.name else { return ("", true) }
     return (s, false)
   }
@@ -275,8 +275,8 @@ extension MyGame.SampleV2.Orb: MyGame__SampleV2__Monster__wear {
   public static let name: FieldExpr<String> = FieldExpr(name: "wear__Orb__name", primaryKey: false, hasIndex: true, tableReader: _tr__wear__Orb__name, objectReader: _or__wear__Orb__name)
 
   static private func _tr__wear__Orb__color(_ table: ByteBuffer) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
-    let tr0 = DflatGen__MyGame__SampleV2.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
-    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2.MyGame.SampleV2.Orb.self) else { return (.red, true) }
+    let tr0 = DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Monster.getRootAsMonster(bb: table)
+    guard let tr1 = tr0.wear(type: DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self) else { return (.red, true) }
     return (MyGame.SampleV2.Color(rawValue: tr1.color.rawValue)!, false)
   }
   static private func _or__wear__Orb__color(_ object: Dflat.Atom) -> (result: MyGame.SampleV2.Color, unknown: Bool) {
