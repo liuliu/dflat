@@ -128,6 +128,9 @@ extension Optional where Wrapped == MyGame.Sample.Monster {
 extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
   public static var table: String { "mygame__sample__monster" }
   public static var indexFields: [String] { ["mana", "equipped__type", "equipped__Orb__name"] }
+  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
+    MyGame.Sample.MonsterChangeRequest.setUpSchema(toolbox)
+  }
 }
 
 extension MyGame.Sample {

@@ -780,6 +780,9 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
   code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
   code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\($0.keyName)\"" }.joined(separator: ", "))] }\n"
+  code += "  public static func setUpSchema(_ toolbox: PersistenceToolbox) {\n"
+  code += "    \(GetFullyQualifiedName(structDef))ChangeRequest.setUpSchema(toolbox)\n"
+  code += "  }\n"
   code += "}\n"
   if structDef.namespace.count > 0 {
     code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
