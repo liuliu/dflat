@@ -4,6 +4,7 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 swift_library(
   name = "Tests_lib",
   srcs = [
+    "ConcurrencyTests.swift",
     "ExprTests.swift",
     "FetchTests.swift",
     "namespace.swift",
