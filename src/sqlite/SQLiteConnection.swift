@@ -36,6 +36,7 @@ public final class SQLiteConnection {
       sqlite3_finalize(prepared)
     }
     sqlite3_close(sqlite)
+    self.sqlite = nil
   }
   public func prepareStatement(_ statement: String) -> OpaquePointer? {
     guard let sqlite = sqlite else { return nil }
