@@ -84,10 +84,13 @@ extension SQLiteConnection {
     var maxRowid: Int64? = nil
     for index in existingIndexes {
       if let status = indexStatus[index] {
-        if status == .indexed {
+        switch status {
+        case .indexed:
           indexSurvey.full.insert(index)
-        } else if status == .unindexed {
+        case .unindexed:
           indexSurvey.partial.insert(index)
+        case .unavailable:
+          indexSurvey.unavailable.insert(index)
         }
         continue
       }
@@ -122,10 +125,12 @@ extension SQLiteConnection {
         // index while the old table has 0 rows. For that case, it is indexed. However, this condition may also be
         // some other errors from SQLite, in that case, error on the safe side.
         indexStatus[index] = .unavailable
+        indexSurvey.unavailable.insert(index)
         continue
       }
       guard let maxQuery = _maxQuery else {
         indexStatus[index] = .unavailable
+        indexSurvey.unavailable.insert(index)
         continue
       }
       if SQLITE_ROW == sqlite3_step(maxQuery) {

@@ -16,6 +16,7 @@ public final class SQLiteWorkspace: Workspace {
     case concurrent
     case serial
   }
+  private static let RebuildIndexDelayOnDiskFull = 5.0 // In seconds..
   private static let RebuildIndexBatchLimit = 500 // We can jam the write queue by just having index rebuild (upon upgrade). This limits that each rebuild batches at this limit, if the limit exceed, we will dispatch back to the queue again to finish up.
   private let filePath: String
   private let fileProtectionLevel: FileProtectionLevel
@@ -411,27 +412,46 @@ extension SQLiteWorkspace {
       // It is OK to create connection, etc. before acquiring the lock as long as we don't do mutation.
       tableSpace.lock()
       defer { tableSpace.unlock() }
+      let begin = connection.prepareStatement("BEGIN")
+      // If we cannot start a transaction, nothing we can do, just wait for re-trigger.
+      guard SQLITE_DONE == sqlite3_step(begin) else { return }
       // Make sure the table exists before we query.
       if !tableSpace.state.tableCreated.contains(objectType) {
         SQLiteElement.setUpSchema(toolbox)
         tableSpace.state.tableCreated.insert(objectType)
       }
       let indexSurvey = connection.indexSurvey(fields, table: table)
+      // We may still have "unavailable" due to other issues (for example, disk full). Ignore for now
+      // and will re-trigger this on later queries.
       var limit = Self.RebuildIndexBatchLimit
-      var fields = indexSurvey.partial
+      var newFields = indexSurvey.partial
       for field in indexSurvey.partial {
         let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
         limit -= retval.insertedRows
         if retval.done {
-          fields.remove(field)
+          newFields.remove(field)
         }
         if limit <= 0 {
           break
         }
       }
-      if fields.count > 0 {
+      // Try to commit.
+      let commit = connection.prepareStatement("COMMIT")
+      let status = sqlite3_step(commit)
+      if SQLITE_FULL == status {
+        let rollback = connection.prepareStatement("ROLLBACK")
+        let status = sqlite3_step(rollback)
+        precondition(status == SQLITE_DONE)
+        // In case we failed, trigger a redo a few seconds later.
+        tableSpace.queue.asyncAfter(deadline: .now() + Self.RebuildIndexDelayOnDiskFull) { [weak self] in
+          self?.beginRebuildIndex(Element.self, fields: fields)
+        }
+        return
+      }
+      connection.clearIndexStatus(for: table)
+      if newFields.count > 0 {
         // Re-enqueue to process the remaining indexes.
-        self.beginRebuildIndex(Element.self, fields: fields)
+        self.beginRebuildIndex(Element.self, fields: newFields)
       }
     }
   }

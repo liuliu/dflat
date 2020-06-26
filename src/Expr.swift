@@ -15,6 +15,7 @@ public enum Evaluable {
 public struct IndexSurvey {
   public var full = Set<String>()
   public var partial = Set<String>()
+  public var unavailable = Set<String>()
   public init() {}
 }
 

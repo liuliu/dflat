@@ -218,7 +218,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
   // Now we are near the end, trigger rebuild the index if needed.
   if let workspace = workspace {
     if indexSurvey.partial.count > 0 {
-      workspace.beginRebuildIndex(Element.self, fields: indexSurvey.partial)
+      workspace.beginRebuildIndex(Element.self, fields: indexSurvey.partial.union(indexSurvey.unavailable))
     }
   }
 }
