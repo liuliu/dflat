@@ -13,6 +13,7 @@ public final class SQLiteTransactionContext: TransactionContext {
   private let state: SQLiteTableState
   private let toolbox: SQLitePersistenceToolbox
   private var tableCreated = Set<ObjectIdentifier>()
+  let changesTimestamp: Int64
   var borrowed: SQLiteConnectionPool.Borrowed {
     SQLiteConnectionPool.Borrowed(pointee: toolbox.connection)
   }
@@ -27,7 +28,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     }
   }
 
-  init(state: SQLiteTableState, objectTypes: [ObjectIdentifier], connection: SQLiteConnection) {
+  init(state: SQLiteTableState, objectTypes: [ObjectIdentifier], changesTimestamp: Int64, connection: SQLiteConnection) {
     var objectTypesSet = Set<ObjectIdentifier>()
     for type in objectTypes {
       objectTypesSet.update(with: type)
@@ -35,6 +36,7 @@ public final class SQLiteTransactionContext: TransactionContext {
     self.state = state
     self.objectTypes = objectTypesSet
     self.toolbox = SQLitePersistenceToolbox(connection: connection)
+    self.changesTimestamp = changesTimestamp
     Self.current = self
   }
 

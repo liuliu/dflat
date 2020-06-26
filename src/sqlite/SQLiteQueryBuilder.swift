@@ -18,9 +18,11 @@ struct AllExpr: Expr, SQLiteExpr {
 final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   private let reader: SQLiteConnectionPool.Borrowed
   private let transactionContext: SQLiteTransactionContext?
+  private let workspace: SQLiteWorkspace
   private let changesTimestamp: Int64
-  public init(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
+  public init(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
     self.reader = reader
+    self.workspace = workspace
     self.transactionContext = transactionContext
     self.changesTimestamp = changesTimestamp
     super.init()
@@ -28,7 +30,7 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
     var result = [Element]()
-    SQLiteQueryWhere(reader: reader, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
+    SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
     return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
   override func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> {
@@ -77,7 +79,7 @@ extension Array where Element: Atom {
   }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], offset: Int, result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], offset: Int, result: inout [Element]) {
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
@@ -213,4 +215,10 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, tran
   // This will help to release memory related to the query.
   sqlite3_reset(preparedQuery)
   sqlite3_clear_bindings(preparedQuery)
+  // Now we are near the end, trigger rebuild the index if needed.
+  if let workspace = workspace {
+    if indexSurvey.partial.count > 0 {
+      workspace.beginRebuildIndex(Element.self, fields: indexSurvey.partial)
+    }
+  }
 }

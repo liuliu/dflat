@@ -156,7 +156,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
         if case .limit(let numLimit) = limit {
           if fetchedResult.count == numLimit && underlyingArray.count < numLimit {
             // If previously it is full, we need to fetch the database again to fill in the rest.
-            SQLiteQueryWhere(reader: reader, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: underlyingArray.count, result: &underlyingArray)
+            SQLiteQueryWhere(reader: reader, workspace: nil, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: underlyingArray.count, result: &underlyingArray)
           }
         }
         fetchedResult = SQLiteFetchedResult(underlyingArray, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)

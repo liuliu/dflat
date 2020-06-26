@@ -2,6 +2,7 @@ import Dflat
 import SQLite3
 import Dispatch
 import Foundation
+import FlatBuffers
 
 public final class SQLiteWorkspace: Workspace {
 
@@ -15,6 +16,7 @@ public final class SQLiteWorkspace: Workspace {
     case concurrent
     case serial
   }
+  private static let RebuildIndexBatchLimit = 500 // We can jam the write queue by just having index rebuild (upon upgrade). This limits that each rebuild batches at this limit, if the limit exceed, we will dispatch back to the queue again to finish up.
   private let filePath: String
   private let fileProtectionLevel: FileProtectionLevel
   private let targetQueue: DispatchQueue
@@ -93,13 +95,16 @@ public final class SQLiteWorkspace: Workspace {
       // If we are in a transaction, we cannot have changesTimestamp for fetching. The reason is because this transaction may
       // later abort, causing all changes in this transaction to rollback. We need to refetch all objects fetched in this transaction
       // if we are going to use the changesTimestamp.
-      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, transactionContext: txnContext, changesTimestamp: 0)
+      let updatedObjectCount = txnContext.objectRepository.updatedObjects[ObjectIdentifier(Element.self)]?.count ?? 0
+      // If there is no changes to this particular Element, we are safe to use existing changesTimestamp. Otherwise, we need to use 0.
+      let changesTimestamp = updatedObjectCount > 0 ? 0 : txnContext.changesTimestamp
+      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, workspace: self, transactionContext: txnContext, changesTimestamp: changesTimestamp)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<Element>(reader: snapshot.reader, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
+      return SQLiteQueryBuilder<Element>(reader: snapshot.reader, workspace: self, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
     }
     let changesTimestamp = state.changesTimestamp.load(order: .acquire)
-    return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), transactionContext: nil, changesTimestamp: changesTimestamp)
+    return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), workspace: self, transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
   public func fetchWithinASnapshot<T>(_ closure: () -> T, ofType: T.Type) -> T {
@@ -137,7 +142,7 @@ public final class SQLiteWorkspace: Workspace {
        return tableSpace
      } else {
        let tableSpace = self.newTableSpace()
-       tableSpaces[identifier] = tableSpace
+       tableSpaces[objectType] = tableSpace
        return tableSpace
      }
     }
@@ -156,7 +161,7 @@ public final class SQLiteWorkspace: Workspace {
           let limit = fetchedResult.limit
           let orderBy = fetchedResult.orderBy
           var result = [Element]()
-          SQLiteQueryWhere(reader: reader, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
+          SQLiteQueryWhere(reader: reader, workspace: nil, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
           let newFetchedResult = SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)
           if newFetchedResult != fetchedResult {
             // If not equal, call changeHandler.
@@ -232,7 +237,7 @@ public final class SQLiteWorkspace: Workspace {
          return tableSpace
        } else {
          let tableSpace = self.newTableSpace()
-         tableSpaces[identifier] = tableSpace
+         tableSpaces[objectType] = tableSpace
          return tableSpace
        }
       }
@@ -250,7 +255,7 @@ public final class SQLiteWorkspace: Workspace {
          return tableSpace
        } else {
          let tableSpace = self.newTableSpace()
-         tableSpaces[identifier] = tableSpace
+         tableSpaces[objectType] = tableSpace
          return tableSpace
        }
       }
@@ -294,6 +299,75 @@ public final class SQLiteWorkspace: Workspace {
     #endif
   }
 
+  // MARK - Build Index
+
+  func buildIndex<Element: Atom>(_ ofType: Element.Type, field: String, toolbox: SQLitePersistenceToolbox, limit: Int) -> (insertedRows: Int, done: Bool) {
+    dispatchPrecondition(condition: .onQueue(targetQueue))
+    guard let sqlite = toolbox.connection.sqlite else { return (0, false) }
+    let SQLiteElement = Element.self as! SQLiteAtom.Type
+    var _query: OpaquePointer? = nil
+    guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid > IFNULL((SELECT MAX(rowid) FROM \(SQLiteElement.table)__\(field)),0)", -1, &_query, nil) else { return (0, false) }
+    guard let query = _query else { return (0, false) }
+    var insertedRows = 0
+    var done = true
+    while SQLITE_ROW == sqlite3_step(query) {
+      let blob = sqlite3_column_blob(query, 1)
+      let blobSize = sqlite3_column_bytes(query, 1)
+      let rowid = sqlite3_column_int64(query, 0)
+      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
+      if SQLiteElement.insertIndex(toolbox, field: field, rowid: rowid, table: bb) {
+        insertedRows += 1
+        if insertedRows >= limit {
+          done = false
+          break
+        }
+      } else {
+        // TODO: Handle unique constraint violation: SQLITE_CONSTRAINT_UNIQUE
+      }
+    }
+    sqlite3_finalize(query)
+    return (insertedRows, done)
+  }
+
+  func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
+    let objectType = ObjectIdentifier(Element.self)
+    let tableSpace: SQLiteTableSpace = state.serial {
+     if let tableSpace = tableSpaces[objectType] {
+       return tableSpace
+     } else {
+       let tableSpace = self.newTableSpace()
+       tableSpaces[objectType] = tableSpace
+       return tableSpace
+     }
+    }
+    // We don't need to bump the priority for this.
+    tableSpace.queue.async { [weak self] in
+      guard let self = self else { return }
+      guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+      let SQLiteElement = Element.self as! SQLiteAtom.Type
+      tableSpace.lock()
+      defer { tableSpace.unlock() }
+      let toolbox = SQLitePersistenceToolbox(connection: connection)
+      let indexSurvey = connection.indexSurvey(fields, table: SQLiteElement.table)
+      var limit = Self.RebuildIndexBatchLimit
+      var fields = indexSurvey.partial
+      for field in indexSurvey.partial {
+        let retval = self.buildIndex(Element.self, field: field, toolbox: toolbox, limit: limit)
+        limit -= retval.insertedRows
+        if retval.done {
+          fields.remove(field)
+        }
+        if limit <= 0 {
+          break
+        }
+      }
+      if fields.count > 0 {
+        // Re-enqueue to process the remaining indexes.
+        self.beginRebuildIndex(Element.self, fields: fields)
+      }
+    }
+  }
+
   // MARK - Concurrency Control Related Methods
 
   private func newTableSpace() -> SQLiteTableSpace {
@@ -332,7 +406,7 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
-    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, connection: connection)
+    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: state.changesTimestamp.load(), connection: connection)
     let begin = connection.prepareStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       return false
