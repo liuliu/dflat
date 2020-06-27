@@ -53,11 +53,11 @@ public final class SQLiteTransactionContext: TransactionContext {
     guard SQLITE_DONE == sqlite3_step(savepoint) else { throw TransactionError.others }
     let retval = updater(toolbox)
     guard let updatedObject = retval else {
+      let errcode = sqlite3_extended_errcode(toolbox.connection.sqlite)
       let rollback = toolbox.connection.prepareStatement("ROLLBACK TO dflat_txn")
       // We cannot handle the situation where the rollback failed.
       let status = sqlite3_step(rollback)
       assert(status == SQLITE_DONE)
-      let errcode = sqlite3_extended_errcode(toolbox.connection.sqlite)
       switch errcode {
       case 2067: // SQLITE_CONSTRAINT_UNIQUE:
         throw TransactionError.objectAlreadyExists

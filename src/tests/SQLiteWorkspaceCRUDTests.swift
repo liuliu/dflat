@@ -366,4 +366,92 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     }
   }
 
+  func testInsertSameObjectError() {
+    guard let dflat = dflat else { return }
+    let expectation1 = XCTestExpectation(description: "transcation done")
+    var objectAlreadyExists = false
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      try! txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name1"
+      creationRequest2.mana = 50
+      creationRequest2.color = .blue
+      try! txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name1"
+      creationRequest3.mana = 20
+      creationRequest3.color = .green
+      do {
+        try txnContext.submit(creationRequest3)
+      } catch TransactionError.objectAlreadyExists {
+        objectAlreadyExists = true
+      } catch {
+        fatalError()
+      }
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 120
+      creationRequest4.color = .green
+      try! txnContext.submit(creationRequest4)
+    }) { success in
+      expectation1.fulfill()
+    }
+    wait(for: [expectation1], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    XCTAssert(fetchedResult.count == 3)
+    XCTAssert(objectAlreadyExists)
+    XCTAssertEqual(fetchedResult[0].name, "name1")
+    XCTAssertEqual(fetchedResult[1].name, "name1")
+    XCTAssertEqual(fetchedResult[2].name, "name4")
+  }
+
+  func testInsertObjectWithTheSameOrbError() {
+    guard let dflat = dflat else { return }
+    let expectation1 = XCTestExpectation(description: "transcation done")
+    var objectAlreadyExists = false
+    dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
+      let creationRequest1 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest1.name = "name1"
+      creationRequest1.mana = 100
+      creationRequest1.color = .green
+      try! txnContext.submit(creationRequest1)
+      let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest2.name = "name1"
+      creationRequest2.mana = 50
+      creationRequest2.color = .blue
+      try! txnContext.submit(creationRequest2)
+      let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest3.name = "name3"
+      creationRequest3.mana = 120
+      creationRequest3.color = .green
+      creationRequest3.equipped = .orb(MyGame.Sample.Orb(name: "golden", color: .blue))
+      try! txnContext.submit(creationRequest3)
+      let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
+      creationRequest4.name = "name4"
+      creationRequest4.mana = 20
+      creationRequest4.color = .red
+      creationRequest4.equipped = .orb(MyGame.Sample.Orb(name: "golden", color: .red))
+      do {
+        try txnContext.submit(creationRequest4)
+      } catch TransactionError.objectAlreadyExists {
+        objectAlreadyExists = true
+      } catch {
+        fatalError()
+      }
+    }) { success in
+      expectation1.fulfill()
+    }
+    wait(for: [expectation1], timeout: 10.0)
+    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    XCTAssert(fetchedResult.count == 3)
+    XCTAssert(objectAlreadyExists)
+    XCTAssertEqual(fetchedResult[0].name, "name1")
+    XCTAssertEqual(fetchedResult[1].name, "name1")
+    XCTAssertEqual(fetchedResult[2].name, "name3")
+  }
+
 }
