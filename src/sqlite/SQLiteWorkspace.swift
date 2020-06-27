@@ -62,8 +62,14 @@ public final class SQLiteWorkspace: Workspace {
           return
         }
         // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
-        for tableSpace in tableSpaces {
-          tableSpace.lock()
+        tableSpaces[0].lock()
+        if tableSpaces.count > 1 {
+          for tableSpace in tableSpaces.suffix(from: 1) {
+            // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
+            tableSpace.queue.sync {
+              tableSpace.lock()
+            }
+          }
         }
         // We need to fetch the resultPublisher only after acquired the lock.
         var resultPublishers = [ObjectIdentifier: ResultPublisher]()
