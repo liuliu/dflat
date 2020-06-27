@@ -65,7 +65,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        _ = try? txnContext.submit(creationRequest)
+        txnContext.try(submit: creationRequest)
       }
     }) { (succeed) in
       insertEndTime = CACurrentMediaTime()
@@ -91,7 +91,7 @@ final class BenchmarksViewController: UIViewController {
       for i in allDocs {
         guard let changeRequest = BenchDocChangeRequest.changeRequest(i) else { continue }
         changeRequest.priority = 0
-        _ = try? txnContext.submit(changeRequest)
+        txnContext.try(submit: changeRequest)
       }
     }) { (succeed) in
       updateEndTime = CACurrentMediaTime()
@@ -108,7 +108,7 @@ final class BenchmarksViewController: UIViewController {
       let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        _ = try? txnContext.submit(deletionRequest)
+        txnContext.try(submit: deletionRequest)
       }
     }) { (succeed) in
       deleteEndTime = CACurrentMediaTime()

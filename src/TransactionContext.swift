@@ -11,3 +11,16 @@ public protocol TransactionContext {
   @discardableResult
   func abort() -> Bool
 }
+
+public extension TransactionContext {
+  @discardableResult
+  func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject? {
+    do {
+      return try self.submit(changeRequest)
+    } catch TransactionError.objectAlreadyExists {
+      fatalError("Object you try to insert already exists. Potentially a conflict unique index or primary key?")
+    } catch {
+      return nil
+    }
+  }
+}
