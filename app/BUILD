@@ -4,7 +4,8 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 swift_library(
   name = "Benchmarks",
   srcs = [
-     "Benchmarks/AppDelegate.swift",
+    "Benchmarks/AppDelegate.swift",
+    "Benchmarks/ViewController.swift",
   ],
   deps = [
     "//src:Dflat",
