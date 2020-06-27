@@ -370,7 +370,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
             let enumDef = enumDefs[field.type.element!.union!]!
             for enumVal in enumDef.fields {
               guard enumVal.name != "NONE" else { continue }
-              code += "      case .\(enumVal.name.firstLowercased()):\n"
+              code += "      case .\(enumVal.name.lowercased()):\n"
               let subStructDef = structDefs[enumVal.struct!]!
               code += "        guard let oe = obj.\(field.name)(at: i, type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self) else { break }\n"
               code += "        __\(field.name).append(.\(enumVal.name.firstLowercased())(\(enumVal.name)(oe)))\n"
@@ -392,7 +392,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
       let enumDef = enumDefs[field.type.union!]!
       for enumVal in enumDef.fields {
         guard enumVal.name != "NONE" else { continue }
-        code += "    case .\(enumVal.name.firstLowercased()):\n"
+        code += "    case .\(enumVal.name.lowercased()):\n"
         let subStructDef = structDefs[enumVal.struct!]!
         code += "      self.\(field.name) = obj.\(field.name)(type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self).map { .\(enumVal.name.firstLowercased())(\(enumVal.name)($0)) }\n"
       }
@@ -510,7 +510,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
     code += "    case .\(enumVal.name.firstLowercased())(_):\n"
-    code += "      return \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef)).\(enumVal.name.firstLowercased())\n"
+    code += "      return \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef)).\(enumVal.name.lowercased())\n"
   }
   code += "    }\n"
   code += "  }\n"
@@ -592,7 +592,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           let enumDef = enumDefs[field.type.element!.enum!]!
           code += "    var __\(field.name) = [\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))]()\n"
           code += "    for i in self.\(field.name) {\n"
-          code += "      __\(field.name).append(\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: i.rawValue) ?? \(GetEnumDefaultValue(field.type.element!.enum!)))\n"
+          code += "      __\(field.name).append(\(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: i.rawValue) ?? \(GetEnumDefaultValue(field.type.element!.enum!).lowercased()))\n"
           code += "    }\n"
           code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(__\(field.name))\n"
           parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
@@ -606,7 +606,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
       parameters.append("\(fieldName): __\(fieldName)")
     case .enum:
       let enumDef = enumDefs[field.type.enum!]!
-      code += "    let __\(field.name) = \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: self.\(field.name).rawValue) ?? \(GetFieldDefaultValue(field))\n"
+      code += "    let __\(field.name) = \(DflatGenNamespace).\(GetFullyQualifiedName(enumDef))(rawValue: self.\(field.name).rawValue) ?? \(GetFieldDefaultValue(field).lowercased())\n"
       parameters.append("\(field.name): __\(field.name)")
     case .string:
       if field.isPrimary {

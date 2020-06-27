@@ -19,6 +19,8 @@ table ImageContent {
 }
 
 union Content {
+  TextContent,
+  ImageContent
 }
 
 table BenchDoc {

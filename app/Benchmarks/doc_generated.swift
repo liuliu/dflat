@@ -22,9 +22,11 @@ public enum Content: UInt8, Enum {
     public static var byteSize: Int { return MemoryLayout<UInt8>.size }
     public var value: UInt8 { return self.rawValue }
     case none_ = 0
+    case textcontent = 1
+    case imagecontent = 2
     
 
-    public static var max: Content { return .none_ }
+    public static var max: Content { return .imagecontent }
     public static var min: Content { return .none_ }
 }
 

@@ -81,6 +81,10 @@ extension BenchDoc {
     let or0 = object as! BenchDoc
     guard let o = or0.content else { return (-1, true) }
     switch o {
+    case .textContent:
+      return (1, false)
+    case .imageContent:
+      return (2, false)
     }
   }
   public static let _type: FieldExpr<Int32> = FieldExpr(name: "content__type", primaryKey: false, hasIndex: false, tableReader: _tr__content__type, objectReader: _or__content__type)
@@ -113,4 +117,36 @@ extension BenchDoc {
 public protocol BenchDoc__content {
   associatedtype AsType__BenchDoc__content
   static var match__BenchDoc__content: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> { get }
+}
+
+extension TextContent: BenchDoc__content {
+  public static let match__BenchDoc__content: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (BenchDoc.content._type == 1)
+
+  public struct _content__TextContent {
+
+  static private func _tr__content__TextContent__text(_ table: ByteBuffer) -> (result: String, unknown: Bool) {
+    let tr0 = DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    guard let tr1 = tr0.content(type: DflatGen__BenchDoc.TextContent.self) else { return ("", true) }
+    guard let s = tr1.text else { return ("", true) }
+    return (s, false)
+  }
+  static private func _or__content__TextContent__text(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {
+    let or0 = object as! BenchDoc
+    guard case let .textContent(or1) = or0.content else { return ("", true) }
+    guard let s = or1.text else { return ("", true) }
+    return (s, false)
+  }
+  public static let text: FieldExpr<String> = FieldExpr(name: "content__TextContent__text", primaryKey: false, hasIndex: false, tableReader: _tr__content__TextContent__text, objectReader: _or__content__TextContent__text)
+  }
+  public typealias AsType__BenchDoc__content = _content__TextContent
+
+}
+
+extension ImageContent: BenchDoc__content {
+  public static let match__BenchDoc__content: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (BenchDoc.content._type == 2)
+
+  public struct _content__ImageContent {
+  }
+  public typealias AsType__BenchDoc__content = _content__ImageContent
+
 }

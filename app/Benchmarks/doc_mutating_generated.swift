@@ -16,10 +16,18 @@ extension Color: SQLiteValue {
 extension Content {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     switch self {
+    case .textContent(let o):
+      return o.to(flatBufferBuilder: &flatBufferBuilder)
+    case .imageContent(let o):
+      return o.to(flatBufferBuilder: &flatBufferBuilder)
     }
   }
   var _type: DflatGen__BenchDoc.Content {
     switch self {
+    case .textContent(_):
+      return DflatGen__BenchDoc.Content.textcontent
+    case .imageContent(_):
+      return DflatGen__BenchDoc.Content.imagecontent
     }
   }
 }

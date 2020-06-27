@@ -11,6 +11,8 @@ public enum Color: Int8, DflatFriendlyValue {
 }
 
 public enum Content: Equatable {
+  case textContent(_: TextContent)
+  case imageContent(_: ImageContent)
 }
 
 public struct Vec3: Equatable {
@@ -85,6 +87,10 @@ public final class BenchDoc: Dflat.Atom, Equatable {
     switch obj.contentType {
     case .none_:
       self.content = nil
+    case .textcontent:
+      self.content = obj.content(type: DflatGen__BenchDoc.TextContent.self).map { .textContent(TextContent($0)) }
+    case .imagecontent:
+      self.content = obj.content(type: DflatGen__BenchDoc.ImageContent.self).map { .imageContent(ImageContent($0)) }
     }
     self.tag = obj.tag
     self.priority = obj.priority
