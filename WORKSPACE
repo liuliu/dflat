@@ -41,6 +41,14 @@ new_git_repository(
   build_file = "flatbuffers.BUILD",
 )
 
+new_git_repository(
+  name = "swift-atomics",
+  remote = "https://github.com/glessard/swift-atomics.git",
+  commit = "5353f78a030ab2b5f0468db78b2887d1eec54fe3",
+  shallow_since = "1591993436 -0600",
+  build_file = "swift-atomics.BUILD",
+)
+
 load(
   "@build_bazel_rules_swift//swift:repositories.bzl",
   "swift_rules_dependencies",

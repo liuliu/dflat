@@ -261,7 +261,7 @@ int main(int argc, const char **argv) {
 
     flatbuffers::EnsureDirExists(output_path);
     GenerateJSONAdapter(*parser.get(), output_path, filebase);
-    std::string prefix = "DflatGen";
+    std::string prefix = "zzz_DflatGen";
     std::vector<std::string> ns = parser->root_struct_def_->defined_namespace->components;
     for (auto &name: ns) {
         prefix += "__" + name;

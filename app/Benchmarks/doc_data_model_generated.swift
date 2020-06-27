@@ -24,7 +24,7 @@ public struct Vec3: Equatable {
     self.y = y
     self.z = z
   }
-  public init(_ obj: DflatGen__BenchDoc.Vec3) {
+  public init(_ obj: zzz_DflatGen__BenchDoc.Vec3) {
     self.x = obj.x
     self.y = obj.y
     self.z = obj.z
@@ -36,7 +36,7 @@ public struct TextContent: Equatable {
   public init(text: String? = nil) {
     self.text = text
   }
-  public init(_ obj: DflatGen__BenchDoc.TextContent) {
+  public init(_ obj: zzz_DflatGen__BenchDoc.TextContent) {
     self.text = obj.text
   }
 }
@@ -46,7 +46,7 @@ public struct ImageContent: Equatable {
   public init(images: [String] = []) {
     self.images = images
   }
-  public init(_ obj: DflatGen__BenchDoc.ImageContent) {
+  public init(_ obj: zzz_DflatGen__BenchDoc.ImageContent) {
     var __images = [String]()
     for i: Int32 in 0..<obj.imagesCount {
       guard let o = obj.images(at: i) else { break }
@@ -80,7 +80,7 @@ public final class BenchDoc: Dflat.Atom, Equatable {
     self.tag = tag
     self.priority = priority
   }
-  public init(_ obj: DflatGen__BenchDoc.BenchDoc) {
+  public init(_ obj: zzz_DflatGen__BenchDoc.BenchDoc) {
     self.pos = obj.pos.map { Vec3($0) }
     self.color = Color(rawValue: obj.color.rawValue) ?? .red
     self.title = obj.title!
@@ -88,14 +88,14 @@ public final class BenchDoc: Dflat.Atom, Equatable {
     case .none_:
       self.content = nil
     case .textcontent:
-      self.content = obj.content(type: DflatGen__BenchDoc.TextContent.self).map { .textContent(TextContent($0)) }
+      self.content = obj.content(type: zzz_DflatGen__BenchDoc.TextContent.self).map { .textContent(TextContent($0)) }
     case .imagecontent:
-      self.content = obj.content(type: DflatGen__BenchDoc.ImageContent.self).map { .imageContent(ImageContent($0)) }
+      self.content = obj.content(type: zzz_DflatGen__BenchDoc.ImageContent.self).map { .imageContent(ImageContent($0)) }
     }
     self.tag = obj.tag
     self.priority = obj.priority
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    Self(DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: bb))
+    Self(zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: bb))
   }
 }

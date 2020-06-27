@@ -7,29 +7,10 @@ swift_library(
 )
 
 objc_library(
-  name = "CAtomics",
-  hdrs = ["CAtomics/CAtomics.h"],
-  enable_modules = True,
-  module_name = "CAtomics"
-)
-
-objc_library(
   name = "SQLiteDflatObjC",
   hdrs = ["sqlite/Bridge.h"],
   enable_modules = True,
   module_name = "SQLiteDflatObjC"
-)
-
-swift_library(
-  name = "SwiftAtomics",
-  module_name = "SwiftAtomics",
-  srcs = [
-    "SwiftAtomics/AtomicInt.swift",
-    "SwiftAtomics/MemoryOrder.swift",
-  ],
-  deps = [
-    ":CAtomics",
-  ]
 )
 
 swift_library(
@@ -48,7 +29,7 @@ swift_library(
   ] + glob(["exprs/*.swift"]),
   deps = [
     ":FlatBuffers",
-    ":SwiftAtomics",
+    "@swift-atomics//:SwiftAtomics",
   ]
 )
 

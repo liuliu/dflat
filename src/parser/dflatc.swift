@@ -1010,26 +1010,26 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   let expandedName = GetExpandedName(keyPaths: keyPaths, field: field)
   let structProtocolName: String
   if structDef.namespace.count > 0 {
-    structProtocolName = structDef.namespace.joined(separator: "__") + "__" + structDef.name
+    structProtocolName = "zzz_DflatGen_Proto__" + structDef.namespace.joined(separator: "__") + "__" + structDef.name
   } else {
-    structProtocolName = structDef.name
+    structProtocolName = "zzz_DflatGen_Proto__" + structDef.name
   }
   switch field.type.type {
   case .union:
     let unionDef = enumDefs[field.type.union!]!
     code += "\n  struct \(field.name) {\n"
     code += "\n  public static func match<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> {\n"
-    code += "    return ofType.match__\(structDef.name)__\(expandedName)\n"
+    code += "    return ofType.zzz_match__\(structDef.name)__\(expandedName)\n"
     code += "  }\n"
-    code += "  public static func `as`<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> T.AsType__\(structDef.name)__\(expandedName).Type {\n"
-    code += "    return ofType.AsType__\(structDef.name)__\(expandedName).self\n"
+    code += "  public static func `as`<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> T.zzz_AsType__\(structDef.name)__\(expandedName).Type {\n"
+    code += "    return ofType.zzz_AsType__\(structDef.name)__\(expandedName).self\n"
     code += "  }\n"
-    code += "\n  static private func _tr__\(expandedName)__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "-1")
     code += "    return (Int32(tr\(keyPaths.count).\(field.name)Type.rawValue), false)\n"
     code += "  }\n"
-    code += "\n  static private func _or__\(expandedName)__type(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {\n"
+    code += "\n  private static func _or__\(expandedName)__type(_ object: Dflat.Atom) -> (result: Int32, unknown: Bool) {\n"
     code += "    let or0 = object as! \(GetFullyQualifiedName(structDef))\n"
     code += GetTraverseKeyDflat(keyPaths, defaultValue: "-1")
     code += "    guard let o = or\(keyPaths.count).\(field.name) else { return (-1, true) }\n"
@@ -1044,8 +1044,8 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "  public static let _type: FieldExpr<Int32> = FieldExpr(name: \"\(expandedName)__type\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName)__type, objectReader: _or__\(expandedName)__type)\n"
     code += "\n  }\n"
     addon += "\npublic protocol \(structProtocolName)__\(expandedName) {\n"
-    addon += "  associatedtype AsType__\(structDef.name)__\(expandedName)\n"
-    addon += "  static var match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> { get }\n"
+    addon += "  associatedtype zzz_AsType__\(structDef.name)__\(expandedName)\n"
+    addon += "  static var zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> { get }\n"
     addon += "}\n"
     for enumVal in unionDef.fields {
       guard enumVal.name != "NONE" else { continue }
@@ -1053,14 +1053,14 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       let subStructDef = structDefs[enumVal.struct!]!
       var newAddon = ""
       addon += "\nextension \(GetFullyQualifiedName(subStructDef)): \(structProtocolName)__\(expandedName) {\n"
-      addon += "  public static let match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (\(GetFullyQualifiedName(structDef)).\(GetKeyPathQuery(keyPaths, field: field))._type == \(enumVal.value))\n"
-      addon += "\n  public struct _\(expandedName)__\(subStructDef.name) {\n"
+      addon += "  public static let zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (\(GetFullyQualifiedName(structDef)).\(GetKeyPathQuery(keyPaths, field: field))._type == \(enumVal.value))\n"
+      addon += "\n  public struct zzz_\(expandedName)__\(subStructDef.name) {\n"
       for field in subStructDef.fields {
         guard IsDataField(field) else { continue }
         GenQueryForField(structDef, keyPaths: newKeyPaths, field: field, pkCount: &pkCount, code: &addon, addon: &newAddon)
       }
       addon += "  }\n"
-      addon += "  public typealias AsType__\(structDef.name)__\(expandedName) = _\(expandedName)__\(subStructDef.name)\n"
+      addon += "  public typealias zzz_AsType__\(structDef.name)__\(expandedName) = zzz_\(expandedName)__\(subStructDef.name)\n"
       addon += "\n}\n"
       addon += newAddon
     }
@@ -1076,7 +1076,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   case .vector: // We cannot query vector, skip.
     break
   case .string:
-    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: String, unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: String, unknown: Bool) {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "\"\"")
     if !field.isPrimary {
@@ -1086,7 +1086,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       code += "    return (tr\(keyPaths.count).\(field.name)!, false)\n"
     }
     code += "  }\n"
-    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {\n"
+    code += "  private static func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: String, unknown: Bool) {\n"
     code += "    let or0 = object as! \(GetFullyQualifiedName(structDef))\n"
     code += GetTraverseKeyDflat(keyPaths, defaultValue: "\"\"")
     if !field.isPrimary {
@@ -1104,12 +1104,12 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "static let \(field.name): FieldExpr<String> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
   case .enum:
     let enumDef = enumDefs[field.type.enum!]!
-    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (\(GetFullyQualifiedName(enumDef))(rawValue: tr\(keyPaths.count).\(field.name).rawValue)!, false)\n"
     code += "  }\n"
-    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
+    code += "  private static func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
     code += "    let or0 = object as! \(GetFullyQualifiedName(structDef))\n"
     code += GetTraverseKeyDflat(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (or\(keyPaths.count).\(field.name), false)\n"
@@ -1122,12 +1122,12 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "static let \(field.name): FieldExpr<\(GetFullyQualifiedName(enumDef))> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
   default: // These are the simple types (scalar) or enum
     let swiftType = SwiftType[field.type.type.rawValue]!
-    code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
     code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (tr\(keyPaths.count).\(field.name), false)\n"
     code += "  }\n"
-    code += "  static private func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(swiftType), unknown: Bool) {\n"
+    code += "  private static func _or__\(expandedName)(_ object: Dflat.Atom) -> (result: \(swiftType), unknown: Bool) {\n"
     code += "    let or0 = object as! \(GetFullyQualifiedName(structDef))\n"
     code += GetTraverseKeyDflat(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
     code += "    return (or\(keyPaths.count).\(field.name), false)\n"
@@ -1180,7 +1180,7 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   let filename = fileComponents.last!
   let filebase = filename.prefix(filename.count - "_generated.json".count)
   let rootStructDef = structDefs[schema.root]!
-  DflatGenNamespace = (["DflatGen"] + rootStructDef.namespace + [rootStructDef.name]).joined(separator: "__")
+  DflatGenNamespace = (["zzz_DflatGen"] + rootStructDef.namespace + [rootStructDef.name]).joined(separator: "__")
   GenDataModel(schema: schema, outputPath: outputPath + "/" + filebase + "_data_model_generated.swift")
   GenMutating(schema: schema, outputPath: outputPath + "/" + filebase + "_mutating_generated.swift")
   GenQuery(schema: schema, outputPath: outputPath + "/" + filebase + "_query_generated.swift")

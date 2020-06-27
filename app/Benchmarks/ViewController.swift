@@ -63,6 +63,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
+        txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       endTime = CACurrentMediaTime()
