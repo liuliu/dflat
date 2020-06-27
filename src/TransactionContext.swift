@@ -6,14 +6,12 @@ public enum TransactionError: Error {
 }
 
 public protocol TransactionContext {
+  // The returned result is guaranteed to be non-nil. However, this is IMO because
+  // if try? submit(changeRequest) wraps another Optional, the discardableResult is
+  // not respected. In that case, we may end up with excessive _ = try? submit, which
+  // is not desirable in my opinion.
   @discardableResult
-  func submit(_: ChangeRequest) throws -> UpdatedObject
+  func submit(_: ChangeRequest) throws -> UpdatedObject!
   @discardableResult
   func abort() -> Bool
-}
-
-public extension TransactionContext {
-  func submit(_ changeRequest: ChangeRequest) throws {
-    _ = try self.submit(changeRequest)
-  }
 }

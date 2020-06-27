@@ -81,7 +81,7 @@ public final class SQLiteTransactionContext: TransactionContext {
   }
 
   @discardableResult
-  public func submit(_ changeRequest: ChangeRequest) throws -> UpdatedObject {
+  public func submit(_ changeRequest: ChangeRequest) throws -> UpdatedObject! {
     let atomType = type(of: changeRequest).atomType
     precondition(contains(ofType: atomType))
     guard !aborted else { throw TransactionError.aborted }

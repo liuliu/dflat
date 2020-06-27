@@ -63,13 +63,14 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        try? txnContext.submit(creationRequest)
+        _ = try? txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       endTime = CACurrentMediaTime()
       group.leave()
     }
     group.wait()
-    text.text = "Insert 10,000: \(endTime - startTime) sec"
+    let stats = "Insert 10,000: \(endTime - startTime) sec"
+    text.text = stats
   }
 }
