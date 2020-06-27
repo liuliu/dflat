@@ -18,7 +18,7 @@ The **Dflat** codebase is still in a very young stage. However, the underlying p
 
  4. Data fetching can happen concurrently and synchronously on any thread by caller's choice;
 
- 5. [Strict serializable](https://jepsen.io/consistency/models/strict-serializable) multi-writer / multi-reader mode is supported but users can choose single-writer (thus, trivially S.S.) / multi-reader mode if they desire;
+ 5. [Strict serializable](https://jepsen.io/consistency/models/strict-serializable) multi-writer / multi-reader mode is supported but users can choose single-writer (thus, trivially strict serializable) / multi-reader mode if they desire;
 
  6. Data queries are expressed with Swift code, and will be type-checked by the Swift compiler;
 

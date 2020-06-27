@@ -249,7 +249,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
       atom._rowid = _rowid
       return .inserted(atom)
     case .update:
-      guard let update = toolbox.connection.prepareStatement("UPDATE benchdoc SET __pk0=?1, p=?2 WHERE rowid=?3 LIMIT 1") else { return nil }
+      guard let update = toolbox.connection.prepareStatement("REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
       title.bindSQLite(update, parameterId: 1)
       let atom = self._atom
       toolbox.flatBufferBuilder.clear()
@@ -262,24 +262,24 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
       _rowid.bindSQLite(update, parameterId: 3)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       if indexSurvey.full.contains("tag") {
-        guard let u0 = toolbox.connection.prepareStatement("UPDATE benchdoc__tag SET tag=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
-        _rowid.bindSQLite(u0, parameterId: 2)
+        guard let u0 = toolbox.connection.prepareStatement("REPLACE INTO benchdoc__tag (rowid, tag) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(u0, parameterId: 1)
         let r0 = BenchDoc.tag.evaluate(object: .object(atom))
         if r0.unknown {
-          sqlite3_bind_null(u0, 1)
+          sqlite3_bind_null(u0, 2)
         } else {
-          r0.result.bindSQLite(u0, parameterId: 1)
+          r0.result.bindSQLite(u0, parameterId: 2)
         }
         guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
       }
       if indexSurvey.full.contains("priority") {
-        guard let u1 = toolbox.connection.prepareStatement("UPDATE benchdoc__priority SET priority=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
-        _rowid.bindSQLite(u1, parameterId: 2)
+        guard let u1 = toolbox.connection.prepareStatement("REPLACE INTO benchdoc__priority (rowid, priority) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(u1, parameterId: 1)
         let r1 = BenchDoc.priority.evaluate(object: .object(atom))
         if r1.unknown {
-          sqlite3_bind_null(u1, 1)
+          sqlite3_bind_null(u1, 2)
         } else {
-          r1.result.bindSQLite(u1, parameterId: 1)
+          r1.result.bindSQLite(u1, parameterId: 2)
         }
         guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
       }

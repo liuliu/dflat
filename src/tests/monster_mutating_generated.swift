@@ -312,7 +312,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       atom._rowid = _rowid
       return .inserted(atom)
     case .update:
-      guard let update = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster SET __pk0=?1, __pk1=?2, p=?3 WHERE rowid=?4 LIMIT 1") else { return nil }
+      guard let update = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)") else { return nil }
       name.bindSQLite(update, parameterId: 1)
       color.bindSQLite(update, parameterId: 2)
       let atom = self._atom
@@ -326,35 +326,35 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       _rowid.bindSQLite(update, parameterId: 4)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       if indexSurvey.full.contains("mana") {
-        guard let u0 = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster__mana SET mana=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
-        _rowid.bindSQLite(u0, parameterId: 2)
+        guard let u0 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__mana (rowid, mana) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(u0, parameterId: 1)
         let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
         if r0.unknown {
-          sqlite3_bind_null(u0, 1)
+          sqlite3_bind_null(u0, 2)
         } else {
-          r0.result.bindSQLite(u0, parameterId: 1)
+          r0.result.bindSQLite(u0, parameterId: 2)
         }
         guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
       }
       if indexSurvey.full.contains("equipped__type") {
-        guard let u1 = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster__equipped__type SET equipped__type=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
-        _rowid.bindSQLite(u1, parameterId: 2)
+        guard let u1 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__type (rowid, equipped__type) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(u1, parameterId: 1)
         let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
         if r1.unknown {
-          sqlite3_bind_null(u1, 1)
+          sqlite3_bind_null(u1, 2)
         } else {
-          r1.result.bindSQLite(u1, parameterId: 1)
+          r1.result.bindSQLite(u1, parameterId: 2)
         }
         guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
       }
       if indexSurvey.full.contains("equipped__Orb__name") {
-        guard let u2 = toolbox.connection.prepareStatement("UPDATE mygame__sample__monster__equipped__Orb__name SET equipped__Orb__name=?1 WHERE rowid=?2 LIMIT 1") else { return nil }
-        _rowid.bindSQLite(u2, parameterId: 2)
+        guard let u2 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__Orb__name (rowid, equipped__Orb__name) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(u2, parameterId: 1)
         let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
         if r2.unknown {
-          sqlite3_bind_null(u2, 1)
+          sqlite3_bind_null(u2, 2)
         } else {
-          r2.result.bindSQLite(u2, parameterId: 1)
+          r2.result.bindSQLite(u2, parameterId: 2)
         }
         guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
       }

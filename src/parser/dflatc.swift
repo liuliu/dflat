@@ -919,7 +919,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      atom._rowid = _rowid\n"
   code += "      return .inserted(atom)\n"
   code += "    case .update:\n"
-  code += "      guard let update = toolbox.connection.prepareStatement(\"UPDATE \(tableName) SET \(primaryKeys.enumerated().map { "__pk\($0.offset)=?\($0.offset + 1)" }.joined(separator: ", ")), p=?\(primaryKeys.count + 1) WHERE rowid=?\(primaryKeys.count + 2) LIMIT 1\") else { return nil }\n"
+  code += "      guard let update = toolbox.connection.prepareStatement(\"REPLACE INTO \(tableName) (\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")), p, rowid) VALUES (?1, ?2, \(primaryKeys.enumerated().map { "?\($0.offset + 3)" }.joined(separator: ", ")))\") else { return nil }\n"
   for (i, field) in primaryKeys.enumerated() {
     code += "      \(field.name).bindSQLite(update, parameterId: \(i + 1))\n"
   }
@@ -935,13 +935,13 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      guard SQLITE_DONE == sqlite3_step(update) else { return nil }\n"
   for (i, indexedField) in indexedFields.enumerated() {
     code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
-    code += "        guard let u\(i) = toolbox.connection.prepareStatement(\"UPDATE \(tableName)__\(indexedField.keyName) SET \(indexedField.keyName)=?1 WHERE rowid=?2 LIMIT 1\") else { return nil }\n"
-    code += "        _rowid.bindSQLite(u\(i), parameterId: 2)\n"
+    code += "        guard let u\(i) = toolbox.connection.prepareStatement(\"REPLACE INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
+    code += "        _rowid.bindSQLite(u\(i), parameterId: 1)\n"
     code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
     code += "        if r\(i).unknown {\n"
-    code += "          sqlite3_bind_null(u\(i), 1)\n"
+    code += "          sqlite3_bind_null(u\(i), 2)\n"
     code += "        } else {\n"
-    code += "          r\(i).result.bindSQLite(u\(i), parameterId: 1)\n"
+    code += "          r\(i).result.bindSQLite(u\(i), parameterId: 2)\n"
     code += "        }\n"
     code += "        guard SQLITE_DONE == sqlite3_step(u\(i)) else { return nil }\n"
     code += "      }\n"

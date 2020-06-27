@@ -7,9 +7,11 @@ final class BenchmarksViewController: UIViewController {
   var dflat: Workspace
 
   override init(nibName: String?, bundle: Bundle?) {
-    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    let defaultFileManager = FileManager.default
+    let paths = defaultFileManager.urls(for: .documentDirectory, in: .userDomainMask)
     let documentsDirectory = paths[0]
     filePath = documentsDirectory.appendingPathComponent("benchmark.db").path
+    try? defaultFileManager.removeItem(atPath: filePath)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     super.init(nibName: nil, bundle: nil)
   }
@@ -40,10 +42,10 @@ final class BenchmarksViewController: UIViewController {
   }
   @objc
   func runBenchmark() {
-    let group = DispatchGroup()
-    group.enter()
-    let startTime = CACurrentMediaTime()
-    var endTime = startTime
+    let insertGroup = DispatchGroup()
+    insertGroup.enter()
+    let insertStartTime = CACurrentMediaTime()
+    var insertEndTime = insertStartTime
     dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
       for i: Int32 in 0..<10_000 {
         let creationRequest = BenchDocChangeRequest.creationRequest()
@@ -66,11 +68,55 @@ final class BenchmarksViewController: UIViewController {
         _ = try? txnContext.submit(creationRequest)
       }
     }) { (succeed) in
-      endTime = CACurrentMediaTime()
-      group.leave()
+      insertEndTime = CACurrentMediaTime()
+      insertGroup.leave()
     }
-    group.wait()
-    let stats = "Insert 10,000: \(endTime - startTime) sec"
+    insertGroup.wait()
+    var stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    let fetchIndexStartTime = CACurrentMediaTime()
+    let fetchHighPri = dflat.fetchFor(BenchDoc.self).where(BenchDoc.priority > 2500)
+    let fetchIndexEndTime = CACurrentMediaTime()
+    stats += "Fetched \(fetchHighPri.count) objects with index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
+    let fetchNoIndexStartTime = CACurrentMediaTime()
+    let fetchImageContent = dflat.fetchFor(BenchDoc.self).where(BenchDoc.content.match(ImageContent.self))
+    let fetchNoIndexEndTime = CACurrentMediaTime()
+    stats += "Fetched \(fetchImageContent.count) objects without index with \(fetchNoIndexEndTime - fetchNoIndexStartTime) sec\n"
+    let updateGroup = DispatchGroup()
+    updateGroup.enter()
+    let updateStartTime = CACurrentMediaTime()
+    var updateEndTime = updateStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      for i in allDocs {
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(i) else { continue }
+        changeRequest.priority = 0
+        _ = try? txnContext.submit(changeRequest)
+      }
+    }) { (succeed) in
+      updateEndTime = CACurrentMediaTime()
+      updateGroup.leave()
+    }
+    updateGroup.wait()
+    stats += "Update 10,000: \(updateEndTime - updateStartTime) sec\n"
+    let deleteGroup = DispatchGroup()
+    deleteGroup.enter()
+    let deleteStartTime = CACurrentMediaTime()
+    var deleteEndTime = deleteStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+        _ = try? txnContext.submit(deletionRequest)
+      }
+    }) { (succeed) in
+      deleteEndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.wait()
+    stats += "Delete 10,000: \(deleteEndTime - deleteStartTime) sec\n"
     text.text = stats
+    print(stats)
   }
 }
