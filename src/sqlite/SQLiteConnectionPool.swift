@@ -34,7 +34,7 @@ final class SQLiteConnectionPool {
       return Borrowed(pointee: connection, pool: self)
     }
     os_unfair_lock_unlock(&lock)
-    let pointee = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let pointee = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: true)
     if pointee == nil {
       flowControl.signal()
       return Borrowed(pointee: pointee, pool: nil)

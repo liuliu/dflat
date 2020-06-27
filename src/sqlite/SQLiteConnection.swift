@@ -12,10 +12,23 @@ public final class SQLiteConnection {
   fileprivate var tableIndexStatus = [String: [String: TableIndexStatus]]()
   private var stringPool = [String: OpaquePointer]()
   private var staticPool = [UnsafePointer<UInt8>: OpaquePointer]()
-  init?(filePath: String, createIfMissing: Bool) {
-    let options = createIfMissing ? SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE : SQLITE_OPEN_READWRITE
-    guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) else { return nil }
-    guard sqlite != nil else { return nil }
+  init?(filePath: String, createIfMissing: Bool, readOnly: Bool) {
+    // Only 3.22 and above support read-only WAL: https://www.sqlite.org/wal.html#readonly
+    var open = false
+    if readOnly && sqlite3_libversion_number() >= 3022000 {
+      let options = createIfMissing ? SQLITE_OPEN_READONLY | SQLITE_OPEN_CREATE : SQLITE_OPEN_READONLY
+      if SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) {
+        // If this is OK, we are good.
+        guard sqlite != nil else { return nil }
+        open = true
+      }
+      // Otherwise, continue to try ReadWrite.
+    }
+    if !open {
+      let options = createIfMissing ? SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE : SQLITE_OPEN_READWRITE
+      guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) else { return nil }
+      guard sqlite != nil else { return nil }
+    }
   }
   deinit {
     guard let sqlite = sqlite else { return }

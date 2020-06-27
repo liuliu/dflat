@@ -314,7 +314,7 @@ public final class SQLiteWorkspace: Workspace {
     case .concurrent:
       // Set the flag before creating the s
       Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true) else { return nil }
+      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 10_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
@@ -324,7 +324,7 @@ public final class SQLiteWorkspace: Workspace {
       guard self.writer == nil else { return self.writer }
       // Set the flag before creating the s
       Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true) else { return nil }
+      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 10_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)

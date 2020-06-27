@@ -48,7 +48,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana", nil, nil, nil)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
@@ -87,7 +87,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana WHERE rowid >= 3", nil, nil, nil)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 3)
@@ -127,7 +127,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__mana", nil, nil, nil)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
@@ -166,7 +166,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__mana", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
@@ -224,7 +224,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
@@ -282,7 +282,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana WHERE rowid >= 3", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
@@ -342,7 +342,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
@@ -407,7 +407,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
-    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false)
+    let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
