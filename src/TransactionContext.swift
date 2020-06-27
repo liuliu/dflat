@@ -11,3 +11,9 @@ public protocol TransactionContext {
   @discardableResult
   func abort() -> Bool
 }
+
+public extension TransactionContext {
+  func submit(_ changeRequest: ChangeRequest) throws {
+    _ = try self.submit(changeRequest)
+  }
+}
