@@ -23,7 +23,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest.name = "What's my name"
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       expectation.fulfill()
     }
@@ -41,11 +41,11 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name1"
       creationRequest1.pos = MyGame.Sample.Vec3(x: 10)
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.color = .red
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
     }) { success in
       expectation.fulfill()
     }
@@ -65,22 +65,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name1"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name3"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -99,22 +99,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name1"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name3"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -135,22 +135,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name1"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name3"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -171,22 +171,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name3"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name1"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -207,22 +207,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name3"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name1"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -244,24 +244,24 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.mana = 100
       creationRequest1.color = .green
       creationRequest1.equipped = .orb(MyGame.Sample.Orb(name: "myOrb", color: .green))
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
       creationRequest2.equipped = .weapon(MyGame.Sample.Weapon(name: "sword", damage: 16))
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name1"
       creationRequest3.mana = 20
       creationRequest3.color = .green
       creationRequest3.equipped = .orb(MyGame.Sample.Orb(name: "red", color: .red))
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation.fulfill()
     }
@@ -283,7 +283,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest.name = "name3"
       creationRequest.mana = 100
       creationRequest.color = .green
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       expectation1.fulfill()
     }
@@ -296,7 +296,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: {txnContext in
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(firstMonster) else { return }
       changeRequest.mana = 110
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       expectation2.fulfill()
     }
@@ -321,22 +321,22 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
       creationRequest1.name = "name3"
       creationRequest1.mana = 100
       creationRequest1.color = .green
-      txnContext.submit(creationRequest1)
+      try! txnContext.submit(creationRequest1)
       let creationRequest2 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest2.name = "name2"
       creationRequest2.mana = 50
       creationRequest2.color = .green
-      txnContext.submit(creationRequest2)
+      try! txnContext.submit(creationRequest2)
       let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest3.name = "name1"
       creationRequest3.mana = 20
       creationRequest3.color = .green
-      txnContext.submit(creationRequest3)
+      try! txnContext.submit(creationRequest3)
       let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest4.name = "name4"
       creationRequest4.mana = 120
       creationRequest4.color = .green
-      txnContext.submit(creationRequest4)
+      try! txnContext.submit(creationRequest4)
     }) { success in
       expectation1.fulfill()
     }
@@ -353,7 +353,7 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
         guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { continue }
         changeRequestRetrieved += 1
         changeRequest.mana = 110
-        txnContext.submit(changeRequest)
+        try! txnContext.submit(changeRequest)
       }
     }) { success in
       expectation2.fulfill()

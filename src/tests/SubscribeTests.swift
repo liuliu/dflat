@@ -26,7 +26,7 @@ class SubscribeTests: XCTestCase {
       for i in 0..<10 {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -54,7 +54,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(firstMonster) else { return }
       changeRequest.color = .red
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -62,7 +62,7 @@ class SubscribeTests: XCTestCase {
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(firstMonster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -76,7 +76,7 @@ class SubscribeTests: XCTestCase {
       for i in 0..<10 {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -90,7 +90,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(firstMonster) else { return }
       changeRequest.color = .red
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -115,7 +115,7 @@ class SubscribeTests: XCTestCase {
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(firstMonster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -130,7 +130,7 @@ class SubscribeTests: XCTestCase {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
         creationRequest.mana = Int16(i * 10)
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -154,7 +154,7 @@ class SubscribeTests: XCTestCase {
       let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest.name = "name 10"
       creationRequest.mana = 15
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -165,7 +165,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -176,7 +176,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       thirdExpectation.fulfill()
     }
@@ -186,7 +186,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       forthExpectation.fulfill()
     }
@@ -212,7 +212,7 @@ class SubscribeTests: XCTestCase {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
         creationRequest.mana = Int16(i * 10)
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -240,7 +240,7 @@ class SubscribeTests: XCTestCase {
       let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest.name = "name 10"
       creationRequest.mana = 15
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -251,7 +251,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -275,7 +275,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       thirdExpectation.fulfill()
     }
@@ -286,7 +286,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       forthExpectation.fulfill()
     }
@@ -318,7 +318,7 @@ class SubscribeTests: XCTestCase {
       for i in 0..<10 {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -344,7 +344,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(firstMonster) else { return }
       changeRequest.color = .red
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -352,7 +352,7 @@ class SubscribeTests: XCTestCase {
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(firstMonster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -370,7 +370,7 @@ class SubscribeTests: XCTestCase {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
         creationRequest.mana = Int16(i * 10)
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -394,7 +394,7 @@ class SubscribeTests: XCTestCase {
       let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest.name = "name 10"
       creationRequest.mana = 15
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -405,7 +405,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -416,7 +416,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       thirdExpectation.fulfill()
     }
@@ -426,7 +426,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       forthExpectation.fulfill()
     }
@@ -452,7 +452,7 @@ class SubscribeTests: XCTestCase {
         let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest.name = "name \(i)"
         creationRequest.mana = Int16(i * 10)
-        txnContext.submit(creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { success in
       expectation.fulfill()
@@ -481,7 +481,7 @@ class SubscribeTests: XCTestCase {
       let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
       creationRequest.name = "name 10"
       creationRequest.mana = 15
-      txnContext.submit(creationRequest)
+      try! txnContext.submit(creationRequest)
     }) { success in
       firstExpectation.fulfill()
     }
@@ -492,7 +492,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       secondExpectation.fulfill()
     }
@@ -503,7 +503,7 @@ class SubscribeTests: XCTestCase {
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
-      txnContext.submit(changeRequest)
+      try! txnContext.submit(changeRequest)
     }) { success in
       thirdExpectation.fulfill()
     }
@@ -513,7 +513,7 @@ class SubscribeTests: XCTestCase {
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
       let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
-      txnContext.submit(deletionRequest)
+      try! txnContext.submit(deletionRequest)
     }) { success in
       forthExpectation.fulfill()
     }
