@@ -6,6 +6,10 @@ swift_library(
   srcs = [
     "Benchmarks/AppDelegate.swift",
     "Benchmarks/ViewController.swift",
+    "Benchmarks/doc_generated.swift",
+    "Benchmarks/doc_data_model_generated.swift",
+    "Benchmarks/doc_mutating_generated.swift",
+    "Benchmarks/doc_query_generated.swift",
   ],
   deps = [
     "//src:Dflat",

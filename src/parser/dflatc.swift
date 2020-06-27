@@ -212,6 +212,8 @@ func GetElementType(_ type: ElementType) -> String {
     return type.union!
   case .enum:
     return type.enum!
+  case .string:
+    return "String" // No nil.
   default:
     return SwiftType[type.type.rawValue]!
   }
@@ -355,6 +357,8 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
         code += "    var __\(field.name) = \(GetFieldType(field))()\n"
         code += "    for i: Int32 in 0..<obj.\(field.name)Count {\n"
         switch field.type.element!.type {
+          case .string:
+            fallthrough
           case .struct:
             code += "      guard let o = obj.\(field.name)(at: i) else { break }\n"
             code += "      __\(field.name).append(\(GetElementType(field.type.element!))(o))\n"
@@ -578,7 +582,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           code += "    let __vector_\(fieldName) = flatBufferBuilder.createVector(__\(fieldName))\n"
           parameters.append("vectorOf\(fieldName.prefix(1).uppercased() + fieldName.dropFirst()): __vector_\(fieldName)")
         case .string:
-          code += "    var __\(field.name) = [Offset<UOffset>]()\n"
+          code += "    var __\(field.name) = [Offset<String>]()\n"
           code += "    for i in \(field.name) {\n"
           code += "      __\(field.name).append(flatBufferBuilder.create(string: i))\n"
           code += "    }\n"
@@ -616,7 +620,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     }
   }
   if structDef.fixed {
-    code += "    return \(DflatGenNamespace).\(structDef.namespace.joined(separator: ".")).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
+    code += "    return \(([DflatGenNamespace] + structDef.namespace).joined(separator: ".")).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
   } else {
     code += "    return \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
   }
@@ -1116,7 +1120,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       code += "  "
     }
     code += "static let \(field.name): FieldExpr<\(GetFullyQualifiedName(enumDef))> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
-  default: // These are the simple types (string, scalar) or enum
+  default: // These are the simple types (scalar) or enum
     let swiftType = SwiftType[field.type.type.rawValue]!
     code += "\n  static private func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"

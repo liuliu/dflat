@@ -1,0 +1,33 @@
+enum Color:byte {
+  Red = 0,
+  Green,
+  Blue = 2
+}
+
+struct Vec3 {
+  x: float;
+  y: float;
+  z: float;
+}
+
+table TextContent {
+  text: string;
+}
+
+table ImageContent {
+  images: [string];
+}
+
+union Content {
+}
+
+table BenchDoc {
+  pos: Vec3;
+  color: Color;
+  title: string (primary);
+  content: Content;
+  tag: string (indexed);
+  priority: int (indexed);
+}
+
+root_type BenchDoc;
