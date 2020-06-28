@@ -278,3 +278,7 @@ Following data are collected, and can be reproduced from:
 I compared mainly with Core Data, and listed numbers for FMDB and WCDB from WCDB benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
 
 The test device is a iPhone 11 Pro with 64GB memory.
+
+**A disclaimer**: you should take a grain of salt for any benchmark numbers. These numbers I presented here simply to demonstrate some pathological cases for frameworks involved. It shouldn't be taken out of this context. In practice, structured data persistence systems rarely are the bottom-neck. It is more important to understand how you use it rather than what's the raw numbers in a light-workload device looks like.
+
+The code for `app:Benchmarks` was compiled in Release mode (`--compilation-mode=opt`) with `-whole-module-optimization` on. The WCDB Benchmark was compiled in Release mode whatever that means in their project file.

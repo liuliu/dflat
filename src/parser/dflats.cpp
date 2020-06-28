@@ -162,7 +162,11 @@ static void GenerateJSONAdapter(const flatbuffers::Parser &parser, const std::st
 			json += GenUnion(enum_def) + ", ";
 		}
 	}
-	json = json.substr(0, json.size() - 2) + "], \"structs\": [";
+	if (parser.enums_.vec.size() > 0) {
+		json = json.substr(0, json.size() - 2) + "], \"structs\": [";
+	} else {
+		json = json + "], \"structs\": [";
+	}
 	for (auto it = parser.structs_.vec.begin(); it != parser.structs_.vec.end(); ++it) {
 		const auto &struct_def = **it;
 		if (struct_def.fixed && !struct_def.generated) {
@@ -175,7 +179,11 @@ static void GenerateJSONAdapter(const flatbuffers::Parser &parser, const std::st
 			json += GenStruct(struct_def) + ", ";
 		}
 	}
-	json = json.substr(0, json.size() - 2) + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+	if (parser.structs_.vec.size() > 0) {
+		json = json.substr(0, json.size() - 2) + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+	} else {
+		json = json + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+	}
 	auto filename = path + "/" + filebase + "_generated.json";
 	flatbuffers::SaveFile(filename.c_str(), json, false);
 }
