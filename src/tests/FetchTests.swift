@@ -15,6 +15,12 @@ class FetchTests: XCTestCase {
   }
   
   override func tearDown() {
+    let group = DispatchGroup()
+    group.enter()
+    dflat?.shutdown {
+      group.leave()
+    }
+    group.wait()
   }
 
   func testFetchWithinASnapshot() {

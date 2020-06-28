@@ -22,6 +22,8 @@ final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
   }
   func shutdown() {
     _shutdown = true
+    connection?.close()
+    connection = nil
   }
   func connect(_ closure: () -> SQLiteConnection?) -> SQLiteConnection? {
     guard !_shutdown else { return nil }

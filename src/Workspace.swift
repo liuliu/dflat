@@ -15,6 +15,8 @@ public enum SubscribedObject<Element: Atom> {
 }
 
 public protocol Workspace: Queryable {
+  // MARK - Management
+  func shutdown(completion: (() -> Void)?)
   // MARK - Changes
   typealias ChangesHandler = (_ transactionContext: TransactionContext) -> Void
   typealias CompletionHandler = (_ success: Bool) -> Void
@@ -30,4 +32,10 @@ public protocol Workspace: Queryable {
   func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable
+}
+
+public extension Workspace {
+  func shutdown() {
+    shutdown(completion: nil)
+  }
 }

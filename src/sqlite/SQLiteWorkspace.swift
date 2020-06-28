@@ -36,9 +36,43 @@ public final class SQLiteWorkspace: Workspace {
     self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
   }
 
+  // MARK - Management
+
+  public func shutdown(completion: (() -> Void)?) {
+    guard !state.shutdown.load() else {
+      completion?()
+      return
+    }
+    state.shutdown.store(true)
+    var tableSpaces: [SQLiteTableSpace]? = nil
+    state.serial {
+      tableSpaces = Array(self.tableSpaces.values)
+      self.tableSpaces.removeAll()
+    }
+    let group = DispatchGroup()
+    if let tableSpaces = tableSpaces {
+      for tableSpace in tableSpaces {
+        group.enter()
+        tableSpace.queue.async {
+          tableSpace.shutdown()
+          group.leave()
+        }
+      }
+    }
+    group.notify(queue: targetQueue) { [self] in
+      // After shutdown all writers, now to drain the reader pool.
+      self.readerPool.drain()
+      completion?()
+    }
+  }
+
   // MARK - Mutation
 
   public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
+    guard !state.shutdown.load() else {
+      completionHandler?(false)
+      return
+    }
     precondition(transactionalObjectTypes.count > 0)
     var transactionalObjectIdentifiers = transactionalObjectTypes.map { ObjectIdentifier($0) }
     transactionalObjectIdentifiers.sort()
@@ -56,7 +90,10 @@ public final class SQLiteWorkspace: Workspace {
     }
     tableSpaces[0].queue.async(execute:
       DispatchWorkItem(flags: .enforceQoS) { [weak self] in
-        guard let self = self else { return }
+        guard let self = self else {
+          completionHandler?(false)
+          return
+        }
         guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
           completionHandler?(false)
           return
@@ -102,6 +139,9 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   public func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element> {
+    guard !state.shutdown.load() else {
+      return SQLiteQueryBuilder<Element>(reader: SQLiteConnectionPool.Borrowed(pointee: nil, pool: nil), workspace: self, transactionContext: nil, changesTimestamp: 0)
+    }
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
       // If we are in a transaction, we cannot have changesTimestamp for fetching. The reason is because this transaction may
@@ -147,6 +187,9 @@ public final class SQLiteWorkspace: Workspace {
   public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let identifier = ObjectIdentifier(fetchedResult)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    guard !state.shutdown.load() else {
+      return subscription
+    }
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
@@ -191,6 +234,9 @@ public final class SQLiteWorkspace: Workspace {
 
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    guard !state.shutdown.load() else {
+      return subscription
+    }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
     tableSpace.queue.async(execute:
@@ -229,6 +275,7 @@ public final class SQLiteWorkspace: Workspace {
   }
   
   func cancel(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier) {
+    guard !state.shutdown.load() else { return }
     switch ofType {
     case let .fetchedResult(atomType, fetchedResult):
       let objectType = ObjectIdentifier(atomType)
@@ -407,6 +454,7 @@ extension SQLiteWorkspace {
   }
 
   func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
+    guard !state.shutdown.load() else { return }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
     // We don't need to bump the priority for this.
