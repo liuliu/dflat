@@ -111,8 +111,24 @@ final class BenchmarksViewController: UIViewController {
     persistentContainer.performBackgroundTask { (objectContext) in
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
       let allDocs = try! objectContext.fetch(fetchRequest)
-      for i in allDocs {
-        i.setValue(11, forKeyPath: "priority")
+      for (i, doc) in allDocs.enumerated() {
+        doc.setValue("tag\(i + 1)", forKeyPath: "tag")
+        doc.setValue(11, forKeyPath: "priority")
+        doc.setValue(1, forKeyPath: "pos_x")
+        doc.setValue(2, forKeyPath: "pos_y")
+        doc.setValue(3, forKeyPath: "pos_z")
+        switch i % 3 {
+        case 1:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 2:
+          doc.setValue(0, forKeyPath: "color")
+        case 0:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
       }
       try! objectContext.save()
       updateEndTime = CACurrentMediaTime()
@@ -120,6 +136,48 @@ final class BenchmarksViewController: UIViewController {
     }
     updateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
+    let individualUpdateGroup = DispatchGroup()
+    individualUpdateGroup.enter()
+    let individualUpdateStartTime = CACurrentMediaTime()
+    var individualUpdateEndTime = individualUpdateStartTime
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      let allDocs = try! objectContext.fetch(fetchRequest)
+      for (i, doc) in allDocs.enumerated() {
+        doc.setValue("tag\(i + 2)", forKeyPath: "tag")
+        doc.setValue(12, forKeyPath: "priority")
+        doc.setValue(3, forKeyPath: "pos_x")
+        doc.setValue(2, forKeyPath: "pos_y")
+        doc.setValue(1, forKeyPath: "pos_z")
+        switch i % 3 {
+        case 2:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 0:
+          doc.setValue(0, forKeyPath: "color")
+        case 1:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
+        try! objectContext.save()
+      }
+      individualUpdateEndTime = CACurrentMediaTime()
+      individualUpdateGroup.leave()
+    }
+    individualUpdateGroup.wait()
+    stats += "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
+    let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+    let individualFetchStartTime = CACurrentMediaTime()
+    var newAllDocs = [NSManagedObject]()
+    for i in 0..<Self.NumberOfEntities {
+      individualFetchRequest.predicate = NSPredicate(format: "title = %@", argumentArray: ["title\(i)"])
+      let docs = try! persistentContainer.viewContext.fetch(individualFetchRequest)
+      newAllDocs.append(docs[0])
+    }
+    let individualFetchEndTime = CACurrentMediaTime()
+    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
@@ -149,6 +207,8 @@ final class BenchmarksViewController: UIViewController {
       for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
         let creationRequest = BenchDocChangeRequest.creationRequest()
         creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        creationRequest.pos = Vec3()
         switch i % 3 {
         case 0:
           creationRequest.color = .blue
@@ -187,9 +247,23 @@ final class BenchmarksViewController: UIViewController {
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
       let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
-      for i in allDocs {
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(i) else { continue }
+      for (i, doc) in allDocs.enumerated() {
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+        changeRequest.tag = "tag\(i + 1)"
         changeRequest.priority = 11
+        changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
+        switch i % 3 {
+        case 1:
+          changeRequest.color = .blue
+          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 2:
+          changeRequest.color = .red
+        case 0:
+          changeRequest.color = .green
+          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
         txnContext.try(submit: changeRequest)
       }
     }) { (succeed) in
@@ -198,6 +272,47 @@ final class BenchmarksViewController: UIViewController {
     }
     updateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
+    let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+    let individualUpdateGroup = DispatchGroup()
+    individualUpdateGroup.enter()
+    let individualUpdateStartTime = CACurrentMediaTime()
+    var individualUpdateEndTime = individualUpdateStartTime
+    for (i, doc) in allDocs.enumerated() {
+      dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { return }
+        changeRequest.tag = "tag\(i + 2)"
+        changeRequest.priority = 12
+        changeRequest.pos = Vec3(x: 3, y: 2, z: 1)
+        switch i % 3 {
+        case 2:
+          changeRequest.color = .blue
+          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 0:
+          changeRequest.color = .red
+        case 1:
+          changeRequest.color = .green
+          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
+        txnContext.try(submit: changeRequest)
+      }) { (succeed) in
+        if i == allDocs.count - 1 {
+          individualUpdateEndTime = CACurrentMediaTime()
+          individualUpdateGroup.leave()
+        }
+      }
+    }
+    individualUpdateGroup.wait()
+    stats += "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
+    let individualFetchStartTime = CACurrentMediaTime()
+    var newAllDocs = [BenchDoc]()
+    for i in 0..<Self.NumberOfEntities {
+      let docs = dflat.fetchFor(BenchDoc.self).where(BenchDoc.title == "title\(i)")
+      newAllDocs.append(docs[0])
+    }
+    let individualFetchEndTime = CACurrentMediaTime()
+    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()

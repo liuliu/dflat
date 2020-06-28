@@ -17,20 +17,26 @@ public final class SQLiteWorkspace: Workspace {
     case concurrent
     case serial
   }
+  public enum Synchronous {
+    case normal
+    case full
+  }
   private static let RebuildIndexDelayOnDiskFull = 5.0 // In seconds..
   private static let RebuildIndexBatchLimit = 500 // We can jam the write queue by just having index rebuild (upon upgrade). This limits that each rebuild batches at this limit, if the limit exceed, we will dispatch back to the queue again to finish up.
   private let filePath: String
   private let fileProtectionLevel: FileProtectionLevel
   private let targetQueue: DispatchQueue
   private let readerPool: SQLiteConnectionPool
+  private let synchronous: Synchronous
   private let writeConcurrency: WriteConcurrency
   private var writer: SQLiteConnection?
   private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
 
-  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .utility, attributes: .concurrent)) {
+  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .utility, attributes: .concurrent)) {
     self.filePath = filePath
     self.fileProtectionLevel = fileProtectionLevel
+    self.synchronous = synchronous
     self.writeConcurrency = writeConcurrency
     self.targetQueue = targetQueue
     self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
@@ -376,6 +382,12 @@ public final class SQLiteWorkspace: Workspace {
       guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 10_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
+      switch synchronous {
+      case .normal:
+        sqlite3_exec(writer.sqlite, "PRAGMA synchronous=NORMAL", nil, nil, nil)
+      case .full:
+        sqlite3_exec(writer.sqlite, "PRAGMA synchronous=FULL", nil, nil, nil)
+      }
       sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
       self.writer = writer

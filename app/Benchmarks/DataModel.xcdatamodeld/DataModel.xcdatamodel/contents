@@ -10,6 +10,9 @@
         <attribute name="tag" optional="YES" attributeType="String"/>
         <attribute name="text" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
+        <fetchIndex name="titleIndex">
+            <fetchIndexElement property="title" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <elements>
         <element name="BenchDoc" positionX="-63" positionY="-18" width="128" height="178"/>
