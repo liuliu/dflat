@@ -8,7 +8,7 @@ swift_library(
 
 objc_library(
   name = "SQLiteDflatObjC",
-  hdrs = ["sqlite/Bridge.h"],
+  hdrs = ["sqlite/include/Bridge.h"],
   enable_modules = True,
   module_name = "SQLiteDflatObjC"
 )
