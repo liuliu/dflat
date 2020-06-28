@@ -2,6 +2,7 @@
 licenses(["notice"])
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -76,4 +77,10 @@ cc_library(
     ],
     linkstatic = 1,
     strip_include_prefix = "/include",
+)
+
+swift_library(
+  name = "FlatBuffers",
+  module_name = "FlatBuffers",
+  srcs = glob(["swift/Sources/FlatBuffers/*.swift"]),
 )

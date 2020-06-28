@@ -28,7 +28,7 @@ swift_library(
     "Workspace.swift",
   ] + glob(["exprs/*.swift"]),
   deps = [
-    ":FlatBuffers",
+    "@flatbuffers//:FlatBuffers",
     "@swift-atomics//:SwiftAtomics",
   ]
 )

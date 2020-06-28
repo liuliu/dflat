@@ -5,15 +5,17 @@ import PackageDescription
 
 let package = Package(
   name: "Dflat",
-  platforms: [.macOS(.v10_12), .iOS(.v11)],
+  platforms: [.macOS(.v10_14), .iOS(.v11)],
   products: [
     .library(name: "Dflat", type: .static, targets: ["Dflat"]),
     .library(name: "SQLiteDflat", type: .static, targets: ["SQLiteDflat"]),
   ],
   dependencies: [
+    .package(name: "FlatBuffers", url: "https://github.com/liuliu/flatbuffers.git", .revision("f5865b241cf37be2b69ab370b1d791e9844d2972")),
     .package(name: "SwiftAtomics", url: "https://github.com/glessard/swift-atomics.git", from: "6.0.0"),
   ],
   targets: [
+  /*
     .target(
       name: "FlatBuffers",
       path: "src/FlatBuffers",
@@ -31,6 +33,7 @@ let package = Package(
         "Struct.swift"
       ]
     ),
+    */
     .target(
       name: "Dflat",
       dependencies: ["FlatBuffers", "SwiftAtomics"],
