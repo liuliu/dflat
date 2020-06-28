@@ -182,6 +182,7 @@ extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
 extension MyGame.Sample {
 
 public final class MonsterChangeRequest: Dflat.ChangeRequest {
+  private var _o: Monster?
   public static var atomType: Any.Type { Monster.self }
   public var _type: ChangeRequestType
   public var _rowid: Int64
@@ -197,6 +198,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   public var colors: [Color]
   public var path: [Vec3]
   public init(type: ChangeRequestType) {
+    _o = nil
     _type = type
     _rowid = -1
     pos = nil
@@ -212,6 +214,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     path = []
   }
   public init(type: ChangeRequestType, _ o: Monster) {
+    _o = o
     _type = type
     _rowid = o._rowid
     pos = o.pos
@@ -259,9 +262,9 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   }
   public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
-    let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
     switch _type {
     case .creation:
+      let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
       guard let insert = toolbox.connection.prepareStatement("INSERT INTO mygame__sample__monster (__pk0, __pk1, p) VALUES (?1, ?2, ?3)") else { return nil }
       name.bindSQLite(insert, parameterId: 1)
       color.bindSQLite(insert, parameterId: 2)
@@ -312,10 +315,16 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       atom._rowid = _rowid
       return .inserted(atom)
     case .update:
+      guard let o = _o else { return nil }
+      let atom = self._atom
+      guard atom != o else {
+        _type = .none
+        return .updated(atom)
+      }
+      let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
       guard let update = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)") else { return nil }
       name.bindSQLite(update, parameterId: 1)
       color.bindSQLite(update, parameterId: 2)
-      let atom = self._atom
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
       toolbox.flatBufferBuilder.finish(offset: offset)
@@ -326,37 +335,49 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       _rowid.bindSQLite(update, parameterId: 4)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       if indexSurvey.full.contains("mana") {
-        guard let u0 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__mana (rowid, mana) VALUES (?1, ?2)") else { return nil }
-        _rowid.bindSQLite(u0, parameterId: 1)
+        let or0 = MyGame.Sample.Monster.mana.evaluate(object: .object(o))
         let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
-        if r0.unknown {
-          sqlite3_bind_null(u0, 2)
-        } else {
-          r0.result.bindSQLite(u0, parameterId: 2)
+        if or0.unknown != r0.unknown || or0.result != r0.result {
+          guard let u0 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__mana (rowid, mana) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u0, parameterId: 1)
+          let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
+          if r0.unknown {
+            sqlite3_bind_null(u0, 2)
+          } else {
+            r0.result.bindSQLite(u0, parameterId: 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
         }
-        guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
       }
       if indexSurvey.full.contains("equipped__type") {
-        guard let u1 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__type (rowid, equipped__type) VALUES (?1, ?2)") else { return nil }
-        _rowid.bindSQLite(u1, parameterId: 1)
+        let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(o))
         let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
-        if r1.unknown {
-          sqlite3_bind_null(u1, 2)
-        } else {
-          r1.result.bindSQLite(u1, parameterId: 2)
+        if or1.unknown != r1.unknown || or1.result != r1.result {
+          guard let u1 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__type (rowid, equipped__type) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u1, parameterId: 1)
+          let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
+          if r1.unknown {
+            sqlite3_bind_null(u1, 2)
+          } else {
+            r1.result.bindSQLite(u1, parameterId: 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
         }
-        guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
       }
       if indexSurvey.full.contains("equipped__Orb__name") {
-        guard let u2 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__Orb__name (rowid, equipped__Orb__name) VALUES (?1, ?2)") else { return nil }
-        _rowid.bindSQLite(u2, parameterId: 1)
+        let or2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(o))
         let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
-        if r2.unknown {
-          sqlite3_bind_null(u2, 2)
-        } else {
-          r2.result.bindSQLite(u2, parameterId: 2)
+        if or2.unknown != r2.unknown || or2.result != r2.result {
+          guard let u2 = toolbox.connection.prepareStatement("REPLACE INTO mygame__sample__monster__equipped__Orb__name (rowid, equipped__Orb__name) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u2, parameterId: 1)
+          let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
+          if r2.unknown {
+            sqlite3_bind_null(u2, 2)
+          } else {
+            r2.result.bindSQLite(u2, parameterId: 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
         }
-        guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
       }
       _type = .none
       return .updated(atom)

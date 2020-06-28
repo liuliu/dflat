@@ -28,8 +28,8 @@ table BenchDoc {
   color: Color;
   title: string (primary);
   content: Content;
-  tag: string (indexed);
-  priority: int (indexed);
+  tag: string;
+  priority: int;
 }
 
 root_type BenchDoc;

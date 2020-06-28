@@ -829,6 +829,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
   }
   code += "\npublic final class \(structDef.name)ChangeRequest: Dflat.ChangeRequest {\n"
+  code += "  private var _o: \(structDef.name)?\n"
   code += "  public static var atomType: Any.Type { \(structDef.name).self }\n"
   code += "  public var _type: ChangeRequestType\n"
   code += "  public var _rowid: Int64\n"
@@ -837,6 +838,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     code += "  public var \(field.name): \(GetFieldType(field))\n"
   }
   code += "  public init(type: ChangeRequestType) {\n"
+  code += "    _o = nil\n"
   code += "    _type = type\n"
   code += "    _rowid = -1\n"
   for field in structDef.fields {
@@ -845,6 +847,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   }
   code += "  }\n"
   code += "  public init(type: ChangeRequestType, _ o: \(structDef.name)) {\n"
+  code += "    _o = o\n"
   code += "    _type = type\n"
   code += "    _rowid = o._rowid\n"
   for field in structDef.fields {
@@ -885,9 +888,11 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "  }\n"
   code += "  public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {\n"
   code += "    guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }\n"
-  code += "    let indexSurvey = toolbox.connection.indexSurvey(\(structDef.name).indexFields, table: \(structDef.name).table)\n"
   code += "    switch _type {\n"
   code += "    case .creation:\n"
+  if indexedFields.count > 0 {
+    code += "      let indexSurvey = toolbox.connection.indexSurvey(\(structDef.name).indexFields, table: \(structDef.name).table)\n"
+  }
   code += "      guard let insert = toolbox.connection.prepareStatement(\"INSERT INTO \(tableName) (\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")), p) VALUES (?1, \(primaryKeys.enumerated().map { "?\($0.offset + 2)" }.joined(separator: ", ")))\") else { return nil }\n"
   for (i, field) in primaryKeys.enumerated() {
     code += "      \(field.name).bindSQLite(insert, parameterId: \(i + 1))\n"
@@ -919,11 +924,19 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      atom._rowid = _rowid\n"
   code += "      return .inserted(atom)\n"
   code += "    case .update:\n"
+  code += "      guard let o = _o else { return nil }\n"
+  code += "      let atom = self._atom\n"
+  code += "      guard atom != o else {\n"
+  code += "        _type = .none\n"
+  code += "        return .updated(atom)\n"
+  code += "      }\n"
+  if indexedFields.count > 0 {
+    code += "      let indexSurvey = toolbox.connection.indexSurvey(\(structDef.name).indexFields, table: \(structDef.name).table)\n"
+  }
   code += "      guard let update = toolbox.connection.prepareStatement(\"REPLACE INTO \(tableName) (\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", ")), p, rowid) VALUES (?1, ?2, \(primaryKeys.enumerated().map { "?\($0.offset + 3)" }.joined(separator: ", ")))\") else { return nil }\n"
   for (i, field) in primaryKeys.enumerated() {
     code += "      \(field.name).bindSQLite(update, parameterId: \(i + 1))\n"
   }
-  code += "      let atom = self._atom\n"
   code += "      toolbox.flatBufferBuilder.clear()\n"
   code += "      let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)\n"
   code += "      toolbox.flatBufferBuilder.finish(offset: offset)\n"
@@ -935,15 +948,19 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      guard SQLITE_DONE == sqlite3_step(update) else { return nil }\n"
   for (i, indexedField) in indexedFields.enumerated() {
     code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
-    code += "        guard let u\(i) = toolbox.connection.prepareStatement(\"REPLACE INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
-    code += "        _rowid.bindSQLite(u\(i), parameterId: 1)\n"
+    code += "        let or\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(o))\n"
     code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
-    code += "        if r\(i).unknown {\n"
-    code += "          sqlite3_bind_null(u\(i), 2)\n"
-    code += "        } else {\n"
-    code += "          r\(i).result.bindSQLite(u\(i), parameterId: 2)\n"
+    code += "        if or\(i).unknown != r\(i).unknown || or\(i).result != r\(i).result {\n"
+    code += "          guard let u\(i) = toolbox.connection.prepareStatement(\"REPLACE INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
+    code += "          _rowid.bindSQLite(u\(i), parameterId: 1)\n"
+    code += "          let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
+    code += "          if r\(i).unknown {\n"
+    code += "            sqlite3_bind_null(u\(i), 2)\n"
+    code += "          } else {\n"
+    code += "            r\(i).result.bindSQLite(u\(i), parameterId: 2)\n"
+    code += "          }\n"
+    code += "          guard SQLITE_DONE == sqlite3_step(u\(i)) else { return nil }\n"
     code += "        }\n"
-    code += "        guard SQLITE_DONE == sqlite3_step(u\(i)) else { return nil }\n"
     code += "      }\n"
   }
   code += "      _type = .none\n"

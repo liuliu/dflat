@@ -101,7 +101,7 @@ extension BenchDoc {
     guard let s = or0.tag else { return ("", true) }
     return (s, false)
   }
-  static let tag: FieldExpr<String> = FieldExpr(name: "tag", primaryKey: false, hasIndex: true, tableReader: _tr__tag, objectReader: _or__tag)
+  static let tag: FieldExpr<String> = FieldExpr(name: "tag", primaryKey: false, hasIndex: false, tableReader: _tr__tag, objectReader: _or__tag)
 
   private static func _tr__priority(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {
     let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
@@ -111,7 +111,7 @@ extension BenchDoc {
     let or0 = object as! BenchDoc
     return (or0.priority, false)
   }
-  static let priority: FieldExpr<Int32> = FieldExpr(name: "priority", primaryKey: false, hasIndex: true, tableReader: _tr__priority, objectReader: _or__priority)
+  static let priority: FieldExpr<Int32> = FieldExpr(name: "priority", primaryKey: false, hasIndex: false, tableReader: _tr__priority, objectReader: _or__priority)
 }
 
 public protocol zzz_DflatGen_Proto__BenchDoc__content {

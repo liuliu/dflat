@@ -4,7 +4,7 @@ import SQLiteDflat
 import CoreData
 
 final class BenchmarksViewController: UIViewController {
-  static let NumberOfEntities = 100
+  static let NumberOfEntities = 10_000
   var filePath: String
   var dflat: Workspace
   var persistentContainer: NSPersistentContainer
@@ -108,7 +108,7 @@ final class BenchmarksViewController: UIViewController {
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
       let allDocs = try! objectContext.fetch(fetchRequest)
       for i in allDocs {
-        i.setValue(0, forKeyPath: "priority")
+        i.setValue(11, forKeyPath: "priority")
       }
       try! objectContext.save()
       updateEndTime = CACurrentMediaTime()
@@ -155,7 +155,7 @@ final class BenchmarksViewController: UIViewController {
           creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
         case 2:
           creationRequest.color = .green
-          creationRequest.priority = 0
+          creationRequest.priority = 11
           creationRequest.content = .textContent(TextContent(text: "text\(i)"))
         default:
           break
@@ -185,7 +185,7 @@ final class BenchmarksViewController: UIViewController {
       let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
       for i in allDocs {
         guard let changeRequest = BenchDocChangeRequest.changeRequest(i) else { continue }
-        changeRequest.priority = 0
+        changeRequest.priority = 11
         txnContext.try(submit: changeRequest)
       }
     }) { (succeed) in
