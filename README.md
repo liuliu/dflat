@@ -185,6 +185,11 @@ let cancellable = dflat.pulisher(for: posts[0])
   }
 ```
 
+## Schema Evolution
+
+The schema evolution in **Dflat** Follows exact with flatbuffers. The only exception is that you cannot add more primary keys or change primary key to a different property once it is selected. Otherwise, you are free to add or remove indexes, rename properties. Properties to be removed should be marked as `deprecated`, new properties should be appended to the end of the table, and you should never change the type of a property.
+
+There is no need for versioning as long as you follow the schema evolution path. Because the schema is maintained by flatbuffers, not SQLite, there is no disk ops required for schema upgrade. Schema upgrade failures due to lack of disk space or prolonged schema upgrade time due to pathological cases won't be a thing with **Dflat**.
 
 ## Dflat Runtime API
 
@@ -262,4 +267,14 @@ This will trigger the **Dflat** shutdown. Immediately after this call, all trans
 
 ## Benchmark
 
-Benchmark on structured data persistence system is notoriously hard. **Dflat** won't claim to be fastest. However, it strives to be *predictive performant*. What that means is there shouldn't be any pathological cases that the performance of **Dflat** degrades unexpectedly. It also means **Dflat** won't be surprisingly fast for some optimal cases.
+Benchmark on structured data persistence system is notoriously hard. **Dflat** won't claim to be fastest. However, it strives to be *predictable performant*. What that means is there shouldn't be any pathological cases that the performance of **Dflat** degrades unexpectedly. It also means **Dflat** won't be surprisingly fast for some optimal cases.
+
+Following data are collected, and can be reproduced from:
+
+```
+./focus.py app:Benchmarks
+```
+
+I compared mainly with Core Data, and listed numbers for FMDB and WCDB from WCDB benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
+
+The test device is a iPhone 11 Pro with 64GB memory.
