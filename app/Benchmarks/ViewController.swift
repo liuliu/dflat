@@ -72,6 +72,10 @@ final class BenchmarksViewController: UIViewController {
       for i in 0..<Self.NumberOfEntities {
         let doc = NSManagedObject(entity: entity, insertInto: objectContext)
         doc.setValue("title\(i)", forKeyPath: "title")
+        doc.setValue("tag\(i)", forKeyPath: "tag")
+        doc.setValue(0, forKeyPath: "pos_x")
+        doc.setValue(0, forKeyPath: "pos_y")
+        doc.setValue(0, forKeyPath: "pos_z")
         switch i % 3 {
         case 0:
           doc.setValue(1, forKeyPath: "color")

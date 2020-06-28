@@ -111,11 +111,6 @@ extension BenchDoc: SQLiteDflat.SQLiteAtom {
     sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdoc (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
   }
   public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return false }
-    switch field {
-    default:
-      break
-    }
     return true
   }
 }
