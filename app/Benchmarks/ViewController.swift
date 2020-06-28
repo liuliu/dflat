@@ -4,6 +4,7 @@ import SQLiteDflat
 import CoreData
 
 final class BenchmarksViewController: UIViewController {
+  static let NumberOfEntities = 100
   var filePath: String
   var dflat: Workspace
   var persistentContainer: NSPersistentContainer
@@ -68,17 +69,17 @@ final class BenchmarksViewController: UIViewController {
     var insertEndTime = insertStartTime
     persistentContainer.performBackgroundTask { (objectContext) in
       let entity = NSEntityDescription.entity(forEntityName: "BenchDoc", in: objectContext)!
-      for i in 0..<10_000 {
+      for i in 0..<Self.NumberOfEntities {
         let doc = NSManagedObject(entity: entity, insertInto: objectContext)
         doc.setValue("title\(i)", forKeyPath: "title")
         switch i % 3 {
         case 0:
           doc.setValue(1, forKeyPath: "color")
-          doc.setValue(5000 - i, forKeyPath: "priority")
+          doc.setValue(Self.NumberOfEntities / 2 - i, forKeyPath: "priority")
           doc.setValue(["image\(i)"], forKeyPath: "images")
         case 1:
           doc.setValue(0, forKeyPath: "color")
-          doc.setValue(i - 5000, forKeyPath: "priority")
+          doc.setValue(i - Self.NumberOfEntities / 2, forKeyPath: "priority")
         case 2:
           doc.setValue(2, forKeyPath: "color")
           doc.setValue("text\(i)", forKeyPath: "text")
@@ -91,11 +92,11 @@ final class BenchmarksViewController: UIViewController {
       insertGroup.leave()
     }
     insertGroup.wait()
-    var stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
     let objectContext = persistentContainer.viewContext
     let fetchIndexStartTime = CACurrentMediaTime()
     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-    fetchRequest.predicate = NSPredicate(format: "priority > %@", argumentArray: [2500])
+    fetchRequest.predicate = NSPredicate(format: "priority > %@", argumentArray: [Self.NumberOfEntities / 4])
     let fetchHighPri = try! objectContext.fetch(fetchRequest)
     let fetchIndexEndTime = CACurrentMediaTime()
     stats += "Fetched \(fetchHighPri.count) objects with index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
@@ -114,7 +115,7 @@ final class BenchmarksViewController: UIViewController {
       updateGroup.leave()
     }
     updateGroup.wait()
-    stats += "Update 10,000: \(updateEndTime - updateStartTime) sec\n"
+    stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
@@ -130,7 +131,7 @@ final class BenchmarksViewController: UIViewController {
       deleteGroup.leave()
     }
     deleteGroup.wait()
-    stats += "Delete 10,000: \(deleteEndTime - deleteStartTime) sec\n"
+    stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
     print(stats)
     text.text = stats
   }
@@ -141,17 +142,17 @@ final class BenchmarksViewController: UIViewController {
     let insertStartTime = CACurrentMediaTime()
     var insertEndTime = insertStartTime
     dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<10_000 {
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
         let creationRequest = BenchDocChangeRequest.creationRequest()
         creationRequest.title = "title\(i)"
         switch i % 3 {
         case 0:
           creationRequest.color = .blue
-          creationRequest.priority = 5000 - i
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
           creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
         case 1:
           creationRequest.color = .red
-          creationRequest.priority = i - 5000
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
         case 2:
           creationRequest.color = .green
           creationRequest.priority = 0
@@ -166,9 +167,9 @@ final class BenchmarksViewController: UIViewController {
       insertGroup.leave()
     }
     insertGroup.wait()
-    var stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
     let fetchIndexStartTime = CACurrentMediaTime()
-    let fetchHighPri = dflat.fetchFor(BenchDoc.self).where(BenchDoc.priority > 2500)
+    let fetchHighPri = dflat.fetchFor(BenchDoc.self).where(BenchDoc.priority > Int32(Self.NumberOfEntities / 4))
     let fetchIndexEndTime = CACurrentMediaTime()
     stats += "Fetched \(fetchHighPri.count) objects with index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
     let fetchNoIndexStartTime = CACurrentMediaTime()
@@ -192,7 +193,7 @@ final class BenchmarksViewController: UIViewController {
       updateGroup.leave()
     }
     updateGroup.wait()
-    stats += "Update 10,000: \(updateEndTime - updateStartTime) sec\n"
+    stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
@@ -209,7 +210,7 @@ final class BenchmarksViewController: UIViewController {
       deleteGroup.leave()
     }
     deleteGroup.wait()
-    stats += "Delete 10,000: \(deleteEndTime - deleteStartTime) sec\n"
+    stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
     text.text = stats
     print(stats)
   }
