@@ -112,7 +112,7 @@ Create:
 
 ```swift
 var createdPost: Post? = nil
-dflat.performChange([Post.self], changesHandler: { (txnContext) in
+dflat.performChanges([Post.self], changesHandler: { (txnContext) in
   let creationRequest = PostChangeRequest.creationRequest()
   creationRequest.title = "first post"
   creationRequest.color = .red
@@ -135,7 +135,7 @@ let posts = dflat.fetchFor(Post.self).where(Post.title == "first post")
 Update:
 
 ```swift
-dflat.performChange([Post.self], changesHandler: { (txnContext) in
+dflat.performChanges([Post.self], changesHandler: { (txnContext) in
   let post = posts[0]
   let changeRequest = PostChangeRequest.changeRequest(post)
   changeRequest.color = .green
@@ -148,7 +148,7 @@ dflat.performChange([Post.self], changesHandler: { (txnContext) in
 Delete:
 
 ```swift
-dflat.performChange([Post.self], changesHandler: { (txnContext) in
+dflat.performChanges([Post.self], changesHandler: { (txnContext) in
   let post = posts[0]
   let deletionRequest = PostChangeRequest.deletionRequest(post)
   txnContent.try(submit: deletionRequest)
