@@ -181,10 +181,10 @@ public final class SQLiteWorkspace: Workspace {
       Self.snapshot = nil
       return retval
     }
-    let begin = pointee.prepareStatement("BEGIN")
+    let begin = pointee.prepareStaticStatement("BEGIN")
     sqlite3_step(begin)
     let retval = closure()
-    let commit = pointee.prepareStatement("COMMIT")
+    let commit = pointee.prepareStaticStatement("COMMIT")
     sqlite3_step(commit)
     Self.snapshot = nil
     return retval
@@ -397,7 +397,7 @@ public final class SQLiteWorkspace: Workspace {
 
   private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
     let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: state.changesTimestamp.load(), connection: connection)
-    let begin = connection.prepareStatement("BEGIN")
+    let begin = connection.prepareStaticStatement("BEGIN")
     guard SQLITE_DONE == sqlite3_step(begin) else {
       return false
     }
@@ -406,15 +406,15 @@ public final class SQLiteWorkspace: Workspace {
     txnContext.destroy()
     // This transaction is aborted by user. rollback.
     if txnContext.aborted {
-      let rollback = connection.prepareStatement("ROLLBACK")
+      let rollback = connection.prepareStaticStatement("ROLLBACK")
       let status = sqlite3_step(rollback)
       precondition(status == SQLITE_DONE)
       return false
     }
-    let commit = connection.prepareStatement("COMMIT")
+    let commit = connection.prepareStaticStatement("COMMIT")
     let status = sqlite3_step(commit)
     if SQLITE_FULL == status {
-      let rollback = connection.prepareStatement("ROLLBACK")
+      let rollback = connection.prepareStaticStatement("ROLLBACK")
       let status = sqlite3_step(rollback)
       precondition(status == SQLITE_DONE)
       return false
@@ -481,7 +481,7 @@ extension SQLiteWorkspace {
       // It is OK to create connection, etc. before acquiring the lock as long as we don't do mutation.
       tableSpace.lock()
       defer { tableSpace.unlock() }
-      let begin = connection.prepareStatement("BEGIN")
+      let begin = connection.prepareStaticStatement("BEGIN")
       // If we cannot start a transaction, nothing we can do, just wait for re-trigger.
       guard SQLITE_DONE == sqlite3_step(begin) else { return }
       // Make sure the table exists before we query.
@@ -505,10 +505,10 @@ extension SQLiteWorkspace {
         }
       }
       // Try to commit.
-      let commit = connection.prepareStatement("COMMIT")
+      let commit = connection.prepareStaticStatement("COMMIT")
       let status = sqlite3_step(commit)
       if SQLITE_FULL == status {
-        let rollback = connection.prepareStatement("ROLLBACK")
+        let rollback = connection.prepareStaticStatement("ROLLBACK")
         let status = sqlite3_step(rollback)
         precondition(status == SQLITE_DONE)
         // In case we failed, trigger a redo a few seconds later.

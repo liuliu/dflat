@@ -183,7 +183,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
     switch _type {
     case .creation:
-      guard let insert = toolbox.connection.prepareStatement("INSERT INTO benchdoc (__pk0, p) VALUES (?1, ?2)") else { return nil }
+      guard let insert = toolbox.connection.prepareStaticStatement("INSERT INTO benchdoc (__pk0, p) VALUES (?1, ?2)") else { return nil }
       title.bindSQLite(insert, parameterId: 1)
       let atom = self._atom
       toolbox.flatBufferBuilder.clear()
@@ -205,7 +205,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
         _type = .none
         return .updated(atom)
       }
-      guard let update = toolbox.connection.prepareStatement("REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
+      guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
       title.bindSQLite(update, parameterId: 1)
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
@@ -219,7 +219,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
       _type = .none
       return .updated(atom)
     case .deletion:
-      guard let deletion = toolbox.connection.prepareStatement("DELETE FROM benchdoc WHERE rowid=?1") else { return nil }
+      guard let deletion = toolbox.connection.prepareStaticStatement("DELETE FROM benchdoc WHERE rowid=?1") else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
       _type = .none

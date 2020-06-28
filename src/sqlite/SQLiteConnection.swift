@@ -65,7 +65,7 @@ public final class SQLiteConnection {
     }
     return prepared
   }
-  public func prepareStatement(_ statement: StaticString) -> OpaquePointer? {
+  public func prepareStaticStatement(_ statement: StaticString) -> OpaquePointer? {
     guard let sqlite = sqlite else { return nil }
     let identifier = statement.utf8Start
     if let prepared = staticPool[identifier] {
@@ -110,7 +110,7 @@ extension SQLiteConnection {
       }
       // Otherwise, we need to check the database. First setup a SAVEPOINT so we can view the rowid in a consistent view.
       if !savepoint {
-        let sp = self.prepareStatement("SAVEPOINT dflat_idx")
+        let sp = self.prepareStaticStatement("SAVEPOINT dflat_idx")
         guard SQLITE_DONE == sqlite3_step(sp) else { return IndexSurvey() }
         savepoint = true
       }
