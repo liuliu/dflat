@@ -223,7 +223,8 @@ func Workspace.fetchWithinASnapshot<T>(_: () -> T) -> T
 Data fetching happens synchronously. You can specify conditions in the `where` clause, such as `Post.title == "first post"` or `Post.priority > 100 && Post.color == .red`. The returned `FetchedResult<Element>` acts pretty much like an array. The object itself (`Element`) is immutable, thus, either the object or the `FetchedResult<Element>` is safe to pass around between threads.
 
 `fetchWithinASnapshot` provides a consistent view if you are going to fetch multiple objects:
-```
+
+```swift
 let result = dflat.fetchWithinASnapshot { () -> (firstPost: FetchedResult<Post>, highPriPosts: FetchedResult<Post>) in
   let firstPost = dflat.fetchFor(Post.self).where(Post.title == "first post")
   let highPriPosts = dflat.fetchFor(Post.self).where(Post.priority > 100 && Post.color == .red)
