@@ -95,3 +95,5 @@ iOSInjectionProject/
 bazel-*
 .DS_Store
 *.swp
+
+Package.resolved
