@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19F101" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CoreBenchDoc" representedClassName="CoreBenchDoc" syncable="YES" codeGenerationType="class">
+    <entity name="BenchDoc" representedClassName="BenchDoc" syncable="YES" codeGenerationType="class">
         <attribute name="color" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="images" optional="YES" attributeType="Transformable" valueTransformerName=""/>
         <attribute name="pos_x" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
@@ -10,8 +10,14 @@
         <attribute name="tag" optional="YES" attributeType="String"/>
         <attribute name="text" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
+        <fetchIndex name="titleIndex">
+            <fetchIndexElement property="title" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="priorityIndex">
+            <fetchIndexElement property="priority" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <elements>
-        <element name="CoreBenchDoc" positionX="-63" positionY="-18" width="128" height="178"/>
+        <element name="BenchDoc" positionX="-63" positionY="-18" width="128" height="178"/>
     </elements>
 </model>

@@ -91,7 +91,47 @@ final class BenchmarksViewController: UIViewController {
       insertGroup.leave()
     }
     insertGroup.wait()
-    let stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    var stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    let objectContext = persistentContainer.viewContext
+    let fetchIndexStartTime = CACurrentMediaTime()
+    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+    fetchRequest.predicate = NSPredicate(format: "priority > %@", argumentArray: [2500])
+    let fetchHighPri = try! objectContext.fetch(fetchRequest)
+    let fetchIndexEndTime = CACurrentMediaTime()
+    stats += "Fetched \(fetchHighPri.count) objects with index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
+    let updateGroup = DispatchGroup()
+    updateGroup.enter()
+    let updateStartTime = CACurrentMediaTime()
+    var updateEndTime = updateStartTime
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      let allDocs = try! objectContext.fetch(fetchRequest)
+      for i in allDocs {
+        i.setValue(0, forKeyPath: "priority")
+      }
+      try! objectContext.save()
+      updateEndTime = CACurrentMediaTime()
+      updateGroup.leave()
+    }
+    updateGroup.wait()
+    stats += "Update 10,000: \(updateEndTime - updateStartTime) sec\n"
+    let deleteGroup = DispatchGroup()
+    deleteGroup.enter()
+    let deleteStartTime = CACurrentMediaTime()
+    var deleteEndTime = deleteStartTime
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      let allDocs = try! objectContext.fetch(fetchRequest)
+      for i in allDocs {
+        objectContext.delete(i)
+      }
+      try! objectContext.save()
+      deleteEndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.wait()
+    stats += "Delete 10,000: \(deleteEndTime - deleteStartTime) sec\n"
+    print(stats)
     text.text = stats
   }
   @objc
