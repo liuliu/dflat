@@ -1,10 +1,12 @@
 import UIKit
 import Dflat
 import SQLiteDflat
+import CoreData
 
 final class BenchmarksViewController: UIViewController {
   var filePath: String
   var dflat: Workspace
+  var persistentContainer: NSPersistentContainer
 
   override init(nibName: String?, bundle: Bundle?) {
     let defaultFileManager = FileManager.default
@@ -13,18 +15,34 @@ final class BenchmarksViewController: UIViewController {
     filePath = documentsDirectory.appendingPathComponent("benchmark.db").path
     try? defaultFileManager.removeItem(atPath: filePath)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    persistentContainer = NSPersistentContainer(name: "DataModel")
+    persistentContainer.loadPersistentStores { (description, error) in
+      if let error = error {
+        fatalError(error.localizedDescription)
+      }
+    }
     super.init(nibName: nil, bundle: nil)
   }
 
   required init?(coder: NSCoder) {
     fatalError()
   }
-  private lazy var runButton: UIButton = {
-    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 24, width: 200, height: 48))
-    button.setTitle("Run Benchmark", for: .normal)
+  private lazy var runDflatButton: UIButton = {
+    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 12, width: 200, height: 36))
+    button.setTitle("Run Dflat", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
-    button.addTarget(self, action: #selector(runBenchmark), for: .touchUpInside)
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runDflatBenchmark), for: .touchUpInside)
+    return button
+  }()
+  private lazy var runCoreDataButton: UIButton = {
+    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 54, width: 200, height: 36))
+    button.setTitle("Run Core Data", for: .normal)
+    button.titleLabel?.textColor = .black
+    button.backgroundColor = .lightGray
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runCoreDataBenchmark), for: .touchUpInside)
     return button
   }()
   private lazy var text: UILabel = {
@@ -32,16 +50,52 @@ final class BenchmarksViewController: UIViewController {
     text.textColor = .black
     text.numberOfLines = 0
     text.textAlignment = .center
+    text.font = .systemFont(ofSize: 12)
     return text
   }()
   override func loadView() {
     view = UIView(frame: UIScreen.main.bounds)
     view.backgroundColor = .white
-    view.addSubview(runButton)
+    view.addSubview(runDflatButton)
+    view.addSubview(runCoreDataButton)
     view.addSubview(text)
   }
   @objc
-  func runBenchmark() {
+  func runCoreDataBenchmark() {
+    let insertGroup = DispatchGroup()
+    insertGroup.enter()
+    let insertStartTime = CACurrentMediaTime()
+    var insertEndTime = insertStartTime
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let entity = NSEntityDescription.entity(forEntityName: "BenchDoc", in: objectContext)!
+      for i in 0..<10_000 {
+        let doc = NSManagedObject(entity: entity, insertInto: objectContext)
+        doc.setValue("title\(i)", forKeyPath: "title")
+        switch i % 3 {
+        case 0:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(5000 - i, forKeyPath: "priority")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 1:
+          doc.setValue(0, forKeyPath: "color")
+          doc.setValue(i - 5000, forKeyPath: "priority")
+        case 2:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
+      }
+      try! objectContext.save()
+      insertEndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.wait()
+    let stats = "Insert 10,000: \(insertEndTime - insertStartTime) sec\n"
+    text.text = stats
+  }
+  @objc
+  func runDflatBenchmark() {
     let insertGroup = DispatchGroup()
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()

@@ -11,6 +11,7 @@ swift_library(
     "Benchmarks/doc_mutating_generated.swift",
     "Benchmarks/doc_query_generated.swift",
   ],
+	data = glob(["Benchmarks/DataModel.xcdatamodeld/**"]),
   deps = [
     "//src:Dflat",
     "//src:SQLiteDflat",
