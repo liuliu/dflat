@@ -155,7 +155,7 @@ final class BenchmarksViewController: UIViewController {
           creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
         case 2:
           creationRequest.color = .green
-          creationRequest.priority = 11
+          creationRequest.priority = 0
           creationRequest.content = .textContent(TextContent(text: "text\(i)"))
         default:
           break

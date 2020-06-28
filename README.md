@@ -1,6 +1,6 @@
 # Dflat: SQLite ❤️  FlatBuffers
 
-If you are familiar with [Core Data](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html) or [Realm](https://realm.io/), **Dflat** occupies the same space as these two in your application. Unlike these two, **Dflat** has a different set of features and makes very different trade-offs. These features and trade-offs are grounded from real-world experiences in writing some of the world largest apps. **Dflat** is also built from ground-up using Swift and hopefully, you will find it is natural to interact with in Swift.
+If you are familiar with [Core Data](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html) or [Realm](https://realm.io/), **Dflat** occupies the same space as these two in your application. Unlike these two, **Dflat** has a different set of features and makes very different trade-offs. These features and trade-offs are grounded from real-world experiences in writing some of the world largest apps. **Dflat** is also built from ground-up using Swift and hopefully, you will find it is natural to interact with in the Swift language.
 
 ## Features
 
@@ -25,3 +25,240 @@ The **Dflat** codebase is still in a very young stage. However, the underlying p
  7. Schema upgrades require no write-access to the underlying database (strict read-only is possible with SQLite 3.22 and above).
 
 Unlike **Core Data**, **Dflat** is built from ground-up with Swift. You can express your data model by taking full advantage of the Swift language. Thus, a native support for `struct` (product-type), `enum` (sum-type), with type-checked queries and observing with [Combine](https://developer.apple.com/documentation/combine).
+
+## 30 Seconds Introduction
+
+**Dflat** consists two parts:
+
+ 1. `dflatc` compiler that takes a [flatbuffers schema](https://google.github.io/flatbuffers/flatbuffers_guide_writing_schema.html) and generate Swift code from it;
+
+ 2. **Dflat** runtime with very minimal API footprint to interact with.
+
+The **Dflat** runtime uses SQLite as the storage backend. The design itself can support other backends such as [libmdbx](https://github.com/erthink/libmdbx) in the future. The only hard dependency is flatbuffers.
+
+To use **Dflat**, you should first use `dflatc` compiler to generate data model from flatbuffers schema, include the generated code in your project, and then use **Dflat** runtime to interact with the data models.
+
+## Installation
+
+**Dflat** at the moment requires [Bazel](https://github.com/bazelbuild/bazel). To be more precise, **Dflat** runtime can be installed with either [Swift Package Manager](https://swift.org/package-manager/) or Bazel. But the `dflatc` compiler requires Bazel to build relevant parts.
+
+You can install Bazel on macOS following [this guide](https://docs.bazel.build/versions/3.3.0/install-os-x.html).
+
+After that, you can use `dflatc` compiler with
+
+```
+./dflatc.py --help
+```
+
+You can then proceed to add **Dflat** runtime either with Swift Package Manager or Bazel. With Swift Package Manager:
+
+```swift
+.package(name: "Dflat", url: "https://github.com/liuliu/dflat.git", .branch("unstable"))
+```
+
+## Example
+
+Assuming you have a `post.fbs` file somewhere look like this:
+
+```
+enum Color:byte {
+  Red = 0,
+  Green,
+  Blue = 2
+}
+
+table TextContent {
+  text: string;
+}
+
+table ImageContent {
+  images: [string];
+}
+
+union Content {
+  TextContent,
+  ImageContent
+}
+
+table Post {
+  title: string (primary); // This is the primary key
+  color: Color;
+  tag: string;
+  priority: int (indexed); // This property is indexed
+  content: Content;
+}
+
+root_type Post; // This is important, it says the Post object will be the one Dflat manages.
+```
+
+You can then use `dflatc` compiler to generate code from the schema:
+
+```
+./dflatc.py -o ../PostExample ../PostExample/post.fbs
+```
+
+If everything checks out, you should see 4 files generated in `../PostExample` directory: `post_generated.swift`, `post_data_model_generated.swift`, `post_mutating_generated.swift`, `post_query_generated.swift`. Adding them to your project.
+
+Now you can do basic Create-Read-Update-Delete (CRUD) operations on the `Post` object.
+
+```swift
+import Dflat
+import SQLiteDflat
+
+let dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+```
+
+Create:
+
+```swift
+var createdPost: Post? = nil
+dflat.performChange([Post.self], changesHandler: { (txnContext) in
+  let creationRequest = PostChangeRequest.creationRequest()
+  creationRequest.title = "first post"
+  creationRequest.color = .red
+  creationRequest.content = .textContent(TextContent(text: "This is my very first post!"))
+  guard let inserted = try? txnContent.submit(creationRequest) else { return } // Alternatively, you can use txnContent.try(submit: creationRequest) which won't return any result and do "reasonable" error handling.
+  if case let .inserted(post) = inserted {
+    createdPost = post
+  }
+}) { succeed in
+  // Transaction Done
+}
+```
+
+Read:
+
+```swift
+let posts = dflat.fetchFor(Post.self).where(Post.title == "first post")
+```
+
+Update:
+
+```swift
+dflat.performChange([Post.self], changesHandler: { (txnContext) in
+  let post = posts[0]
+  let changeRequest = PostChangeRequest.changeRequest(post)
+  changeRequest.color = .green
+  txnContent.try(submit: changeRequest)
+}) { succeed in
+  // Transaction Done
+}
+```
+
+Delete:
+
+```swift
+dflat.performChange([Post.self], changesHandler: { (txnContext) in
+  let post = posts[0]
+  let deletionRequest = PostChangeRequest.deletionRequest(post)
+  txnContent.try(submit: deletionRequest)
+}) { succeed in
+  // Transaction Done
+}
+```
+
+You can subscribe changes to either a query, or an object. For an object, the subscription ends when the object was deleted. For queries, the subscription won't complete unless cancelled. There are two sets of APIs for this, one is vanilla callback-based, the other is based on [Combine](https://developer.apple.com/documentation/combine). I will show the **Combine** one here.
+
+Subscribe a live query:
+
+```swift
+let cancellable = dflat.publisher(for: Post.self)
+  .where(Post.color == .red, orderBy: [Post.priority.descending])
+  .subscribe(on: DispatchQueue.global())
+  .sink { posts in
+    print(posts)
+  }
+```
+
+Subscribe to an object:
+
+```swift
+let cancellable = dflat.pulisher(for: posts[0])
+  .subscribe(on: DispatchQueue.global())
+  .sink { post in
+    switch post {
+    case .updated(newPost):
+      print(newPost)
+    case .deleted:
+      print("deleted, this is completed.")
+    }
+  }
+```
+
+
+## Dflat Runtime API
+
+**Dflat** runtime has very minimal API footprint. There are about 15 APIs in total from 2 objects.
+
+### Transactions
+
+```swift
+func Workspace.performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping (_ transactionContext: TransactionContext) -> Void, completionHandler: ((_ success: Bool) -> Void)?)
+```
+
+The API takes a `changesHandler` closure, where you can perform transactions such as object creations, updates or deletions. These mutations are performed through `ChangeRequest` objects.
+
+The first parameter specifies relevant object you are going to transact with. If you read or update any objects that is not specified here, an assertion will be triggered.
+
+When the transaction is done, the `completionHandler` closure will be triggered, and it will let you know whether the transaction is successful or not.
+
+The transaction will be performed in a background thread, exactly which one shouldn't be your concern. Two different objects can have transactions performed concurrently, it follows strict serializable protocol in that case.
+
+```swift
+func TransactionContext.submit(_ changeRequest: ChangeRequest) throws -> UpdatedObject
+func TransactionContext.try(submit: ChangeRequest)
+func TransactionContext.abort() -> Bool
+```
+
+You can interact with **Dflat** with above APIs in a transaction. It handles data mutations through `submit`. Note that errors are possible. For example, if you created an object with the same primary key twice (you should use `upsertRequest` if this is expected). `try(submit:` method simplified the `try? submit` dance in case you don't want to know the returned value. It will fatal if there are conflict primary keys, otherwise will swallow other types of errors (such as disk full). When encountered any other types of errors, **Dflat** will simply fail the whole transaction. `abort` method will explicitly abort a transaction. All submissions before and after this call will have no effect.
+
+### Data Fetching
+
+```swift
+func Workspace.fetchFor(_ ofType: Element.Type).where(ElementQuery, limit = .noLimit, orderBy = []) -> FetchedResult<Element>
+func Workspace.fetchFor(_ ofType: Element.Type).all(limit = .noLimit, orderBy = []) -> FetchedResult<Element>
+func Workspace.fetchWithinASnapshot<T>(_: () -> T) -> T
+```
+
+Data fetching happens synchronously. You can specify conditions in the `where` clause, such as `Post.title == "first post"` or `Post.priority > 100 && Post.color == .red`. The returned `FetchedResult<Element>` acts pretty much like an array. The object itself (`Element`) is immutable, thus, either the object or the `FetchedResult<Element>` is safe to pass around between threads.
+
+`fetchWithinASnapshot` provides a consistent view if you are going to fetch multiple objects:
+```
+let result = dflat.fetchWithinASnapshot { () -> (firstPost: FetchedResult<Post>, highPriPosts: FetchedResult<Post>) in
+  let firstPost = dflat.fetchFor(Post.self).where(Post.title == "first post")
+  let highPriPosts = dflat.fetchFor(Post.self).where(Post.priority > 100 && Post.color == .red)
+  return (firstPost, highPriPosts)
+}
+```
+
+This is needed because **Dflat** can do transactions in between fetch for `firstPost` and `highPriPosts`. The `fetchWithinASnapshot` won't stop that transaction, but will make sure it only observe the view from fetching for `firstPost`.
+
+### Data Subscription
+
+```swift
+func Workspace.subscribe<Element: Equatable>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription
+func Workspace.subscribe<Element: Equatable>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription
+```
+
+The above are the native subscription APIs. It subscribes changes to either a `fetchedResult` or an object. For object, it will end when object deleted. The subscription is triggered before a `completionHandler` on a transaction triggered.
+
+```swift
+func Workspace.publisher<Element: Equatable>(for: Element) -> AtomPublisher<Element>
+func Workspace.publisher<Element: Equatable>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
+func Workspace.publisher<Element: Equatable>(for: Element.Type).where(ElementQuery, limit = .noLimit, orderBy = []) -> QueryPublisher<Element>
+func Workspace.publisher<Element: Equatable>(for: Element.Type).all(limit = .noLimit, orderBy = []) -> QueryPublisher<Element>
+```
+
+These are the **Combine** counter-parts. Besides subscribing to objects or `fetchedResult`, it can also subscribe to a query directly. What happens under the hood is the query will be made upon `subscribe` (hence, on whichever queue you provided if you did `subscribe(on:`), and subscribe the `fetchedResult` from then on.
+
+### Close
+
+```swift
+func Workspace.shutdown(completion: (() -> Void)?)
+```
+
+This will trigger the **Dflat** shutdown. Immediately after this call, all transactions made to **Dflat** after this will fail. Transactions initiated before this will finish normally. Data fetching after this will return empty results. Any data fetching triggered before this call will finish normally, hence the `completion` part. The `completion` closure, if supplied, will be called once all transactions and data fetching initiated before `shutdown` finish.
+
+## Benchmark
+
+Benchmark on structured data persistence system is notoriously hard. **Dflat** won't claim to be fastest. However, it strives to be *predictive performant*. What that means is there shouldn't be any pathological cases that the performance of **Dflat** degrades unexpectedly. It also means **Dflat** won't be surprisingly fast for some optimal cases.

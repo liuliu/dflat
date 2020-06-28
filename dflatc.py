@@ -7,6 +7,7 @@ import os
 def main():
   parser = argparse.ArgumentParser(description="Dflat schema compiler")
   parser.add_argument('-o', '--output', dest="output", nargs=1, help="output directory", required=True)
+  parser.add_argument('--keep-json', action='store_true', help="keep the intermediate json file")
   parser.add_argument('-I', '--include', action='append', dest="include", nargs=1, help="include directory")
   parser.add_argument('files', nargs='+')
   args = parser.parse_args()
@@ -30,6 +31,9 @@ def main():
     dflatc.append(os.path.splitext(fn)[0] + "_generated.json")
   subprocess.call(dflats)
   subprocess.call(dflatc)
+  if not args.keep_json:
+    for fn in args.files:
+      os.remove(os.path.splitext(fn)[0] + "_generated.json")
 
 if __name__ == "__main__":
   main()

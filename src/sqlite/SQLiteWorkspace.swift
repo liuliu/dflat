@@ -54,7 +54,9 @@ public final class SQLiteWorkspace: Workspace {
       for tableSpace in tableSpaces {
         group.enter()
         tableSpace.queue.async {
+          tableSpace.lock()
           tableSpace.shutdown()
+          tableSpace.unlock()
           group.leave()
         }
       }
