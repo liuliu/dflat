@@ -275,7 +275,7 @@ Following data are collected, and can be reproduced from:
 ./focus.py app:Benchmarks
 ```
 
-I compared mainly with Core Data, and listed numbers for FMDB and WCDB from WCDB Benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
+I compared mainly against Core Data, and listed numbers for FMDB and WCDB from WCDB Benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
 
 The test device is a iPhone 11 Pro with 64GB memory.
 
@@ -283,7 +283,7 @@ The test device is a iPhone 11 Pro with 64GB memory.
 
 The code for `app:Benchmarks` was compiled in Release mode (`--compilation-mode=opt`) with `-whole-module-optimization` on. The WCDB Benchmark was compiled in Release mode whatever that means in their project file.
 
-The benchmark itself is preliminary. It presents the best case scenarios for these frameworks, and I'd like to update this benchmark later with more focus on update propagation.
+The benchmark itself is preliminary. It represents the best case scenarios for these frameworks, and I'd like to update this benchmark later with more focus on update propagation.
 
 First, we compared **Dflat** against Core Data on object insertions, fetching, updates and deletions. 10,000 objects are generated, with no index (only title indexed in Core Data).
 
@@ -293,13 +293,15 @@ First, we compared **Dflat** against Core Data on object insertions, fetching, u
 
 *Fetching 10,000 Objects Individually* evaluated fetching different objects by title (indexed in Core Data and is the primary key in Dflat) 10,000 times.
 
+These are obviously not the best way of doing things (you should update objects in one big transaction, and fetch them in batch if possible), but these are the interesting pathological cases we discussed earlier.
+
 A proper way of doing multi-thread insertions / deletions in Core Data are considerably more tricky, I haven't got around to do that. The *Multi-thread Insert 40,000 Objects* and *Multi-thread Delete 40,000 Objects* are only for **Dflat**.
 
 ![](docs/dflat-vs-core-data.png)
 
 Some of these numbers looks too good to be true. For example, on insertions, **Dflat** appears 20 times faster than Core Data. Some of these numbers didn't make intuitive sense, why multi-thread insertions is slower? Putting it in perspective is important.
 
-![](docs/wcdb-vs-dflat.png)
+![](docs/wcdb-vs-fmdb-vs-dflat.png)
 
 The chart compared against numbers extracted from WCDB Benchmark (v1.0.8.2) without any modifications. It compares ops per seconds rather than time spent fetching 3,334 objects. Note that in WCDB Benchmark, Baseline Read did fetch all, which is the best case scenario in SQLite. It also compares a simple table with only two columns, a key and a blob payload (100 bytes).
 
