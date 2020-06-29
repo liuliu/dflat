@@ -1,8 +1,17 @@
 public protocol PersistenceToolbox {}
 
 public enum UpdatedObject {
+  /**
+   * A new object inserted. You can subscribe this object immediately.
+   */
   case inserted(_: Atom)
+  /**
+   * An object updated.
+   */
   case updated(_: Atom)
+  /**
+   * An object deleted. The parameter is irrelevant.
+   */
   case deleted(_: Int64)
 }
 

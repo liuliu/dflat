@@ -8,15 +8,50 @@ import SQLiteDflatObjC
 public final class SQLiteWorkspace: Workspace {
 
   public enum FileProtectionLevel: Int32 {
+    /**
+     * Class D: No protection. If the device is booted, in theory, you can access the content.
+     * When it is not booted, the content is protected by the Secure Enclave's hardware key.
+     */
     case noProtection = 4 // Class D
+    /**
+     * Class A: The file is accessible if the phone is unlocked and the app is in foreground.
+     * You will lose the file access if the app is backgrounded or the phone is locked.
+     */
     case completeFileProtection = 1 // Class A
+    /**
+     * Class B: The file is accessible if the phone is unlocked. You will lose the file access
+     * if the phone is locked.
+     */
     case completeFileProtectionUnlessOpen = 2 // Class B
+    /**
+     * Class C: The file is accessible once user unlocked the phone once. The file cannot be
+     * accessed prior to that. For example, if you received a notification before first device
+     * unlock, the underlying database cannot be open successfully.
+     */
     case completeFileProtectionUntilFirstUserAuthentication = 3 // Class C
   }
   public enum WriteConcurrency {
+    /**
+     * Enable strict serializable multi-writer / multi-reader mode. Note that SQLite under the
+     * hood still writes serially. It only means the transaction closures can be executed
+     * concurrently. If you provided a targetQueue, please make sure it is a concurrent queue
+     * otherwise it will still execute transaction closure serially. The targetQueue is supplied
+     * by you, should be at reasonable priority, at least .default, because it sets the ceiling
+     * for any sub-queues targeting that, and we may need to bump the sub-queues depending on
+     * where you `performChanges`.
+     */
     case concurrent
+    /**
+     * Enable single-writer / multi-reader mode. This will execute transaction closures serially.
+     * If you supply a targetQueue, please make sure it is serial. It is safe for this serial queue
+     * to have lower priority such as .utility, because we can bump the priority based on where
+     * you call `performChanges`.
+     */
     case serial
   }
+    /**
+     * The synchronous mode of SQLite. We defaults to .normal. Read more on: https://www.sqlite.org/wal.html#performance_considerations
+     */
   public enum Synchronous {
     case normal
     case full
@@ -33,12 +68,30 @@ public final class SQLiteWorkspace: Workspace {
   private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
 
-  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .default, attributes: .concurrent)) {
+  /**
+   * Return a SQLite backed Workspace instance.
+   * @param filePath The path to the SQLite file. There will be 3 files named filePath, "\(filePath)-wal" and "\(filePath)-shm" created.
+   * @param fileProtectionLevel The expected protection level for the database file.
+   * @param synchronous The SQLite synchronous mode, read: https://www.sqlite.org/wal.html#performance_considerations
+   * @param writeConcurrency Either .concurrent or .serial.
+   * @param targetQueue If nil, we will create a queue based on writeConcurrency settings. If you supply your own queue, please read
+   *                    about WriteConcurrency before proceed.
+   */
+  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue? = nil) {
     self.filePath = filePath
     self.fileProtectionLevel = fileProtectionLevel
     self.synchronous = synchronous
     self.writeConcurrency = writeConcurrency
-    self.targetQueue = targetQueue
+    if targetQueue {
+      self.targetQueue = targetQueue
+    } else {
+      switch writeConcurrency {
+      case .concurrent:
+        self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default, attributes: .concurrent)
+      case .serial:
+        self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .utility)
+      }
+    }
     self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
   }
 

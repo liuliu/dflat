@@ -96,4 +96,7 @@ bazel-*
 .DS_Store
 *.swp
 
+# SPM
 Package.resolved
+# sourcedocs
+Documentation
