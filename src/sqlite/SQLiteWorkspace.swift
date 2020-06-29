@@ -84,7 +84,7 @@ public final class SQLiteWorkspace: Workspace {
     self.fileProtectionLevel = fileProtectionLevel
     self.synchronous = synchronous
     self.writeConcurrency = writeConcurrency
-    if targetQueue {
+    if let targetQueue = targetQueue {
       self.targetQueue = targetQueue
     } else {
       switch writeConcurrency {
