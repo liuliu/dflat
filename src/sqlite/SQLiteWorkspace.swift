@@ -91,7 +91,7 @@ public final class SQLiteWorkspace: Workspace {
       case .concurrent:
         self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default, attributes: .concurrent)
       case .serial:
-        self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .utility)
+        self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default)
       }
     }
     self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
