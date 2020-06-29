@@ -263,7 +263,7 @@ These are the **Combine** counter-parts. Besides subscribing to objects or `fetc
 func Workspace.shutdown(completion: (() -> Void)? = nil)
 ```
 
-This will trigger the **Dflat** shutdown. Immediately after this call, all transactions made to **Dflat** after this will fail. Transactions initiated before this will finish normally. Data fetching after this will return empty results. Any data fetching triggered before this call will finish normally, hence the `completion` part. The `completion` closure, if supplied, will be called once all transactions and data fetching initiated before `shutdown` finish.
+This will trigger the **Dflat** shutdown. All transactions made to **Dflat** after this call will fail. Transactions initiated before this will finish normally. Data fetching after this will return empty results. Any data fetching triggered before this call will finish normally, hence the `completion` part. The `completion` closure, if supplied, will be called once all transactions and data fetching initiated before `shutdown` finish.
 
 ## Benchmark
 
@@ -275,7 +275,7 @@ Following data are collected, and can be reproduced from:
 ./focus.py app:Benchmarks
 ```
 
-I compared mainly against Core Data, and listed numbers for FMDB and WCDB from WCDB Benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
+I compared mainly against Core Data, and listed numbers for FMDB and [WCDB](https://github.com/Tencent/wcdb) from WCDB Benchmark (from v1.0.8.2) to give a better overview of what you would expect from the test device.
 
 The test device is a iPhone 11 Pro with 64GB memory.
 
@@ -287,7 +287,7 @@ The benchmark itself is preliminary. It represents the best case scenarios for t
 
 First, we compared **Dflat** against Core Data on object insertions, fetching, updates and deletions. 10,000 objects are generated, with no index (only title indexed in Core Data).
 
-*Fetching 1,667 Objects* evaluated both frameworks on querying by non-indexed property (priority).
+*Fetching 1,667 Objects* evaluated both frameworks on querying by non-indexed property.
 
 *Update 10,000 Objects Individually* evaluated updating different objects in separate transactions 10,000 times.
 
@@ -299,7 +299,7 @@ A proper way of doing multi-thread insertions / deletions in Core Data are consi
 
 ![](docs/dflat-vs-core-data.png)
 
-Some of these numbers looks too good to be true. For example, on insertions, **Dflat** appears 20 times faster than Core Data. Some of these numbers didn't make intuitive sense, why multi-thread insertions is slower? Putting it in perspective is important.
+Some of these numbers looks too good to be true. For example, on insertions, **Dflat** appears 20 times faster than Core Data. Some of these numbers didn't make intuitive sense, why multi-thread insertions are slower? Putting it in perspective is important.
 
 ![](docs/wcdb-vs-fmdb-vs-dflat.png)
 
@@ -307,4 +307,4 @@ The chart compared against numbers extracted from WCDB Benchmark (v1.0.8.2) with
 
 Multi-thread writes is indeed slower in our ideal case, because SQLite itself cannot execute writes concurrently. Thus, our multi-writer mode really just means these transaction closures can be executed concurrently. The writes still happen serially at SQLite layer. It is still beneficial because in real-world cases, we spend significant time in the transaction closure for data transformations, rather than SQLite writes.
 
-The ceiling for writes is higher than what Dflat achieved. Again, WCDB represents an ideal case where you have only two columns. Dflat numbers in real-world would also be lower than what we had here, because we will have more indexes and objects with many fields, even arrays of data.
+The ceiling for writes is higher than what **Dflat** achieved. Again, WCDB represents an ideal case where you have only two columns. **Dflat** numbers in real-world would also be lower than what we had here, because we will have more indexes and objects with many fields, even arrays of data.
