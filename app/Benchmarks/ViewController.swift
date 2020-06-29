@@ -61,8 +61,46 @@ final class BenchmarksViewController: UIViewController {
     view.addSubview(runCoreDataButton)
     view.addSubview(text)
   }
+
   @objc
   func runCoreDataBenchmark() {
+    // Insert 10x more objects and delete them so that SQLite have enough pages to recycle.
+    let warmupGroup = DispatchGroup()
+    warmupGroup.enter()
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let entity = NSEntityDescription.entity(forEntityName: "BenchDoc", in: objectContext)!
+      for i in 0..<Self.NumberOfEntities * 10 {
+        let doc = NSManagedObject(entity: entity, insertInto: objectContext)
+        doc.setValue("title\(i)", forKeyPath: "title")
+        doc.setValue("tag\(i)", forKeyPath: "tag")
+        doc.setValue(0, forKeyPath: "pos_x")
+        doc.setValue(0, forKeyPath: "pos_y")
+        doc.setValue(0, forKeyPath: "pos_z")
+        switch i % 3 {
+        case 0:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(Self.NumberOfEntities / 2 - i, forKeyPath: "priority")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 1:
+          doc.setValue(0, forKeyPath: "color")
+          doc.setValue(i - Self.NumberOfEntities / 2, forKeyPath: "priority")
+        case 2:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
+      }
+      try! objectContext.save()
+      let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      let allDocs = try! objectContext.fetch(fetchRequest)
+      for i in allDocs {
+        objectContext.delete(i)
+      }
+      try! objectContext.save()
+      warmupGroup.leave()
+    }
+    warmupGroup.wait()
     let insertGroup = DispatchGroup()
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
@@ -200,7 +238,46 @@ final class BenchmarksViewController: UIViewController {
     print(stats)
     text.text = stats
   }
+
   func runDflatCRUD() -> String {
+    let warmupGroup = DispatchGroup()
+    warmupGroup.enter()
+    // Insert 10x more objects and delete them so that SQLite have enough pages to recycle.
+    dflat.performChanges([BenchDoc.self]) { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities * 10) {
+        let creationRequest = BenchDocChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        creationRequest.pos = Vec3()
+        switch i % 3 {
+        case 0:
+          creationRequest.color = .blue
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 1:
+          creationRequest.color = .red
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+        case 2:
+          creationRequest.color = .green
+          creationRequest.priority = 0
+          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
+        txnContext.try(submit: creationRequest)
+      }
+    }
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+        txnContext.try(submit: deletionRequest)
+      }
+    }) { (succeed) in
+      warmupGroup.leave()
+    }
+    warmupGroup.wait()
     let insertGroup = DispatchGroup()
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
@@ -334,6 +411,7 @@ final class BenchmarksViewController: UIViewController {
     stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
     return stats
   }
+
   func runDflatMTCRUD() -> String {
     let insertGroup = DispatchGroup()
     insertGroup.enter()
@@ -503,11 +581,12 @@ final class BenchmarksViewController: UIViewController {
     stats += "Multithread Delete \(4 * Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
     return stats
   }
+
   @objc
   func runDflatBenchmark() {
     let CRUDStats = runDflatCRUD()
-    // let MTCRUDStats = runDflatMTCRUD()
-    let stats = CRUDStats // + MTCRUDStats
+    let MTCRUDStats = runDflatMTCRUD()
+    let stats = CRUDStats + MTCRUDStats
     text.text = stats
     print(stats)
   }

@@ -38,4 +38,7 @@ public extension Workspace {
   func shutdown() {
     shutdown(completion: nil)
   }
+  func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler) {
+    performChanges(transactionalObjectTypes, changesHandler: changesHandler, completionHandler: nil)
+  }
 }
