@@ -25,19 +25,25 @@ open class QueryBuilder<Element: Atom> {
   public init() {}
   /**
    * Make query against the Workspace. This is coupled with `fetchFor()` method and shouldn't be used independently.
-   * @param query The query such as `Post.title == "some title" && Post.color == .red`
-   * @param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-   * @param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-   * @return Return a fetched result which interacts just like normal array.
+   *
+   * - Parameters:
+   *    - query: The query such as `Post.title == "some title" && Post.color == .red`
+   *    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+   *    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+   *
+   * - Returns: Return a fetched result which interacts just like normal array.
    */
   open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
     fatalError()
   }
   /**
    * Return all objects for a class.
-   * @param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-   * @param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-   * @return Return a fetched result which interacts just like normal array.
+   *
+   * - Parameters:
+   *    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+   *    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+   *
+   * - Returns: Return a fetched result which interacts just like normal array.
    */
   open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> {
     fatalError()

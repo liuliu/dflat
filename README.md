@@ -61,7 +61,7 @@ You can then proceed to add **Dflat** runtime either with Swift Package Manager 
 Assuming you have a `post.fbs` file somewhere look like this:
 
 ```
-enum Color:byte {
+enum Color: byte {
   Red = 0,
   Green,
   Blue = 2
@@ -190,6 +190,31 @@ let cancellable = dflat.pulisher(for: posts[0])
 The schema evolution in **Dflat** Follows exact with flatbuffers. The only exception is that you cannot add more primary keys or change primary key to a different property once it is selected. Otherwise, you are free to add or remove indexes, rename properties. Properties to be removed should be marked as `deprecated`, new properties should be appended to the end of the table, and you should never change the type of a property.
 
 There is no need for versioning as long as you follow the schema evolution path. Because the schema is maintained by flatbuffers, not SQLite, there is no disk ops required for schema upgrade. Schema upgrade failures due to lack of disk space or prolonged schema upgrade time due to pathological cases won't be a thing with **Dflat**.
+
+## Namespace
+
+**Dflat** schema supports namespace, as does flatbuffers schema. However, because Swift doesn't really support proper namespace, the namespace implementation relies on `public enum` and extensions. Thus, if you have namespace:
+
+```
+namespace Evolution.V1;
+
+table Post {
+  title: string (primary);
+}
+
+root_type Post;
+```
+
+You have to declare the namespace yourself. In your project, you need to have a Swift file contains following:
+
+```swift
+public enum Evolution {
+  public enum V1 {
+  }
+}
+```
+
+And it will work. You can then access the `Post` object through `Evolution.V1.Post` or `typealias Post = Evolution.V1.Post`.
 
 ## Dflat Runtime API
 

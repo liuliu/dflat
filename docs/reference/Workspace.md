@@ -23,6 +23,7 @@ func fetchWithinASnapshot<T>(_: () -> T) -> T
 
 Provide a consistent view for fetching multiple objects at once.
 
+
 **PROTOCOL**
 
 # `Workspace`
@@ -50,14 +51,24 @@ be called once all transactions and data fetching initiated before shutdown fini
 func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
 ```
 
-Perform a transaction for given object types.
-@param transactionalObjectTypes A list of object types you are going to transact with. If you
+ Perform a transaction for given object types.
+
+ - Parameters:
+    - transactionalObjectTypes: A list of object types you are going to transact with. If you
                                 If you fetch or mutation an object outside of this list, it will fatal.
-@param changesHandler: The transaction closure where you will give a transactionContext and safe to do
-                       data mutations through submission of change requests.
-@param completionHandler: If supplied, will be called once the transaction committed. It will be called
-                          with success / failure. You don't need to handle failure cases specifically
-                          (such as retry), but rather to surface and log such error.
+    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
+                      data mutations through submission of change requests.
+    - completionHandler: If supplied, will be called once the transaction committed. It will be called
+                         with success / failure. You don't need to handle failure cases specifically
+                         (such as retry), but rather to surface and log such error.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| transactionalObjectTypes | A list of object types you are going to transact with. If you If you fetch or mutation an object outside of this list, it will fatal. |
+| changesHandler | The transaction closure where you will give a transactionContext and safe to do data mutations through submission of change requests. |
+| completionHandler | If supplied, will be called once the transaction committed. It will be called with success / failure. You don’t need to handle failure cases specifically (such as retry), but rather to surface and log such error. |
 
 ### `subscribe(fetchedResult:changeHandler:)`
 
@@ -65,15 +76,25 @@ Perform a transaction for given object types.
 func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription where Element: Equatable
 ```
 
-Subscribe to changes of a fetched result. You queries fetched result with
-`fetchFor().where()` method and the result can be observed. If any object
-created / updated meet the query criterion, the callback will happen and you
-will get a updated fetched result.
-@param fetchedResult The original fetchedResult. If it is outdated already, you will get an updated
+ Subscribe to changes of a fetched result. You queries fetched result with
+ `fetchFor().where()` method and the result can be observed. If any object
+ created / updated meet the query criterion, the callback will happen and you
+ will get a updated fetched result.
+
+ - Parameters:
+    - fetchedResult: The original fetchedResult. If it is outdated already, you will get an updated
                      callback soon after.
-@param changeHandler The callback where you will receive an update if anything changed.
-@return A subscription object that you can cancel the subscription. If no one hold the subscription
-        object, it will cancel automatically.
+    - changeHandler: The callback where you will receive an update if anything changed.
+
+ - Returns: A subscription object that you can cancel the subscription. If no one hold the subscription
+            object, it will cancel automatically.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| fetchedResult | The original fetchedResult. If it is outdated already, you will get an updated callback soon after. |
+| changeHandler | The callback where you will receive an update if anything changed. |
 
 ### `subscribe(object:changeHandler:)`
 
@@ -81,17 +102,27 @@ will get a updated fetched result.
 func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription where Element: Equatable
 ```
 
-Subscribe to changes of an object. If anything in the object changed or
-the object itself is deleted. Deletion is a terminal event for subscription.
-Even if later you inserted an object with the same primary key, the subscription
-callback won't be triggered. This is different from fetched result subscription
-above where if you query by primary key, you will get subscription update if
-a new object with the same primary key later created.
-@param object The object to be observed. If it is outdated already, you will get an updated callback
+ Subscribe to changes of an object. If anything in the object changed or
+ the object itself is deleted. Deletion is a terminal event for subscription.
+ Even if later you inserted an object with the same primary key, the subscription
+ callback won't be triggered. This is different from fetched result subscription
+ above where if you query by primary key, you will get subscription update if
+ a new object with the same primary key later created.
+
+ - Parameters:
+    - object: The object to be observed. If it is outdated already, you will get an updated callback
               soon after.
-@param changeHandler The callback where you will receive an update if anything changed.
-@return A subscription object that you can cancel on. If no one hold the subscription, it will cancel
-        automatically.
+    - changeHandler: The callback where you will receive an update if anything changed.
+
+ - Returns: A subscription object that you can cancel on. If no one hold the subscription, it will cancel
+            automatically.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| object | The object to be observed. If it is outdated already, you will get an updated callback soon after. |
+| changeHandler | The callback where you will receive an update if anything changed. |
 
 ### `publisher(for:)`
 
@@ -117,6 +148,7 @@ func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Elemen
 
 Return a publisher builder for query subscription in Combine.
 
+
 **CLASS**
 
 # `QueryBuilder`
@@ -138,11 +170,22 @@ public init()
 open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool
 ```
 
-Make query against the Workspace. This is coupled with `fetchFor()` method and shouldn't be used independently.
-@param query The query such as `Post.title == "some title" && Post.color == .red`
-@param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-@param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-@return Return a fetched result which interacts just like normal array.
+ Make query against the Workspace. This is coupled with `fetchFor()` method and shouldn't be used independently.
+
+ - Parameters:
+    - query: The query such as `Post.title == "some title" && Post.color == .red`
+    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+
+ - Returns: Return a fetched result which interacts just like normal array.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| query | The query such as `Post.title == "some title" && Post.color == .red` |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
 
 ### `all(limit:orderBy:)`
 
@@ -150,10 +193,20 @@ Make query against the Workspace. This is coupled with `fetchFor()` method and s
 open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element>
 ```
 
-Return all objects for a class.
-@param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-@param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-@return Return a fetched result which interacts just like normal array.
+ Return all objects for a class.
+
+ - Parameters:
+    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+
+ - Returns: Return a fetched result which interacts just like normal array.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
 
 **PROTOCOL**
 
@@ -172,6 +225,7 @@ func cancel()
 
 Cancel an existing subscription. It is guaranteed that no callback will happen
 immediately after `cancel`.
+
 
 **ENUM**
 
@@ -198,6 +252,7 @@ case deleted
 
 The object is deleted. This denotes the end of a subscription.
 
+
 **CLASS**
 
 # `QueryPublisherBuilder`
@@ -219,12 +274,23 @@ public init()
 open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> where T.ResultType == Bool
 ```
 
-Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
-and shouldn't be used independently.
-@param query The query such as `Post.title == "some title" && Post.color == .red`
-@param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-@param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-@return A publisher object that can be interacted with Combine.
+ Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
+ and shouldn't be used independently.
+
+ - Parameters:
+    - query: The query such as `Post.title == "some title" && Post.color == .red`
+    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+
+ - Returns: A publisher object that can be interacted with Combine.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| query | The query such as `Post.title == "some title" && Post.color == .red` |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
 
 ### `all(limit:orderBy:)`
 
@@ -232,8 +298,18 @@ and shouldn't be used independently.
 open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element>
 ```
 
-Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
-and shouldn't be used independently.
-@param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-@param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-@return A publisher object that can be interacted with Combine.
+ Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
+ and shouldn't be used independently.
+
+ - Parameters:
+   - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+   - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+
+ - Returns: A publisher object that can be interacted with Combine.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |

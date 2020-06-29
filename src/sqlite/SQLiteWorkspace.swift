@@ -50,7 +50,7 @@ public final class SQLiteWorkspace: Workspace {
     case serial
   }
     /**
-     * The synchronous mode of SQLite. We defaults to .normal. Read more on: https://www.sqlite.org/wal.html#performance_considerations
+     * The synchronous mode of SQLite. We defaults to .normal. Read more on: [https://www.sqlite.org/wal.html#performance_considerations](https://www.sqlite.org/wal.html#performance_considerations)
      */
   public enum Synchronous {
     case normal
@@ -70,12 +70,14 @@ public final class SQLiteWorkspace: Workspace {
 
   /**
    * Return a SQLite backed Workspace instance.
-   * @param filePath The path to the SQLite file. There will be 3 files named filePath, "\(filePath)-wal" and "\(filePath)-shm" created.
-   * @param fileProtectionLevel The expected protection level for the database file.
-   * @param synchronous The SQLite synchronous mode, read: https://www.sqlite.org/wal.html#performance_considerations
-   * @param writeConcurrency Either .concurrent or .serial.
-   * @param targetQueue If nil, we will create a queue based on writeConcurrency settings. If you supply your own queue, please read
-   *                    about WriteConcurrency before proceed.
+   *
+   * - Parameters:
+   *    - filePath: The path to the SQLite file. There will be 3 files named filePath, "\(filePath)-wal" and "\(filePath)-shm" created.
+   *    - fileProtectionLevel: The expected protection level for the database file.
+   *    - synchronous: The SQLite synchronous mode, read: https://www.sqlite.org/wal.html#performance_considerations
+   *    - writeConcurrency: Either .concurrent or .serial.
+   *    - targetQueue: If nil, we will create a queue based on writeConcurrency settings. If you supply your own queue, please read
+   *                   about WriteConcurrency before proceed.
    */
   public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue? = nil) {
     self.filePath = filePath

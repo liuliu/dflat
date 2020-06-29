@@ -36,10 +36,13 @@ open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
   /**
    * Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
    * and shouldn't be used independently.
-   * @param query The query such as `Post.title == "some title" && Post.color == .red`
-   * @param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-   * @param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-   * @return A publisher object that can be interacted with Combine.
+   *
+   * - Parameters:
+   *    - query: The query such as `Post.title == "some title" && Post.color == .red`
+   *    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+   *    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+   *
+   * - Returns: A publisher object that can be interacted with Combine.
    */
   open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> where T.ResultType == Bool {
     fatalError()
@@ -47,9 +50,12 @@ open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
   /**
    * Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
    * and shouldn't be used independently.
-   * @param limit The limit. Default to `.noLimit`, you can supply `.limit(number)`
-   * @param orderBy The array of keys to order the result. Such as `[Post.priority.descending]`
-   * @return A publisher object that can be interacted with Combine.
+   *
+   * - Parameters:
+   *   - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+   *   - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+   *
+   * - Returns: A publisher object that can be interacted with Combine.
    */
   open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> {
     fatalError()
