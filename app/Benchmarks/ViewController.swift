@@ -200,8 +200,7 @@ final class BenchmarksViewController: UIViewController {
     print(stats)
     text.text = stats
   }
-  @objc
-  func runDflatBenchmark() {
+  func runDflatCRUD() -> String {
     let insertGroup = DispatchGroup()
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
@@ -333,6 +332,182 @@ final class BenchmarksViewController: UIViewController {
     }
     deleteGroup.wait()
     stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
+    return stats
+  }
+  func runDflatMTCRUD() -> String {
+    let insertGroup = DispatchGroup()
+    insertGroup.enter()
+    let insertStartTime = CACurrentMediaTime()
+    var insertDocV1EndTime = insertStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+        let creationRequest = BenchDocChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        creationRequest.pos = Vec3()
+        switch i % 3 {
+        case 0:
+          creationRequest.color = .blue
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 1:
+          creationRequest.color = .red
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+        case 2:
+          creationRequest.color = .green
+          creationRequest.priority = 0
+          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
+        txnContext.try(submit: creationRequest)
+      }
+    }) { (succeed) in
+      insertDocV1EndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.enter()
+    var insertDocV2EndTime = insertStartTime
+    dflat.performChanges([BenchDocV2.self], changesHandler: { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+        let creationRequest = BenchDocV2ChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        switch i % 3 {
+        case 0:
+          creationRequest.color = .blue
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+        case 1:
+          creationRequest.color = .red
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+        case 2:
+          creationRequest.color = .green
+          creationRequest.priority = 0
+          creationRequest.text = "text\(i)"
+        default:
+          break
+        }
+        txnContext.try(submit: creationRequest)
+      }
+    }) { (succeed) in
+      insertDocV2EndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.enter()
+    var insertDocV3EndTime = insertStartTime
+    dflat.performChanges([BenchDocV3.self], changesHandler: { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+        let creationRequest = BenchDocV3ChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        switch i % 3 {
+        case 0:
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          creationRequest.text = "text\(i)"
+        case 1:
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+        case 2:
+          creationRequest.priority = 0
+        default:
+          break
+        }
+        txnContext.try(submit: creationRequest)
+      }
+    }) { (succeed) in
+      insertDocV3EndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.enter()
+    var insertDocV4EndTime = insertStartTime
+    dflat.performChanges([BenchDocV4.self], changesHandler: { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+        let creationRequest = BenchDocV4ChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        switch i % 3 {
+        case 0:
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+        case 1:
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          creationRequest.text = "text\(i)"
+        case 2:
+          creationRequest.priority = 0
+        default:
+          break
+        }
+        txnContext.try(submit: creationRequest)
+      }
+    }) { (succeed) in
+      insertDocV4EndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.wait()
+    let insertEndTime = max(max(insertDocV1EndTime, insertDocV2EndTime), max(insertDocV3EndTime, insertDocV4EndTime))
+    var stats = "Multithread Insert \(4 * Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
+    let deleteGroup = DispatchGroup()
+    deleteGroup.enter()
+    let deleteStartTime = CACurrentMediaTime()
+    var deleteDocV1EndTime = deleteStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+        txnContext.try(submit: deletionRequest)
+      }
+    }) { (succeed) in
+      deleteDocV1EndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.enter()
+    var deleteDocV2EndTime = deleteStartTime
+    dflat.performChanges([BenchDocV2.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDocV2.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocV2ChangeRequest.deletionRequest(i) else { continue }
+        txnContext.try(submit: deletionRequest)
+      }
+    }) { (succeed) in
+      deleteDocV2EndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.enter()
+    var deleteDocV3EndTime = deleteStartTime
+    dflat.performChanges([BenchDocV3.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDocV3.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocV3ChangeRequest.deletionRequest(i) else { continue }
+        txnContext.try(submit: deletionRequest)
+      }
+    }) { (succeed) in
+      deleteDocV3EndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.enter()
+    var deleteDocV4EndTime = deleteStartTime
+    dflat.performChanges([BenchDocV4.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetchFor(BenchDocV4.self).all()
+      for i in allDocs {
+        guard let deletionRequest = BenchDocV4ChangeRequest.deletionRequest(i) else { continue }
+        txnContext.try(submit: deletionRequest)
+      }
+    }) { (succeed) in
+      deleteDocV4EndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.wait()
+    let deleteEndTime = max(max(deleteDocV1EndTime, deleteDocV2EndTime), max(deleteDocV3EndTime, deleteDocV4EndTime))
+    stats += "Multithread Delete \(4 * Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
+    return stats
+  }
+  @objc
+  func runDflatBenchmark() {
+    let CRUDStats = runDflatCRUD()
+    // let MTCRUDStats = runDflatMTCRUD()
+    let stats = CRUDStats // + MTCRUDStats
     text.text = stats
     print(stats)
   }

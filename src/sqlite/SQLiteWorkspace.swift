@@ -33,7 +33,7 @@ public final class SQLiteWorkspace: Workspace {
   private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
 
-  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .utility, attributes: .concurrent)) {
+  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue = DispatchQueue(label: "dflat.workq", qos: .default, attributes: .concurrent)) {
     self.filePath = filePath
     self.fileProtectionLevel = fileProtectionLevel
     self.synchronous = synchronous
@@ -357,7 +357,7 @@ public final class SQLiteWorkspace: Workspace {
   private func newTableSpace() -> SQLiteTableSpace {
     switch writeConcurrency {
     case .concurrent:
-      return ConcurrentSQLiteTableSpace(queue: DispatchQueue(label: "dflat.subq", target: targetQueue))
+      return ConcurrentSQLiteTableSpace(queue: DispatchQueue(label: "dflat.subq", qos: .utility, target: targetQueue))
     case .serial:
       return SerialSQLiteTableSpace(queue: targetQueue)
     }
@@ -372,6 +372,12 @@ public final class SQLiteWorkspace: Workspace {
       guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 10_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
+      switch synchronous {
+      case .normal:
+        sqlite3_exec(writer.sqlite, "PRAGMA synchronous=NORMAL", nil, nil, nil)
+      case .full:
+        sqlite3_exec(writer.sqlite, "PRAGMA synchronous=FULL", nil, nil, nil)
+      }
       sqlite3_exec(writer.sqlite, "PRAGMA auto_vacuum=incremental", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA incremental_vaccum(2)", nil, nil, nil)
       return writer
