@@ -1,0 +1,14 @@
+enum ColorV2: byte {
+  Red = 0,
+  Green,
+  Blue = 2
+}
+table BenchDocV2 {
+  color: ColorV2;
+  title: string (primary);
+  tag: string;
+  priority: int;
+  text: string;
+}
+
+root_type BenchDocV2;

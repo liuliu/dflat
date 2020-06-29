@@ -1,0 +1,8 @@
+table BenchDocV4 {
+  title: string (primary);
+  tag: string;
+  priority: int;
+  text: string;
+}
+
+root_type BenchDocV4;

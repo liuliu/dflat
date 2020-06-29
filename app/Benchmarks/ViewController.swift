@@ -142,26 +142,29 @@ final class BenchmarksViewController: UIViewController {
     var individualUpdateEndTime = individualUpdateStartTime
     persistentContainer.performBackgroundTask { (objectContext) in
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-      let allDocs = try! objectContext.fetch(fetchRequest)
-      for (i, doc) in allDocs.enumerated() {
-        doc.setValue("tag\(i + 2)", forKeyPath: "tag")
-        doc.setValue(12, forKeyPath: "priority")
-        doc.setValue(3, forKeyPath: "pos_x")
-        doc.setValue(2, forKeyPath: "pos_y")
-        doc.setValue(1, forKeyPath: "pos_z")
-        switch i % 3 {
-        case 2:
-          doc.setValue(1, forKeyPath: "color")
-          doc.setValue(["image\(i)"], forKeyPath: "images")
-        case 0:
-          doc.setValue(0, forKeyPath: "color")
-        case 1:
-          doc.setValue(2, forKeyPath: "color")
-          doc.setValue("text\(i)", forKeyPath: "text")
-        default:
-          break
+      var allDocs = try! objectContext.fetch(fetchRequest)
+      for i in (0..<Self.NumberOfEntities).reversed() {
+        autoreleasepool {
+          let doc = allDocs.removeLast()
+          doc.setValue("tag\(i + 2)", forKeyPath: "tag")
+          doc.setValue(12, forKeyPath: "priority")
+          doc.setValue(3, forKeyPath: "pos_x")
+          doc.setValue(2, forKeyPath: "pos_y")
+          doc.setValue(1, forKeyPath: "pos_z")
+          switch i % 3 {
+          case 2:
+            doc.setValue(1, forKeyPath: "color")
+            doc.setValue(["image\(i)"], forKeyPath: "images")
+          case 0:
+            doc.setValue(0, forKeyPath: "color")
+          case 1:
+            doc.setValue(2, forKeyPath: "color")
+            doc.setValue("text\(i)", forKeyPath: "text")
+          default:
+            break
+          }
+          try! objectContext.save()
         }
-        try! objectContext.save()
       }
       individualUpdateEndTime = CACurrentMediaTime()
       individualUpdateGroup.leave()
