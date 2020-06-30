@@ -13,11 +13,12 @@ public final class SQLiteTransactionContext: TransactionContext {
   private let state: SQLiteTableState
   private let toolbox: SQLitePersistenceToolbox
   private var tableCreated = Set<ObjectIdentifier>()
+  private (set) internal var began = false
   let changesTimestamp: Int64
   var borrowed: SQLiteConnectionPool.Borrowed {
     SQLiteConnectionPool.Borrowed(pointee: toolbox.connection)
   }
-  var aborted: Bool = false
+  var aborted = false
   
   static private(set) public var current: SQLiteTransactionContext? {
     get {
@@ -90,6 +91,20 @@ public final class SQLiteTransactionContext: TransactionContext {
       (atomType as! SQLiteAtom.Type).setUpSchema(toolbox)
       state.tableCreated.insert(atomTypeIdentifier)
       tableCreated.insert(atomTypeIdentifier)
+    }
+    if !began {
+      // Begin a transaction, obtain the exclusive lock right away.
+      // I can only start a deferred transaction because the first one
+      // will be a write anyway. Doing BEGIN IMMEDIATE just to prevent
+      // myself doing stupid things in the future where I may do some read
+      // in the transactionalUpdate, who knows. Also, table creation doesn't
+      // need to be wrapped in this transaction. Doing that before.
+      let begin = toolbox.connection.prepareStaticStatement("BEGIN IMMEDIATE")
+      guard SQLITE_DONE == sqlite3_step(begin) else {
+        self.abort()
+        throw TransactionError.others
+      }
+      began = true
     }
     do {
       let updatedObject = try Self.transactionalUpdate(toolbox: toolbox) { toolbox in

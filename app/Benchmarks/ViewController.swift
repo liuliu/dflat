@@ -264,7 +264,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
@@ -272,7 +272,7 @@ final class BenchmarksViewController: UIViewController {
       let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       warmupGroup.leave()
@@ -303,7 +303,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       insertEndTime = CACurrentMediaTime()
@@ -343,7 +343,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: changeRequest)
+        try! txnContext.submit(changeRequest)
       }
     }) { (succeed) in
       updateEndTime = CACurrentMediaTime()
@@ -374,7 +374,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: changeRequest)
+        try! txnContext.submit(changeRequest)
       }) { (succeed) in
         if i == allDocs.count - 1 {
           individualUpdateEndTime = CACurrentMediaTime()
@@ -403,7 +403,7 @@ final class BenchmarksViewController: UIViewController {
       deletedCount = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       deleteEndTime = CACurrentMediaTime()
@@ -440,7 +440,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       insertDocV1EndTime = CACurrentMediaTime()
@@ -467,7 +467,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       insertDocV2EndTime = CACurrentMediaTime()
@@ -491,7 +491,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       insertDocV3EndTime = CACurrentMediaTime()
@@ -515,7 +515,7 @@ final class BenchmarksViewController: UIViewController {
         default:
           break
         }
-        txnContext.try(submit: creationRequest)
+        try! txnContext.submit(creationRequest)
       }
     }) { (succeed) in
       insertDocV4EndTime = CACurrentMediaTime()
@@ -535,7 +535,7 @@ final class BenchmarksViewController: UIViewController {
       deletedCount = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       deleteDocV1EndTime = CACurrentMediaTime()
@@ -550,7 +550,7 @@ final class BenchmarksViewController: UIViewController {
       deletedV2Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV2ChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       deleteDocV2EndTime = CACurrentMediaTime()
@@ -565,7 +565,7 @@ final class BenchmarksViewController: UIViewController {
       deletedV3Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV3ChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       deleteDocV3EndTime = CACurrentMediaTime()
@@ -580,7 +580,7 @@ final class BenchmarksViewController: UIViewController {
       deletedV4Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV4ChangeRequest.deletionRequest(i) else { continue }
-        txnContext.try(submit: deletionRequest)
+        try! txnContext.submit(deletionRequest)
       }
     }) { (succeed) in
       deleteDocV4EndTime = CACurrentMediaTime()

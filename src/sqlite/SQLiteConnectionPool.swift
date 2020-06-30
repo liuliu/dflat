@@ -61,7 +61,7 @@ final class SQLiteConnectionPool {
       flowControl.signal()
       return Borrowed(pointee: pointee, pool: nil)
     }
-    sqlite3_busy_timeout(pointee?.sqlite, 10_000)
+    sqlite3_busy_timeout(pointee?.sqlite, 30_000)
     return Borrowed(pointee: pointee, pool: self)
   }
   fileprivate func add(_ connection: SQLiteConnection) {

@@ -425,7 +425,7 @@ public final class SQLiteWorkspace: Workspace {
       // Set the flag before creating the s
       Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
       guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
-      sqlite3_busy_timeout(writer.sqlite, 10_000)
+      sqlite3_busy_timeout(writer.sqlite, 30_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
       case .normal:
@@ -441,7 +441,7 @@ public final class SQLiteWorkspace: Workspace {
       // Set the flag before creating the s
       Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
       guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
-      sqlite3_busy_timeout(writer.sqlite, 10_000)
+      sqlite3_busy_timeout(writer.sqlite, 30_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
       case .normal:
@@ -458,29 +458,30 @@ public final class SQLiteWorkspace: Workspace {
 
   private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
     let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: state.changesTimestamp.load(), connection: connection)
-    let begin = connection.prepareStaticStatement("BEGIN")
-    guard SQLITE_DONE == sqlite3_step(begin) else {
-      return false
-    }
     changesHandler(txnContext)
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
     // This transaction is aborted by user. rollback.
     if txnContext.aborted {
-      let rollback = connection.prepareStaticStatement("ROLLBACK")
-      let status = sqlite3_step(rollback)
-      precondition(status == SQLITE_DONE)
+      if txnContext.began { // If it doesn't even begin a transaction, no need to rollback.
+        let rollback = connection.prepareStaticStatement("ROLLBACK")
+        let status = sqlite3_step(rollback)
+        precondition(status == SQLITE_DONE)
+      }
       return false
     }
-    let commit = connection.prepareStaticStatement("COMMIT")
-    let status = sqlite3_step(commit)
-    if SQLITE_FULL == status {
-      let rollback = connection.prepareStaticStatement("ROLLBACK")
-      let status = sqlite3_step(rollback)
+    // If we started a transaction, because we called submit. Commit now.
+    if txnContext.began {
+      let commit = connection.prepareStaticStatement("COMMIT")
+      let status = sqlite3_step(commit)
+      if SQLITE_FULL == status {
+        let rollback = connection.prepareStaticStatement("ROLLBACK")
+        let status = sqlite3_step(rollback)
+        precondition(status == SQLITE_DONE)
+        return false
+      }
       precondition(status == SQLITE_DONE)
-      return false
     }
-    precondition(status == SQLITE_DONE)
     var reader: SQLiteConnectionPool.Borrowed? = nil
     let newChangesTimestamp = state.changesTimestamp.increment(order: .release) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
     state.setTableTimestamp(newChangesTimestamp, for: updatedObjects.keys)
@@ -542,15 +543,16 @@ extension SQLiteWorkspace {
       // It is OK to create connection, etc. before acquiring the lock as long as we don't do mutation.
       tableSpace.lock()
       defer { tableSpace.unlock() }
-      let begin = connection.prepareStaticStatement("BEGIN")
-      // If we cannot start a transaction, nothing we can do, just wait for re-trigger.
-      guard SQLITE_DONE == sqlite3_step(begin) else { return }
       // Make sure the table exists before we query.
       if !tableSpace.state.tableCreated.contains(objectType) {
         SQLiteElement.setUpSchema(toolbox)
         tableSpace.state.tableCreated.insert(objectType)
       }
       let indexSurvey = connection.indexSurvey(fields, table: table)
+      // Obtain a exclusive lock, see discussions in SQLiteTransactionContext for why.
+      let begin = connection.prepareStaticStatement("BEGIN IMMEDIATE")
+      // If we cannot start a transaction, nothing we can do, just wait for re-trigger.
+      guard SQLITE_DONE == sqlite3_step(begin) else { return }
       // We may still have "unavailable" due to other issues (for example, disk full). Ignore for now
       // and will re-trigger this on later queries.
       var limit = Self.RebuildIndexBatchLimit
