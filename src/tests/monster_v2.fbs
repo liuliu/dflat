@@ -8,9 +8,13 @@ enum Color:byte {
   Blue = 2
 }
 
+table Empty {
+}
+
 union Equipment {
   Weapon,
-  Orb
+  Orb,
+  Empty
 }
 
 struct Vec3 {

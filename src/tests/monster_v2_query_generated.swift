@@ -105,6 +105,8 @@ extension MyGame.SampleV2.Monster {
       return (1, false)
     case .orb:
       return (2, false)
+    case .empty:
+      return (3, false)
     }
   }
   public static let _type: FieldExpr<Int32> = FieldExpr(name: "equipped__type", primaryKey: false, hasIndex: true, tableReader: _tr__equipped__type, objectReader: _or__equipped__type)
@@ -133,6 +135,8 @@ extension MyGame.SampleV2.Monster {
       return (1, false)
     case .orb:
       return (2, false)
+    case .empty:
+      return (3, false)
     }
   }
   public static let _type: FieldExpr<Int32> = FieldExpr(name: "wear__type", primaryKey: false, hasIndex: false, tableReader: _tr__wear__type, objectReader: _or__wear__type)
@@ -215,6 +219,15 @@ extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__eq
 
 }
 
+extension MyGame.SampleV2.Empty: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__equipped {
+  public static let zzz_match__Monster__equipped: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.equipped._type == 3)
+
+  public struct zzz_equipped__Empty {
+  }
+  public typealias zzz_AsType__Monster__equipped = zzz_equipped__Empty
+
+}
+
 public protocol zzz_DflatGen_Proto__MyGame__SampleV2__Monster__wear {
   associatedtype zzz_AsType__Monster__wear
   static var zzz_match__Monster__wear: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> { get }
@@ -287,5 +300,14 @@ extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__we
   public static let color: FieldExpr<MyGame.SampleV2.Color> = FieldExpr(name: "wear__Orb__color", primaryKey: false, hasIndex: false, tableReader: _tr__wear__Orb__color, objectReader: _or__wear__Orb__color)
   }
   public typealias zzz_AsType__Monster__wear = zzz_wear__Orb
+
+}
+
+extension MyGame.SampleV2.Empty: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__wear {
+  public static let zzz_match__Monster__wear: EqualToExpr<FieldExpr<Int32>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.wear._type == 3)
+
+  public struct zzz_wear__Empty {
+  }
+  public typealias zzz_AsType__Monster__wear = zzz_wear__Empty
 
 }

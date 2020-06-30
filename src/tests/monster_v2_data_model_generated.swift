@@ -15,6 +15,7 @@ public enum Color: Int8, DflatFriendlyValue {
 public enum Equipment: Equatable {
   case weapon(_: Weapon)
   case orb(_: Orb)
+  case empty(_: Empty)
 }
 
 public struct Vec3: Equatable {
@@ -30,6 +31,13 @@ public struct Vec3: Equatable {
     self.x = obj.x
     self.y = obj.y
     self.z = obj.z
+  }
+}
+
+public struct Empty: Equatable {
+  public init() {
+  }
+  public init(_ obj: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Empty) {
   }
 }
 
@@ -118,6 +126,8 @@ public final class Monster: Dflat.Atom, Equatable {
       self.equipped = obj.equipped(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
     case .orb:
       self.equipped = obj.equipped(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
+    case .empty:
+      self.equipped = obj.equipped(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Empty.self).map { .empty(Empty($0)) }
     }
     var __colors = [Color]()
     for i: Int32 in 0..<obj.colorsCount {
@@ -138,6 +148,8 @@ public final class Monster: Dflat.Atom, Equatable {
       self.wear = obj.wear(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Weapon.self).map { .weapon(Weapon($0)) }
     case .orb:
       self.wear = obj.wear(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Orb.self).map { .orb(Orb($0)) }
+    case .empty:
+      self.wear = obj.wear(type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Empty.self).map { .empty(Empty($0)) }
     }
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {

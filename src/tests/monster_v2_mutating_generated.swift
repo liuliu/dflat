@@ -20,6 +20,8 @@ extension MyGame.SampleV2.Equipment {
       return o.to(flatBufferBuilder: &flatBufferBuilder)
     case .orb(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
+    case .empty(let o):
+      return o.to(flatBufferBuilder: &flatBufferBuilder)
     }
   }
   var _type: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Equipment {
@@ -28,6 +30,8 @@ extension MyGame.SampleV2.Equipment {
       return zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Equipment.weapon
     case .orb(_):
       return zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Equipment.orb
+    case .empty(_):
+      return zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Equipment.empty
     }
   }
 }
@@ -50,6 +54,18 @@ extension MyGame.SampleV2.Vec3 {
 extension Optional where Wrapped == MyGame.SampleV2.Vec3 {
   func toRawMemory() -> UnsafeMutableRawPointer? {
     self.map { $0.toRawMemory() }
+  }
+}
+
+extension MyGame.SampleV2.Empty {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    return zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Empty.endEmpty(&flatBufferBuilder, start: zzz_DflatGen__MyGame__SampleV2__Monster.MyGame.SampleV2.Empty.startEmpty(&flatBufferBuilder))
+  }
+}
+
+extension Optional where Wrapped == MyGame.SampleV2.Empty {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 

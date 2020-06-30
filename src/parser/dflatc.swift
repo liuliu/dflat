@@ -622,7 +622,12 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
   if structDef.fixed {
     code += "    return \(([DflatGenNamespace] + structDef.namespace).joined(separator: ".")).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
   } else {
-    code += "    return \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
+    // Account for zero-length table.
+    if structDef.fields.count > 0 {
+      code += "    return \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
+    } else {
+      code += "    return \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).end\(structDef.name)(&flatBufferBuilder, start: \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).start\(structDef.name)(&flatBufferBuilder))\n"
+    }
   }
   code += "  }\n"
   code += "}\n"

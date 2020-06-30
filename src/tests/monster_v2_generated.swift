@@ -26,9 +26,10 @@ public enum Equipment: UInt8, Enum {
     case none_ = 0
     case weapon = 1
     case orb = 2
+    case empty = 3
     
 
-    public static var max: Equipment { return .orb }
+    public static var max: Equipment { return .empty }
     public static var min: Equipment { return .none_ }
 }
 
@@ -54,6 +55,21 @@ public static func createVec3(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0
     memory.storeBytes(of: y, toByteOffset: 4, as: Float32.self)
     memory.storeBytes(of: z, toByteOffset: 8, as: Float32.self)
     return memory
+}
+
+public struct Empty: FlatBufferObject {
+
+    static func validateVersion() { FlatBuffersVersion_1_12_0() }
+    public var __buffer: ByteBuffer! { return _accessor.bb }
+    private var _accessor: Table
+
+    public static func getRootAsEmpty(bb: ByteBuffer) -> Empty { return Empty(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+
+    private init(_ t: Table) { _accessor = t }
+    public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+
+    public static func startEmpty(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 0) }
+    public static func endEmpty(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
 }
 
 public struct Monster: FlatBufferObject {
