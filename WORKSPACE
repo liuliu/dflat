@@ -4,33 +4,29 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 git_repository(
   name = "build_bazel_rules_apple",
   remote = "https://github.com/bazelbuild/rules_apple.git",
-  commit = "19f031f09185e0fcd722c22e596d09bd6fff7944",
-  shallow_since = "1570721035 -0700",
-  # tag = "0.19.0",
+  commit = "12ac0738c56f8a15c714a7e09ec87a1bbdbcada9",
+  shallow_since = "1592940289 -0700"
 )
 
 git_repository(
   name = "build_bazel_rules_swift",
   remote = "https://github.com/bazelbuild/rules_swift.git",
-  commit = "ebef63d4fd639785e995b9a2b20622ece100286a",
-  shallow_since = "1570649187 -0700",
-  # tag = "0.13.0",
+  commit = "8ecb09641ee0ba5efd971ffff8dd6cbee6ea7dd3",
+  shallow_since = "1584545517 -0700"
 )
 
 git_repository(
   name = "build_bazel_apple_support",
   remote = "https://github.com/bazelbuild/apple_support.git",
-  commit = "8c585c66c29b9d528e5fcf78da8057a6f3a4f001",
-  shallow_since = "1570646613 -0700",
-  # tag = "0.7.2",
+  commit = "501b4afb27745c4813a88ffa28acd901408014e4",
+  shallow_since = "1577729628 -0800"
 )
 
 git_repository(
   name = "bazel_skylib",
   remote = "https://github.com/bazelbuild/bazel-skylib.git",
-  commit = "e59b620b392a8ebbcf25879fc3fde52b4dc77535",
-  shallow_since = "1570639401 -0400",
-  # tag = "1.0.2",
+  commit = "d35e8d7bc6ad7a3a53e9a1d2ec8d3a904cc54ff7",
+  shallow_since = "1593183852 +0200"
 )
 
 new_git_repository(
@@ -73,6 +69,6 @@ protobuf_deps()
 http_file(
   name = "xctestrunner",
   executable = 1,
-  sha256 = "8b7352f7414de4b54478563c90d55509030baa531696dfe9c4e1bf0617ee5eb0",
-  urls = ["https://github.com/google/xctestrunner/releases/download/0.2.12/ios_test_runner.par"],
+  sha256 = "890faff3f6d5321712ffb7a09ba3614eabca93977221e86d058c7842fdbad6b6",
+  urls = ["https://github.com/google/xctestrunner/releases/download/0.2.13/ios_test_runner.par"],
 )

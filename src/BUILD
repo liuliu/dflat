@@ -1,22 +1,13 @@
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
-
-swift_library(
-  name = "FlatBuffers",
-  module_name = "FlatBuffers",
-  srcs = glob(["FlatBuffers/*.swift"]),
-)
-
 objc_library(
   name = "SQLiteDflatObjC",
   hdrs = ["sqlite/include/Bridge.h"],
   enable_modules = True,
-  module_name = "SQLiteDflatObjC"
+  module_name = "SQLiteDflatObjC",
+  visibility = ["//:__pkg__"]
 )
 
-swift_library(
-  name = "Dflat",
-  module_name = "Dflat",
-  visibility = ["//visibility:public"],
+filegroup(
+  name = "DflatFiles",
   srcs = [
     "Atom.swift",
     "ChangeRequest.swift",
@@ -27,16 +18,11 @@ swift_library(
     "TransactionContext.swift",
     "Workspace.swift",
   ] + glob(["exprs/*.swift"]),
-  deps = [
-    "@flatbuffers//:FlatBuffers",
-    "@swift-atomics//:SwiftAtomics",
-  ]
+  visibility = ["//:__pkg__"],
 )
 
-swift_library(
-  name = "SQLiteDflat",
-  module_name = "SQLiteDflat",
-  visibility = ["//visibility:public"],
+filegroup(
+  name = "SQLiteDflatFiles",
   srcs = [
     "sqlite/SQLiteAtom.swift",
     "sqlite/SQLiteConnection.swift",
@@ -54,8 +40,5 @@ swift_library(
     "sqlite/SQLiteWorkspace.swift",
     "sqlite/SQLiteWorkspaceState.swift",
   ] + glob(["sqlite/exprs/*.swift"]),
-  deps = [
-    ":Dflat",
-    ":SQLiteDflatObjC"
-  ]
+  visibility = ["//:__pkg__"],
 )

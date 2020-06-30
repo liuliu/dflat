@@ -178,12 +178,21 @@ final class BenchmarksViewController: UIViewController {
     individualUpdateGroup.enter()
     let individualUpdateStartTime = CACurrentMediaTime()
     var individualUpdateEndTime = individualUpdateStartTime
+    // I tried different approach for this, the standard one that get a list of
+    // objectIDs and then modifying them one by one simply not performant for some reason.
+    // let updateFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+    // let allDocs = try! persistentContainer.viewContext.fetch(updateFetchRequest)
+    // let allDocObjectIDs = Array(allDocs.map { $0.objectID })
     persistentContainer.performBackgroundTask { (objectContext) in
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
       var allDocs = try! objectContext.fetch(fetchRequest)
       for i in (0..<Self.NumberOfEntities).reversed() {
+      // for (i, objectID) in allDocObjectIDs.enumerated() {
         autoreleasepool {
           let doc = allDocs.removeLast()
+      // for (i, objectID) in allDocObjectIDs.enumerated() {
+      //  autoreleasepool {
+      //    let doc = objectContext.object(with: objectID)
           doc.setValue("tag\(i + 2)", forKeyPath: "tag")
           doc.setValue(12, forKeyPath: "priority")
           doc.setValue(3, forKeyPath: "pos_x")

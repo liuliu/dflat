@@ -22,7 +22,7 @@ swift_library(
     "SubscribeTests.swift",
   ],
   deps = [
-    "//src:SQLiteDflat",
+    "//:SQLiteDflat",
   ],
 )
 

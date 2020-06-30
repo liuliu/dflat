@@ -25,8 +25,8 @@ swift_library(
   ],
 	data = glob(["Benchmarks/DataModel.xcdatamodeld/**"]),
   deps = [
-    "//src:Dflat",
-    "//src:SQLiteDflat",
+    "//:Dflat",
+    "//:SQLiteDflat",
   ],
 )
 
