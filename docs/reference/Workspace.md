@@ -302,8 +302,8 @@ open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublishe
  and shouldn't be used independently.
 
  - Parameters:
-   - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
-   - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
+    - limit: The limit. Default to `.noLimit`, you can supply `.limit(number)`
+    - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
 
  - Returns: A publisher object that can be interacted with Combine.
 

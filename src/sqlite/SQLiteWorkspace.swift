@@ -36,7 +36,7 @@ public final class SQLiteWorkspace: Workspace {
      * hood still writes serially. It only means the transaction closures can be executed
      * concurrently. If you provided a targetQueue, please make sure it is a concurrent queue
      * otherwise it will still execute transaction closure serially. The targetQueue is supplied
-     * by you, should be at reasonable priority, at least .default, because it sets the ceiling
+     * by you, should be at reasonable priority, at least `.default`, because it sets the ceiling
      * for any sub-queues targeting that, and we may need to bump the sub-queues depending on
      * where you `performChanges`.
      */
@@ -44,13 +44,13 @@ public final class SQLiteWorkspace: Workspace {
     /**
      * Enable single-writer / multi-reader mode. This will execute transaction closures serially.
      * If you supply a targetQueue, please make sure it is serial. It is safe for this serial queue
-     * to have lower priority such as .utility, because we can bump the priority based on where
+     * to have lower priority such as `.utility`, because we can bump the priority based on where
      * you call `performChanges`.
      */
     case serial
   }
     /**
-     * The synchronous mode of SQLite. We defaults to .normal. Read more on: [https://www.sqlite.org/wal.html#performance_considerations](https://www.sqlite.org/wal.html#performance_considerations)
+     * The synchronous mode of SQLite. We defaults to `.normal`. Read more on: [https://www.sqlite.org/wal.html#performance_considerations](https://www.sqlite.org/wal.html#performance_considerations)
      */
   public enum Synchronous {
     case normal
@@ -75,7 +75,7 @@ public final class SQLiteWorkspace: Workspace {
    *    - filePath: The path to the SQLite file. There will be 3 files named filePath, "\(filePath)-wal" and "\(filePath)-shm" created.
    *    - fileProtectionLevel: The expected protection level for the database file.
    *    - synchronous: The SQLite synchronous mode, read: https://www.sqlite.org/wal.html#performance_considerations
-   *    - writeConcurrency: Either .concurrent or .serial.
+   *    - writeConcurrency: Either `.concurrent` or `.serial`.
    *    - targetQueue: If nil, we will create a queue based on writeConcurrency settings. If you supply your own queue, please read
    *                   about WriteConcurrency before proceed.
    */
