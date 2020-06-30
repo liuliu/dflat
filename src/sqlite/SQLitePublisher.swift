@@ -109,7 +109,7 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
     os_unfair_lock_lock(&lock)
     defer { os_unfair_lock_unlock(&lock) }
     guard _initialFetchedResult == nil else { return _initialFetchedResult }
-    _initialFetchedResult = workspace?.fetchFor(Element.self).where(query, limit: limit, orderBy: orderBy)
+    _initialFetchedResult = workspace?.fetch(for: Element.self).where(query, limit: limit, orderBy: orderBy)
     return _initialFetchedResult
   }
   private var _initialFetchedResult: FetchedResult<Element>? = nil

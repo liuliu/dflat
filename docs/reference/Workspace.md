@@ -7,10 +7,10 @@ public protocol Queryable
 ```
 
 ## Methods
-### `fetchFor(_:)`
+### `fetch(for:)`
 
 ```swift
-func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element>
+func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element>
 ```
 
 Return a QueryBuilder that you can make `where` or `all` queries against.
@@ -77,7 +77,7 @@ func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandl
 ```
 
  Subscribe to changes of a fetched result. You queries fetched result with
- `fetchFor().where()` method and the result can be observed. If any object
+ `fetch(for:).where()` method and the result can be observed. If any object
  created / updated meet the query criterion, the callback will happen and you
  will get a updated fetched result.
 
@@ -170,7 +170,7 @@ public init()
 open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool
 ```
 
- Make query against the Workspace. This is coupled with `fetchFor()` method and shouldn't be used independently.
+ Make query against the Workspace. This is coupled with `fetch(for:)` method and shouldn't be used independently.
 
  - Parameters:
     - query: The query such as `Post.title == "some title" && Post.color == .red`

@@ -4,7 +4,7 @@ public protocol Queryable {
   /**
    * Return a QueryBuilder that you can make `where` or `all` queries against.
    */
-  func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element>
+  func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element>
   /**
    * Provide a consistent view for fetching multiple objects at once.
    */
@@ -60,7 +60,7 @@ public protocol Workspace: Queryable {
   typealias Subscription = WorkspaceSubscription
   /**
    * Subscribe to changes of a fetched result. You queries fetched result with
-   * `fetchFor().where()` method and the result can be observed. If any object
+   * `fetch(for:).where()` method and the result can be observed. If any object
    * created / updated meet the query criterion, the callback will happen and you
    * will get a updated fetched result.
    *

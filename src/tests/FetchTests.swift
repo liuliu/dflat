@@ -54,7 +54,7 @@ class FetchTests: XCTestCase {
     let deletionExpectation = XCTestExpectation(description: "deletion done")
     let fetchedResult: FetchedResult<MyGame.Sample.Monster> = dflat.fetchWithinASnapshot {
       // Only after the first fetch made, the Snapshot will be captured, otherwise there is no Snapshot for consistency.
-      let firstFetch = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 40)
+      let firstFetch = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 40)
       XCTAssert(firstFetch.count == 1)
       XCTAssertEqual(firstFetch[0].name, "name3")
       let deletedObj = MyGame.Sample.Monster(name: "name2", color: .green)
@@ -66,13 +66,13 @@ class FetchTests: XCTestCase {
       }
       wait(for: [deletionExpectation], timeout: 10.0)
       // We fetch after the name2 object deleted.
-      return dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+      return dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     }
     XCTAssert(fetchedResult.count == 2)
     XCTAssertEqual(fetchedResult[0].name, "name3")
     XCTAssertEqual(fetchedResult[1].name, "name2")
     // Since we deleted it, now we should get 1 object.
-    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let finalFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(finalFetchedResult.count == 1)
     XCTAssertEqual(finalFetchedResult[0].name, "name3")
   }

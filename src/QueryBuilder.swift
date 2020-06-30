@@ -24,7 +24,7 @@ public enum Limit {
 open class QueryBuilder<Element: Atom> {
   public init() {}
   /**
-   * Make query against the Workspace. This is coupled with `fetchFor()` method and shouldn't be used independently.
+   * Make query against the Workspace. This is coupled with `fetch(for:)` method and shouldn't be used independently.
    *
    * - Parameters:
    *    - query: The query such as `Post.title == "some title" && Post.color == .red`

@@ -45,10 +45,10 @@ public func shutdown(completion: (() -> Void)?)
 public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil)
 ```
 
-### `fetchFor(_:)`
+### `fetch(for:)`
 
 ```swift
-public func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element>
+public func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element>
 ```
 
 ### `fetchWithinASnapshot(_:)`

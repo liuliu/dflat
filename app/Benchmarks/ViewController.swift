@@ -269,7 +269,7 @@ final class BenchmarksViewController: UIViewController {
     }
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
         try! txnContext.submit(deletionRequest)
@@ -312,11 +312,11 @@ final class BenchmarksViewController: UIViewController {
     insertGroup.wait()
     var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
     let fetchIndexStartTime = CACurrentMediaTime()
-    let fetchHighPri = dflat.fetchFor(BenchDoc.self).where(BenchDoc.priority > Int32(Self.NumberOfEntities / 4))
+    let fetchHighPri = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority > Int32(Self.NumberOfEntities / 4))
     let fetchIndexEndTime = CACurrentMediaTime()
     stats += "Fetched \(fetchHighPri.count) objects with no index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
     let fetchNoIndexStartTime = CACurrentMediaTime()
-    let fetchImageContent = dflat.fetchFor(BenchDoc.self).where(BenchDoc.content.match(ImageContent.self))
+    let fetchImageContent = dflat.fetch(for: BenchDoc.self).where(BenchDoc.content.match(ImageContent.self))
     let fetchNoIndexEndTime = CACurrentMediaTime()
     stats += "Fetched \(fetchImageContent.count) objects with no index with \(fetchNoIndexEndTime - fetchNoIndexStartTime) sec\n"
     let updateGroup = DispatchGroup()
@@ -325,7 +325,7 @@ final class BenchmarksViewController: UIViewController {
     var updateEndTime = updateStartTime
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
       for (i, doc) in allDocs.enumerated() {
         guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
         changeRequest.tag = "tag\(i + 1)"
@@ -351,7 +351,7 @@ final class BenchmarksViewController: UIViewController {
     }
     updateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
-    let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+    let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
     let individualUpdateGroup = DispatchGroup()
     individualUpdateGroup.enter()
     let individualUpdateStartTime = CACurrentMediaTime()
@@ -387,7 +387,7 @@ final class BenchmarksViewController: UIViewController {
     let individualFetchStartTime = CACurrentMediaTime()
     var newAllDocs = [BenchDoc]()
     for i in 0..<Self.NumberOfEntities {
-      let docs = dflat.fetchFor(BenchDoc.self).where(BenchDoc.title == "title\(i)")
+      let docs = dflat.fetch(for: BenchDoc.self).where(BenchDoc.title == "title\(i)")
       newAllDocs.append(docs[0])
     }
     let individualFetchEndTime = CACurrentMediaTime()
@@ -399,7 +399,7 @@ final class BenchmarksViewController: UIViewController {
     var deletedCount = 0
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
       deletedCount = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
@@ -531,7 +531,7 @@ final class BenchmarksViewController: UIViewController {
     var deleteDocV1EndTime = deleteStartTime
     dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDoc.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
       deletedCount = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
@@ -546,7 +546,7 @@ final class BenchmarksViewController: UIViewController {
     var deleteDocV2EndTime = deleteStartTime
     dflat.performChanges([BenchDocV2.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDocV2.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDocV2.self).all()
       deletedV2Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV2ChangeRequest.deletionRequest(i) else { continue }
@@ -561,7 +561,7 @@ final class BenchmarksViewController: UIViewController {
     var deleteDocV3EndTime = deleteStartTime
     dflat.performChanges([BenchDocV3.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDocV3.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDocV3.self).all()
       deletedV3Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV3ChangeRequest.deletionRequest(i) else { continue }
@@ -576,7 +576,7 @@ final class BenchmarksViewController: UIViewController {
     var deleteDocV4EndTime = deleteStartTime
     dflat.performChanges([BenchDocV4.self], changesHandler: { [weak self] (txnContext) in
       guard let self = self else { return }
-      let allDocs = self.dflat.fetchFor(BenchDocV4.self).all()
+      let allDocs = self.dflat.fetch(for: BenchDocV4.self).all()
       deletedV4Count = allDocs.count
       for i in allDocs {
         guard let deletionRequest = BenchDocV4ChangeRequest.deletionRequest(i) else { continue }

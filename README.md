@@ -131,7 +131,7 @@ dflat.performChanges([Post.self], changesHandler: { (txnContext) in
 Read:
 
 ```swift
-let posts = dflat.fetchFor(Post.self).where(Post.title == "first post")
+let posts = dflat.fetch(for: Post.self).where(Post.title == "first post")
 ```
 
 Update:
@@ -247,8 +247,8 @@ You can interact with **Dflat** with above APIs in a transaction. It handles dat
 ### Data Fetching
 
 ```swift
-func Workspace.fetchFor(_ ofType: Element.Type).where(ElementQuery, limit = .noLimit, orderBy = []) -> FetchedResult<Element>
-func Workspace.fetchFor(_ ofType: Element.Type).all(limit = .noLimit, orderBy = []) -> FetchedResult<Element>
+func Workspace.fetch(for ofType: Element.Type).where(ElementQuery, limit = .noLimit, orderBy = []) -> FetchedResult<Element>
+func Workspace.fetch(for ofType: Element.Type).all(limit = .noLimit, orderBy = []) -> FetchedResult<Element>
 func Workspace.fetchWithinASnapshot<T>(_: () -> T) -> T
 ```
 
@@ -258,8 +258,8 @@ Data fetching happens synchronously. You can specify conditions in the `where` c
 
 ```swift
 let result = dflat.fetchWithinASnapshot { () -> (firstPost: FetchedResult<Post>, highPriPosts: FetchedResult<Post>) in
-  let firstPost = dflat.fetchFor(Post.self).where(Post.title == "first post")
-  let highPriPosts = dflat.fetchFor(Post.self).where(Post.priority > 100 && Post.color == .red)
+  let firstPost = dflat.fetch(for: Post.self).where(Post.title == "first post")
+  let highPriPosts = dflat.fetch(for: Post.self).where(Post.priority > 100 && Post.color == .red)
   return (firstPost, highPriPosts)
 }
 ```

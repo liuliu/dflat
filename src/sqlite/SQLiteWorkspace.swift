@@ -201,7 +201,7 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  public func fetchFor<Element: Atom>(_ ofType: Element.Type) -> QueryBuilder<Element> {
+  public func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element> {
     guard !state.shutdown.load() else {
       return SQLiteQueryBuilder<Element>(reader: SQLiteConnectionPool.Borrowed(pointee: nil, pool: nil), workspace: self, transactionContext: nil, changesTimestamp: 0)
     }

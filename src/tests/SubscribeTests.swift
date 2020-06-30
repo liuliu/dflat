@@ -38,7 +38,7 @@ class SubscribeTests: XCTestCase {
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).all()
     XCTAssertEqual(fetchedResult.count, 10)
     let firstMonster = fetchedResult[0]
     XCTAssertEqual(firstMonster.name, "name 0")
@@ -88,7 +88,7 @@ class SubscribeTests: XCTestCase {
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).all()
     XCTAssertEqual(fetchedResult.count, 10)
     let firstMonster = fetchedResult[0]
     XCTAssertEqual(firstMonster.name, "name 0")
@@ -142,7 +142,7 @@ class SubscribeTests: XCTestCase {
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(fetchedResult.count, 6)
     var updateCount = 0
     let subExpectation = XCTestExpectation(description: "subscribe")
@@ -168,7 +168,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to later.
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
       try! txnContext.submit(changeRequest)
@@ -179,7 +179,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to earlier.
     let thirdExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
       try! txnContext.submit(changeRequest)
@@ -190,7 +190,7 @@ class SubscribeTests: XCTestCase {
     // Delete one, move to earlier.
     let forthExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
       try! txnContext.submit(deletionRequest)
     }) { success in
@@ -204,13 +204,13 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(updatedFetchedResult[3].name, "name 10")
     XCTAssertEqual(updatedFetchedResult[4].name, "name 2")
     XCTAssertEqual(updatedFetchedResult[5].name, "name 5")
-    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let finalFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(updatedFetchedResult, finalFetchedResult)
   }
 
   func testSubscribeOutdatedFetchedResultAndCancelSecondary() {
     guard let dflat = dflat else { return }
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(fetchedResult.count, 0)
     let expectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
@@ -254,7 +254,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to later.
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
       try! txnContext.submit(changeRequest)
@@ -278,7 +278,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to earlier.
     let thirdExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
       try! txnContext.submit(changeRequest)
@@ -290,7 +290,7 @@ class SubscribeTests: XCTestCase {
     // Delete one, move to earlier.
     let forthExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
       try! txnContext.submit(deletionRequest)
     }) { success in
@@ -304,7 +304,7 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(updatedFetchedResult[3].name, "name 10")
     XCTAssertEqual(updatedFetchedResult[4].name, "name 2")
     XCTAssertEqual(updatedFetchedResult[5].name, "name 5")
-    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let finalFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(updatedFetchedResult, finalFetchedResult)
     XCTAssertEqual(secondaryFetchedResult.count, 7)
     XCTAssertEqual(secondaryFetchedResult[0].name, "name 0")
@@ -330,7 +330,7 @@ class SubscribeTests: XCTestCase {
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).all()
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).all()
     XCTAssertEqual(fetchedResult.count, 10)
     let firstMonster = fetchedResult[0]
     XCTAssertEqual(firstMonster.name, "name 0")
@@ -382,7 +382,7 @@ class SubscribeTests: XCTestCase {
       expectation.fulfill()
     }
     wait(for: [expectation], timeout: 10.0)
-    let fetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(fetchedResult.count, 6)
     var updateCount = 0
     let subExpectation = XCTestExpectation(description: "subscribe")
@@ -408,7 +408,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to later.
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
       try! txnContext.submit(changeRequest)
@@ -419,7 +419,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to earlier.
     let thirdExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
       try! txnContext.submit(changeRequest)
@@ -430,7 +430,7 @@ class SubscribeTests: XCTestCase {
     // Delete one, move to earlier.
     let forthExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
       try! txnContext.submit(deletionRequest)
     }) { success in
@@ -444,7 +444,7 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(updatedFetchedResult[3].name, "name 10")
     XCTAssertEqual(updatedFetchedResult[4].name, "name 2")
     XCTAssertEqual(updatedFetchedResult[5].name, "name 5")
-    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let finalFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(updatedFetchedResult, finalFetchedResult)
     cancellable.cancel()
   }
@@ -495,7 +495,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to later.
     let secondExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 2")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 43
       try! txnContext.submit(changeRequest)
@@ -506,7 +506,7 @@ class SubscribeTests: XCTestCase {
     // Mutate one, move to earlier.
     let thirdExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 4")[0]
       guard let changeRequest = MyGame.Sample.MonsterChangeRequest.changeRequest(monster) else { return }
       changeRequest.mana = 13
       try! txnContext.submit(changeRequest)
@@ -517,7 +517,7 @@ class SubscribeTests: XCTestCase {
     // Delete one, move to earlier.
     let forthExpectation = XCTestExpectation(description: "transcation done")
     dflat.performChanges([MyGame.Sample.Monster.self], changesHandler: { (txnContext) in
-      let monster = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
+      let monster = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.name == "name 3")[0]
       guard let deletionRequest = MyGame.Sample.MonsterChangeRequest.deletionRequest(monster) else { return }
       try! txnContext.submit(deletionRequest)
     }) { success in
@@ -531,7 +531,7 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(updatedFetchedResult![3].name, "name 10")
     XCTAssertEqual(updatedFetchedResult![4].name, "name 2")
     XCTAssertEqual(updatedFetchedResult![5].name, "name 5")
-    let finalFetchedResult = dflat.fetchFor(MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
+    let finalFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssertEqual(updatedFetchedResult!, finalFetchedResult)
     cancellable.cancel()
   }
