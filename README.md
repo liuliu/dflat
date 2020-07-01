@@ -55,7 +55,7 @@ After that, you can use `dflatc` compiler with
 You can then proceed to add **Dflat** runtime either with Swift Package Manager or Bazel. With Swift Package Manager:
 
 ```swift
-.package(name: "Dflat", url: "https://github.com/liuliu/dflat.git", .branch("unstable"))
+.package(name: "Dflat", url: "https://github.com/liuliu/dflat.git", from: "0.1.1")
 ```
 
 ## Example
