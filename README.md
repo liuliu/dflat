@@ -238,7 +238,7 @@ The transaction will be performed in a background thread, exactly which one shou
 
 ```swift
 func TransactionContext.submit(_ changeRequest: ChangeRequest) throws -> UpdatedObject
-func TransactionContext.try(submit: ChangeRequest)
+func TransactionContext.try(submit: ChangeRequest) -> UpdatedObject?
 func TransactionContext.abort() -> Bool
 ```
 
