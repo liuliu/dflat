@@ -21,19 +21,16 @@ public struct SQLiteObjectRepository {
   }
 
   mutating func set(updatedObject: UpdatedObject, ofTypeIdentifier: ObjectIdentifier) {
-    let rowid: Int64
     switch updatedObject {
+      case .identity(_):
+        break
       case .inserted(let element), .updated(let element):
-        rowid = element._rowid
-      case .deleted(let _rowid):
-        rowid = _rowid
-    }
-    updatedObjects[ofTypeIdentifier, default: [rowid: updatedObject]][rowid] = updatedObject
-    // Update updatedObject will also update fetchedObject.
-    switch updatedObject {
-      case .inserted(let element), .updated(let element):
+        let rowid = element._rowid
+        updatedObjects[ofTypeIdentifier, default: [rowid: updatedObject]][rowid] = updatedObject
         set(fetchedObject: .fetched(element), ofTypeIdentifier: ofTypeIdentifier, for: rowid)
-      case .deleted(_):
+      case .deleted(let _rowid):
+        let rowid = _rowid
+        updatedObjects[ofTypeIdentifier, default: [rowid: updatedObject]][rowid] = updatedObject
         set(fetchedObject: .deleted, ofTypeIdentifier: ofTypeIdentifier, for: rowid)
     }
   }

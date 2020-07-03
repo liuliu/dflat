@@ -373,7 +373,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       let atom = self._atom
       guard atom != o else {
         _type = .none
-        return .updated(atom)
+        return .identity(atom)
       }
       let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
       guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__samplev2__monster (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)") else { return nil }

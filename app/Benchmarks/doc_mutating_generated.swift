@@ -203,7 +203,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
       let atom = self._atom
       guard atom != o else {
         _type = .none
-        return .updated(atom)
+        return .identity(atom)
       }
       guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
       title.bindSQLite(update, parameterId: 1)

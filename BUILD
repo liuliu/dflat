@@ -26,6 +26,9 @@ swift_library(
   name = "SQLiteDflat",
   module_name = "SQLiteDflat",
   srcs = ["//src:SQLiteDflatFiles"],
+  private_deps = [
+    "@swift-atomics//:SwiftAtomics"
+  ],
   deps = [
     ":Dflat",
     "//src:SQLiteDflatObjC"

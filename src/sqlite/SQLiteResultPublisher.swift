@@ -52,9 +52,10 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
         changeHandler(.deleted)
       case .updated(let atom):
         changeHandler(.updated(atom as! Element))
+      case .identity(_):
+        fatalError() // We shouldn't process identity updated objects.
       case .inserted(_):
-        // This is awkward.
-        fatalError()
+        fatalError() // This is awkward. We shouldn't process inserted objects.
       }
     }
   }
@@ -76,6 +77,8 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
       var resultUpdated = false
       for (rowid, updatedObject) in updatedObjects {
         switch updatedObject {
+        case .identity(_):
+          fatalError() // We shouldn't process identity updated objects.
         case .inserted(let object):
           let element = object as! Element
           let retval = fetchedResult.query.evaluate(object: .object(element))

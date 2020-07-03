@@ -10,6 +10,10 @@ public enum UpdatedObject {
    */
   case updated(_: Atom)
   /**
+   * An object returned but not updated.
+   */
+  case identity(_: Atom)
+  /**
    * An object deleted. The parameter is irrelevant.
    */
   case deleted(_: Int64)

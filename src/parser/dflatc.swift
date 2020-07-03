@@ -935,7 +935,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "      let atom = self._atom\n"
   code += "      guard atom != o else {\n"
   code += "        _type = .none\n"
-  code += "        return .updated(atom)\n"
+  code += "        return .identity(atom)\n"
   code += "      }\n"
   if indexedFields.count > 0 {
     code += "      let indexSurvey = toolbox.connection.indexSurvey(\(structDef.name).indexFields, table: \(structDef.name).table)\n"

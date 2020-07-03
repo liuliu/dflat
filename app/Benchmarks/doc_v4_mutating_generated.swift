@@ -118,7 +118,7 @@ public final class BenchDocV4ChangeRequest: Dflat.ChangeRequest {
       let atom = self._atom
       guard atom != o else {
         _type = .none
-        return .updated(atom)
+        return .identity(atom)
       }
       guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO benchdocv4 (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
       title.bindSQLite(update, parameterId: 1)

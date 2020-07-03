@@ -28,7 +28,7 @@ class ObjectRepositoryTests: XCTestCase {
     case .inserted(let atom):
       let inserted = atom as! MyGame.Sample.Monster
       XCTAssertEqual(inserted.name, "name1")
-    case .updated(_), .deleted(_):
+    case .updated(_), .deleted(_), .identity(_):
       fatalError()
     }
     let updatedMonster2 = updatedMonsters[2]!
@@ -36,14 +36,14 @@ class ObjectRepositoryTests: XCTestCase {
     case .updated(let atom):
       let updated = atom as! MyGame.Sample.Monster
       XCTAssertEqual(updated.name, "name2")
-    case .inserted(_), .deleted(_):
+    case .inserted(_), .deleted(_), .identity(_):
       fatalError()
     }
     let updatedMonster3 = updatedMonsters[3]!
     switch updatedMonster3 {
     case .deleted(let rowid):
       XCTAssertEqual(rowid, 3)
-    case .inserted(_), .updated(_):
+    case .inserted(_), .updated(_), .identity(_):
       fatalError()
     }
   }
