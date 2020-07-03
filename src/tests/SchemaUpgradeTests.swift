@@ -55,7 +55,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__f6", nil, nil, nil)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
     XCTAssertEqual(fetchedResult[0].name, "name3")
@@ -94,7 +94,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana WHERE rowid >= 3", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__f6 WHERE rowid >= 3", nil, nil, nil)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 3)
     XCTAssertEqual(fetchedResult[0].name, "name3")
@@ -134,7 +134,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__f6", nil, nil, nil)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
     XCTAssertEqual(fetchedResult[0].name, "name3")
@@ -173,7 +173,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DROP TABLE mygame__sample__monster__f6", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
@@ -187,7 +187,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [indexExpectation], timeout: 10.0)
     var query: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__f6", -1, &query, nil)
     sqlite3_step(query!)
     let count = sqlite3_column_int64(query!, 0)
     XCTAssertEqual(count, 4)
@@ -231,7 +231,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__f6", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 2)
@@ -245,7 +245,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [indexExpectation], timeout: 10.0)
     var query: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__f6", -1, &query, nil)
     sqlite3_step(query!)
     let count = sqlite3_column_int64(query!, 0)
     XCTAssertEqual(count, 4)
@@ -289,7 +289,7 @@ class SchemaUpgradeTests: XCTestCase {
     wait(for: [expectation], timeout: 10.0)
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
-    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__mana WHERE rowid >= 3", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "DELETE FROM mygame__sample__monster__f6 WHERE rowid >= 3", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(MyGame.Sample.Monster.mana < 120, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(fetchedResult.count == 3)
@@ -304,7 +304,7 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [indexExpectation], timeout: 10.0)
     var query: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__mana", -1, &query, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__sample__monster__f6", -1, &query, nil)
     sqlite3_step(query!)
     let count = sqlite3_column_int64(query!, 0)
     XCTAssertEqual(count, 4)
@@ -350,9 +350,9 @@ class SchemaUpgradeTests: XCTestCase {
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__Orb__name RENAME TO mygame__samplev2__monster__equipped__Orb__name", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f6 RENAME TO mygame__samplev2__monster__f6", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f26__type RENAME TO mygame__samplev2__monster__f26__type", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f26__u2__f4 RENAME TO mygame__samplev2__monster__f26__u4__f4", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetch(for: MyGame.SampleV2.Monster.self).where(MyGame.SampleV2.Monster.mana + MyGame.SampleV2.Monster.hp > 150, orderBy: [MyGame.SampleV2.Monster.mana.descending])
     XCTAssert(fetchedResult.count == 2)
@@ -365,12 +365,12 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [indexExpectation], timeout: 10.0)
     var query1: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__hp", -1, &query1, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__f8", -1, &query1, nil)
     sqlite3_step(query1!)
     let count1 = sqlite3_column_int64(query1!, 0) // The hp index should finished.
     XCTAssertEqual(count1, 4)
     var query2: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__wear__Orb__name", -1, &query2, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__f34__u2__f4", -1, &query2, nil)
     sqlite3_step(query2!)
     let count2 = sqlite3_column_int64(query2!, 0) // The Orb name index should finished.
     XCTAssertEqual(count2, 4)
@@ -415,9 +415,9 @@ class SchemaUpgradeTests: XCTestCase {
     // Now delete the index, we know the table name.
     let connection = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: false)
     sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster RENAME TO mygame__samplev2__monster", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__mana RENAME TO mygame__samplev2__monster__mana", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__type RENAME TO mygame__samplev2__monster__equipped__type", nil, nil, nil)
-    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__equipped__Orb__name RENAME TO mygame__samplev2__monster__equipped__Orb__name", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f6 RENAME TO mygame__samplev2__monster__f6", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f26__type RENAME TO mygame__samplev2__monster__f26__type", nil, nil, nil)
+    sqlite3_exec(connection?.sqlite!, "ALTER TABLE mygame__sample__monster__f26__u2__f4 RENAME TO mygame__samplev2__monster__f26__u2__f4", nil, nil, nil)
     dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let fetchedResult = dflat.fetch(for: MyGame.SampleV2.Monster.self).where(MyGame.SampleV2.Monster.mana > 50, orderBy: [MyGame.SampleV2.Monster.mana.descending])
     XCTAssert(fetchedResult.count == 2)
@@ -430,10 +430,10 @@ class SchemaUpgradeTests: XCTestCase {
     }
     wait(for: [indexExpectation], timeout: 10.0)
     var query1: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__hp", -1, &query1, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__f8", -1, &query1, nil)
     XCTAssertNil(query1)
     var query2: OpaquePointer? = nil
-    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__wear__Orb__name", -1, &query2, nil)
+    sqlite3_prepare_v2(connection?.sqlite!, "SELECT COUNT(*) FROM mygame__samplev2__monster__f34__u2__f4", -1, &query2, nil)
     XCTAssertNil(query2)
     connection?.close()
   }

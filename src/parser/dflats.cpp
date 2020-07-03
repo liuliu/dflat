@@ -141,9 +141,9 @@ const std::string GenStruct(const flatbuffers::StructDef &struct_def) {
 	for (auto it = struct_def.fields.vec.begin(); it != struct_def.fields.vec.end(); ++it) {
 		const auto &field_def = **it;
 		if (field_def.value.constant != "0") {
-			json += "{\"name\": \"" + field_def.name + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"default\": \"" + field_def.value.constant + "\", " + GenAttributes(field_def.attributes) + "}, ";
+			json += "{\"name\": \"" + field_def.name + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", \"default\": \"" + field_def.value.constant + "\", " + GenAttributes(field_def.attributes) + "}, ";
 		} else {
-			json += "{\"name\": \"" + field_def.name + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", " + GenAttributes(field_def.attributes) + "}, ";
+			json += "{\"name\": \"" + field_def.name + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", " + GenAttributes(field_def.attributes) + "}, ";
 		}
 	}
 	if (struct_def.fields.vec.size() > 0) {

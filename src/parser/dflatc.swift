@@ -81,6 +81,7 @@ struct Type: Decodable {
 struct Field: Decodable {
   var name: String
   var type: Type
+  var offset: Int32
   var `default`: String?
   var deprecated: Bool
   var attributes: [String]
@@ -649,9 +650,9 @@ enum KeyPath {
   var name: String {
     switch self {
     case .field(let field):
-      return field.name
+      return "f" + String(field.offset)
     case .union(let field, let union):
-      return field.name + "__" + union.name
+      return "f" + String(field.offset) + "__" + "u" + String(union.value)
     }
   }
 }
@@ -662,7 +663,7 @@ func GetKeyName(keyPaths: [KeyPath], field: Field, pkCount: inout Int) -> String
     pkCount += 1
     return key
   } else {
-    return keyPaths.map { $0.name + "__" }.joined() + field.name
+    return keyPaths.map { $0.name + "__" }.joined() + "f" + String(field.offset)
   }
 }
 
@@ -712,7 +713,7 @@ struct IndexedField {
 }
 
 func GetExpandedName(keyPaths: [KeyPath], field: Field) -> String {
-  return keyPaths.map { $0.name + "__" }.joined() + field.name
+  return keyPaths.map { $0.name + "__" }.joined() + "f" + String(field.offset)
 }
 
 func GetIndexForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pkCount: inout Int, indexedFields: inout [IndexedField]) {
