@@ -45,6 +45,14 @@ public func shutdown(completion: (() -> Void)?)
 public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil)
 ```
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| transactionalObjectTypes | A list of object types you are going to transact with. If you If you fetch or mutation an object outside of this list, it will fatal. |
+| changesHandler | The transaction closure where you will give a transactionContext and safe to do data mutations through submission of change requests. |
+| completionHandler | If supplied, will be called once the transaction committed. It will be called with success / failure. You don’t need to handle failure cases specifically (such as retry), but rather to surface and log such error. |
+
 ### `fetch(for:)`
 
 ```swift
@@ -63,11 +71,25 @@ public func fetchWithinASnapshot<T>(_ closure: () -> T) -> T
 public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable
 ```
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| fetchedResult | The original fetchedResult. If it is outdated already, you will get an updated callback soon after. |
+| changeHandler | The callback where you will receive an update if anything changed. |
+
 ### `subscribe(object:changeHandler:)`
 
 ```swift
 public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable
 ```
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| object | The object to be observed. If it is outdated already, you will get an updated callback soon after. |
+| changeHandler | The callback where you will receive an update if anything changed. |
 
 ### `publisher(for:)`
 
