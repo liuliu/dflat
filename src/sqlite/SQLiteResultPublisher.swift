@@ -74,6 +74,8 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
       let query = fetchedResult.query
       let orderBy = fetchedResult.orderBy
       let limit = fetchedResult.limit
+      var elementsToBeInserted = [Element]()
+      var rowidsToBeRemoved = Set<Int64>()
       var resultUpdated = false
       for (rowid, updatedObject) in updatedObjects {
         switch updatedObject {
@@ -83,16 +85,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
           let element = object as! Element
           let retval = fetchedResult.query.evaluate(object: .object(element))
           if retval.result && !retval.unknown {
-            underlyingArray.insertSorted(element, orderBy: orderBy)
-            objects.insert(rowid)
-            if case .limit(let limit) = limit {
-              if underlyingArray.count > limit {
-                precondition(underlyingArray.count == limit + 1)
-                objects.remove(underlyingArray[limit]._rowid)
-                underlyingArray.removeLast()
-              }
-            }
-            resultUpdated = true
+            elementsToBeInserted.append(element)
           }
           break
         case .updated(let object):
@@ -103,55 +96,42 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
             if objects.contains(rowid) {
               // This object is in the list, now just need to check whether we need to update the order.
               let index = underlyingArray.indexSorted(element, orderBy: orderBy)
-              if index == underlyingArray.count {
-                if let index = underlyingArray.firstIndex(where: { $0._rowid == rowid }) {
-                  underlyingArray.remove(at: index)
-                }
-                underlyingArray.append(element)
-              } else if underlyingArray[index]._rowid == rowid {
+              if underlyingArray[index]._rowid == rowid {
                 underlyingArray[index] = element // Inplace replacement
-              } else if let oldIndex = underlyingArray.firstIndex(where: { $0._rowid == rowid }) {
-                underlyingArray.insert(element, at: index)
-                if oldIndex > index {
-                  underlyingArray.remove(at: oldIndex + 1)
-                } else {
-                  precondition(oldIndex < index) // We've already covered oldIndex == index in inplace replacement
-                  underlyingArray.remove(at: oldIndex)
-                }
+                resultUpdated = true
               } else {
-                fatalError()
+                elementsToBeInserted.append(element)
+                rowidsToBeRemoved.insert(rowid)
               }
-              resultUpdated = true
             } else {
               // This hasn't been added before, add it now.
-              underlyingArray.insertSorted(element, orderBy: orderBy)
-              objects.insert(rowid)
-              if case .limit(let limit) = limit {
-                if underlyingArray.count > limit {
-                  precondition(underlyingArray.count == limit + 1)
-                  objects.remove(underlyingArray[limit]._rowid)
-                  underlyingArray.removeLast()
-                }
-              }
-              resultUpdated = true
+              elementsToBeInserted.append(element)
             }
           } else if objects.contains(rowid) {
-            // We need to remove
-            if let index = underlyingArray.firstIndex(where: { $0._rowid == rowid }) {
-              underlyingArray.remove(at: index)
-            }
-            objects.remove(rowid)
-            resultUpdated = true
+            rowidsToBeRemoved.insert(rowid)
           }
           break
         case .deleted(let rowid):
           if objects.contains(rowid) {
-            // Remove this from the list.
-            if let index = underlyingArray.firstIndex(where: { $0._rowid == rowid }) {
-              underlyingArray.remove(at: index)
-            }
-            objects.remove(rowid)
-            resultUpdated = true
+            rowidsToBeRemoved.insert(rowid)
+          }
+        }
+      }
+      resultUpdated = resultUpdated || rowidsToBeRemoved.count > 0 || elementsToBeInserted.count > 0
+      // First, remove objects.
+      if rowidsToBeRemoved.count > 0 {
+        objects.subtract(rowidsToBeRemoved)
+        underlyingArray.removeAll { rowidsToBeRemoved.contains($0._rowid) }
+      }
+      // Then insert relevant elements back.
+      for element in elementsToBeInserted {
+        underlyingArray.insertSorted(element, orderBy: orderBy)
+        objects.insert(element._rowid)
+        if case .limit(let limit) = limit {
+          if underlyingArray.count > limit {
+            precondition(underlyingArray.count == limit + 1)
+            objects.remove(underlyingArray[limit]._rowid)
+            underlyingArray.removeLast()
           }
         }
       }

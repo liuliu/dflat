@@ -767,10 +767,11 @@ final class BenchmarksViewController: UIViewController {
     let bigSubGroup = DispatchGroup()
     var bigSubs = [Workspace.Subscription]()
     var count = 0
-    for fetchedResult in bigFetchedResults {
+    for (i, fetchedResult) in bigFetchedResults.enumerated() {
       count += fetchedResult.count
       bigSubGroup.enter()
       let sub = dflat.subscribe(fetchedResult: fetchedResult) { newFetchedResult in
+        bigFetchedResults[i] = newFetchedResult
         bigSubGroup.leave()
       }
       bigSubs.append(sub)
@@ -800,6 +801,10 @@ final class BenchmarksViewController: UIViewController {
     bigUpdateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(bigUpdateEndTime - bigUpdateStartTime) sec\n"
     stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
+    for i in 0..<Self.NumberOfSubscriptions {
+      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
+      assert(bigFetchedResults[i] != fetchedResult)
+    }
     return stats
   }
 
