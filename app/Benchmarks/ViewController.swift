@@ -5,8 +5,10 @@ import CoreData
 
 final class BenchmarksViewController: UIViewController {
   static let NumberOfEntities = 10_000
+  static let NumberOfSubscriptions = 1_000
   var filePath: String
   var dflat: Workspace
+  var subs: [Workspace.Subscription]? = nil
   var persistentContainer: NSPersistentContainer
 
   override init(nibName: String?, bundle: Bundle?) {
@@ -30,7 +32,7 @@ final class BenchmarksViewController: UIViewController {
   }
   private lazy var runDflatButton: UIButton = {
     let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 12, width: 200, height: 36))
-    button.setTitle("Run Dflat", for: .normal)
+    button.setTitle("Run Dflat CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
     button.titleLabel?.font = .systemFont(ofSize: 12)
@@ -39,15 +41,24 @@ final class BenchmarksViewController: UIViewController {
   }()
   private lazy var runCoreDataButton: UIButton = {
     let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 54, width: 200, height: 36))
-    button.setTitle("Run Core Data", for: .normal)
+    button.setTitle("Run Core Data CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
     button.titleLabel?.font = .systemFont(ofSize: 12)
     button.addTarget(self, action: #selector(runCoreDataBenchmark), for: .touchUpInside)
     return button
   }()
+  private lazy var runDflatSubButton: UIButton = {
+    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 96, width: 200, height: 36))
+    button.setTitle("Run Dflat Subscription", for: .normal)
+    button.titleLabel?.textColor = .black
+    button.backgroundColor = .lightGray
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runDflatSubBenchmark), for: .touchUpInside)
+    return button
+  }()
   private lazy var text: UILabel = {
-    let text = UILabel(frame: CGRect(x: 20, y: 96, width: UIScreen.main.bounds.width - 40, height: 500))
+    let text = UILabel(frame: CGRect(x: 20, y: 138, width: UIScreen.main.bounds.width - 40, height: 400))
     text.textColor = .black
     text.numberOfLines = 0
     text.textAlignment = .center
@@ -59,6 +70,7 @@ final class BenchmarksViewController: UIViewController {
     view.backgroundColor = .white
     view.addSubview(runDflatButton)
     view.addSubview(runCoreDataButton)
+    view.addSubview(runDflatSubButton)
     view.addSubview(text)
   }
 
@@ -608,5 +620,105 @@ final class BenchmarksViewController: UIViewController {
     let stats = CRUDStats + MTCRUDStats
     text.text = stats
     print(stats)
+  }
+
+  func runDflatSub() -> String {
+    let insertGroup = DispatchGroup()
+    insertGroup.enter()
+    let insertStartTime = CACurrentMediaTime()
+    var insertEndTime = insertStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
+      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+        let creationRequest = BenchDocChangeRequest.creationRequest()
+        creationRequest.title = "title\(i)"
+        creationRequest.tag = "tag\(i)"
+        creationRequest.pos = Vec3()
+        switch i % 3 {
+        case 0:
+          creationRequest.color = .blue
+          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 1:
+          creationRequest.color = .red
+          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+        case 2:
+          creationRequest.color = .green
+          creationRequest.priority = 0
+          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
+        try! txnContext.submit(creationRequest)
+      }
+    }) { (succeed) in
+      insertEndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.wait()
+    var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
+    let fetchStartTime = CACurrentMediaTime()
+    // Do 1000 fetches of exact 1 matches, and observe the fetched result.
+    var fetchedResults = [FetchedResult<BenchDoc>]()
+    for i in 0..<Self.NumberOfSubscriptions {
+      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.title == "title\(i)")
+      fetchedResults.append(fetchedResult)
+    }
+    let fetchEndTime = CACurrentMediaTime()
+    stats += "Fetched \(Self.NumberOfSubscriptions) Individually: \(fetchEndTime - fetchStartTime) sec\n"
+    var subs = [Workspace.Subscription]()
+    let subGroup = DispatchGroup()
+    for fetchedResult in fetchedResults {
+      subGroup.enter()
+      let sub = dflat.subscribe(fetchedResult: fetchedResult) { newFetchedResult in
+        subGroup.leave()
+      }
+      subs.append(sub)
+    }
+    self.subs = subs
+    let updateGroup = DispatchGroup()
+    updateGroup.enter()
+    let updateStartTime = CACurrentMediaTime()
+    var updateEndTime = updateStartTime
+    var subStartTime = updateStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+      for (i, doc) in allDocs.enumerated() {
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+        changeRequest.tag = "tag\(i + 1)"
+        changeRequest.priority = 11
+        changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
+        switch i % 3 {
+        case 1:
+          changeRequest.color = .blue
+          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+        case 2:
+          changeRequest.color = .red
+        case 0:
+          changeRequest.color = .green
+          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+        default:
+          break
+        }
+        try! txnContext.submit(changeRequest)
+      }
+      subStartTime = CACurrentMediaTime()
+    }) { (succeed) in
+      updateEndTime = CACurrentMediaTime()
+      updateGroup.leave()
+    }
+    subGroup.wait()
+    let subEndTime = CACurrentMediaTime()
+    updateGroup.wait()
+    stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
+    stats += "Subscription for \(Self.NumberOfSubscriptions) Delivered: \(subEndTime - subStartTime) sec\n"
+    return stats
+  }
+
+  @objc
+  func runDflatSubBenchmark() {
+    let subStats = runDflatSub()
+    text.text = subStats
+    print(subStats)
   }
 }
