@@ -14,11 +14,9 @@ swift_library(
   name = "Dflat",
   module_name = "Dflat",
   srcs = ["//src:DflatFiles"],
-  private_deps = [
-    "@swift-atomics//:SwiftAtomics"
-  ],
   deps = [
-    "@flatbuffers//:FlatBuffers"
+    "@flatbuffers//:FlatBuffers",
+    "@swift-atomics//:SwiftAtomics"
   ]
 )
 
@@ -26,9 +24,6 @@ swift_library(
   name = "SQLiteDflat",
   module_name = "SQLiteDflat",
   srcs = ["//src:SQLiteDflatFiles"],
-  private_deps = [
-    "@swift-atomics//:SwiftAtomics"
-  ],
   deps = [
     ":Dflat",
     "//src:SQLiteDflatObjC"
