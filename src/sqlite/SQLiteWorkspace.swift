@@ -260,8 +260,8 @@ public final class SQLiteWorkspace: Workspace {
       DispatchWorkItem(flags: .enforceQoS) { [weak self] in
         guard let self = self else { return }
         guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
-        let identifier = ObjectIdentifier(Element.self)
-        let changesTimestamp = self.state.tableTimestamp(for: identifier)
+        let objectType = ObjectIdentifier(Element.self)
+        let changesTimestamp = self.state.tableTimestamp(for: objectType)
         var fetchedResult = fetchedResult
         // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
         tableSpace.lock()
