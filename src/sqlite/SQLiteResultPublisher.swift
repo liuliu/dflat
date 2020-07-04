@@ -127,10 +127,10 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
       for element in elementsToBeInserted {
         underlyingArray.insertSorted(element, orderBy: orderBy)
         objects.insert(element._rowid)
-        if case .limit(let limit) = limit {
-          if underlyingArray.count > limit {
-            precondition(underlyingArray.count == limit + 1)
-            objects.remove(underlyingArray[limit]._rowid)
+        if case .limit(let numLimit) = limit {
+          if underlyingArray.count > numLimit {
+            precondition(underlyingArray.count == numLimit + 1)
+            objects.remove(underlyingArray[numLimit]._rowid)
             underlyingArray.removeLast()
           }
         }

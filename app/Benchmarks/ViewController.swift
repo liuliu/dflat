@@ -803,7 +803,7 @@ final class BenchmarksViewController: UIViewController {
     stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
     for i in 0..<Self.NumberOfSubscriptions {
       let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
-      assert(bigFetchedResults[i] != fetchedResult)
+      assert(bigFetchedResults[i] == fetchedResult)
     }
     return stats
   }
