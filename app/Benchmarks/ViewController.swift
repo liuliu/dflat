@@ -711,7 +711,95 @@ final class BenchmarksViewController: UIViewController {
     let subEndTime = CACurrentMediaTime()
     updateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
-    stats += "Subscription for \(Self.NumberOfSubscriptions) Delivered: \(subEndTime - subStartTime) sec\n"
+    stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
+    for sub in subs {
+      sub.cancel()
+    }
+    self.subs = nil
+
+    let fetchAll = dflat.fetch(for: BenchDoc.self).all(limit: .limit(Self.NumberOfSubscriptions))
+    let objSubGroup = DispatchGroup()
+    var objSubs = [Workspace.Subscription]()
+    for doc in fetchAll {
+      objSubGroup.enter()
+      let sub = dflat.subscribe(object: doc) { updatedObj in
+        objSubGroup.leave()
+      }
+      objSubs.append(sub)
+    }
+    self.subs = objSubs
+    let objUpdateGroup = DispatchGroup()
+    objUpdateGroup.enter()
+    let objUpdateStartTime = CACurrentMediaTime()
+    var objUpdateEndTime = objUpdateStartTime
+    var objSubStartTime = objUpdateStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+      for (i, doc) in allDocs.enumerated() {
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+        changeRequest.priority = Int32(-i)
+        try! txnContext.submit(changeRequest)
+      }
+      objSubStartTime = CACurrentMediaTime()
+    }) { (succeed) in
+      objUpdateEndTime = CACurrentMediaTime()
+      objUpdateGroup.leave()
+    }
+    objSubGroup.wait()
+    let objSubEndTime = CACurrentMediaTime()
+    objUpdateGroup.wait()
+    stats += "Update \(Self.NumberOfEntities): \(objUpdateEndTime - objUpdateStartTime) sec\n"
+    stats += "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(objSubEndTime - objSubStartTime) sec\n"
+    for sub in objSubs {
+      sub.cancel()
+    }
+    self.subs = nil
+    // 1000 fetched results with 1000 items inside.
+    var bigFetchedResults = [FetchedResult<BenchDoc>]()
+    let bigFetchStartTime = CACurrentMediaTime()
+    for i in 0..<Self.NumberOfSubscriptions {
+      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
+      bigFetchedResults.append(fetchedResult)
+    }
+    let bigFetchEndTime = CACurrentMediaTime()
+    stats += "Fetched \(Self.NumberOfSubscriptions) Individually: \(bigFetchEndTime - bigFetchStartTime) sec\n"
+    let bigSubGroup = DispatchGroup()
+    var bigSubs = [Workspace.Subscription]()
+    var count = 0
+    for fetchedResult in bigFetchedResults {
+      count += fetchedResult.count
+      bigSubGroup.enter()
+      let sub = dflat.subscribe(fetchedResult: fetchedResult) { newFetchedResult in
+        bigSubGroup.leave()
+      }
+      bigSubs.append(sub)
+    }
+    count = count / bigFetchedResults.count
+    self.subs = bigSubs
+    let bigUpdateGroup = DispatchGroup()
+    bigUpdateGroup.enter()
+    let bigUpdateStartTime = CACurrentMediaTime()
+    var bigUpdateEndTime = bigUpdateStartTime
+    var bigSubStartTime = bigUpdateStartTime
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+      for (i, doc) in allDocs.enumerated() {
+        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+        changeRequest.priority = Int32(-Self.NumberOfEntities + i)
+        try! txnContext.submit(changeRequest)
+      }
+      bigSubStartTime = CACurrentMediaTime()
+    }) { (succeed) in
+      bigUpdateEndTime = CACurrentMediaTime()
+      bigUpdateGroup.leave()
+    }
+    bigSubGroup.wait()
+    let bigSubEndTime = CACurrentMediaTime()
+    bigUpdateGroup.wait()
+    stats += "Update \(Self.NumberOfEntities): \(bigUpdateEndTime - bigUpdateStartTime) sec\n"
+    stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
     return stats
   }
 
