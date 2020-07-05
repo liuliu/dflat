@@ -6,12 +6,15 @@ public struct OrExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType,
   public let right: R
   public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
     let lval = left.evaluate(object: object)
+    if lval.result && !lval.unknown {
+      return (true, false)
+    }
     let rval = right.evaluate(object: object)
     // If any of these result is true and !unknown, the whole expression evaluated to true and !unknown
-    if ((lval.result && !lval.unknown) || (rval.result && !rval.unknown)) {
-      return (lval.result || rval.result, lval.unknown && rval.unknown)
+    if rval.result && !rval.unknown {
+      return (true, false)
     } else {
-      return (lval.result || rval.result, lval.unknown || rval.unknown)
+      return (false, lval.unknown || rval.unknown)
     }
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
