@@ -805,6 +805,10 @@ final class BenchmarksViewController: UIViewController {
       let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
       assert(bigFetchedResults[i] == fetchedResult)
     }
+    for sub in bigSubs {
+      sub.cancel()
+    }
+    self.subs = nil
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
