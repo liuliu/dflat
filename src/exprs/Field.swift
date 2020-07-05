@@ -1,7 +1,7 @@
 import FlatBuffers
 
-public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
-  let field: FieldExpr<T>
+public struct OrderByField<T, Element>: OrderBy where T: DflatFriendlyValue, Element: Atom {
+  let field: FieldExpr<T, Element>
   public var name: String { field.name }
   public let sortingOrder: SortingOrder
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -31,10 +31,10 @@ public struct OrderByField<T>: OrderBy where T: DflatFriendlyValue {
   }
 }
 
-public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
+public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Element: Atom {
   public typealias ResultType = T
   public typealias TableReader = (_ table: ByteBuffer) -> (result: T, unknown: Bool)
-  public typealias ObjectReader = (_ object: Atom) -> (result: T, unknown: Bool)
+  public typealias ObjectReader = (_ object: Element) -> (result: T, unknown: Bool)
   public let name: String
   let tableReader: TableReader
   let objectReader: ObjectReader
@@ -52,7 +52,7 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
     case .table(let table):
       return tableReader(table)
     case .object(let atom):
-      return objectReader(atom)
+      return objectReader(atom as! Element)
     }
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -75,5 +75,5 @@ public final class FieldExpr<T>: Expr where T: DflatFriendlyValue {
       existingIndexes.insert(name)
     }
   }
-  public var ascending: OrderByField<T> { OrderByField(field: self, sortingOrder: .ascending) }
-  public var descending: OrderByField<T> { OrderByField(field: self, sortingOrder: .descending) }}
+  public var ascending: OrderByField<T, Element> { OrderByField(field: self, sortingOrder: .ascending) }
+  public var descending: OrderByField<T, Element> { OrderByField(field: self, sortingOrder: .descending) }}
