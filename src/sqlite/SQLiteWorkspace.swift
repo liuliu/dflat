@@ -248,12 +248,12 @@ public final class SQLiteWorkspace: Workspace {
   // MARK - Observation
 
   public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
-    let identifier = ObjectIdentifier(fetchedResult)
+    let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
+    let identifier = ObjectIdentifier(fetchedResult.query)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
     guard !state.shutdown.load() else {
       return subscription
     }
-    let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
     tableSpace.queue.async(execute:
