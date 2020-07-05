@@ -28,30 +28,20 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
     self.changesTimestamp = changesTimestamp
     super.init()
   }
-  override func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
+  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
     let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
     var result = [Element]()
-    if let anyOrderBy = orderBy as? [AnyOrderBy<Element>] {
-      SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy, offset: 0, result: &result)
-      return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy)
-    } else {
-      // Type-erase.
-      var anyOrderBy = [AnyOrderBy<Element>]()
-      for i in orderBy {
-        anyOrderBy.append(AnyOrderBy(i))
-      }
-      SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy, offset: 0, result: &result)
-      return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy)
-    }
+    SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
+    return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
-  override func all<OrderByType: OrderBy>(limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where OrderByType.Element == Element {
+  override func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> {
     return self.where(AllExpr<Element>(), limit: limit, orderBy: orderBy)
   }
 }
 
 // MARK - Query
 
-private func areInIncreasingOrder<Element, OrderByType: OrderBy>(_ lhs: Element, _ rhs: Element, orderBy: [OrderByType]) -> Bool where OrderByType.Element == Element {
+private func areInIncreasingOrder<Element>(_ lhs: Element, _ rhs: Element, orderBy: [OrderBy<Element>]) -> Bool {
   for i in orderBy {
     let sortingOrder = i.areInSortingOrder(.object(lhs), .object(rhs))
     guard sortingOrder != .same else { continue }
@@ -61,7 +51,7 @@ private func areInIncreasingOrder<Element, OrderByType: OrderBy>(_ lhs: Element,
 }
 
 extension Array where Element: Atom {
-  func indexSorted<OrderByType: OrderBy>(_ newElement: Element, orderBy: [OrderByType]) -> Int where OrderByType.Element == Element {
+  func indexSorted(_ newElement: Element, orderBy: [OrderBy<Element>]) -> Int {
     var lb = 0
     var ub = self.count - 1
     var pivot = (ub - lb) / 2 + lb
@@ -83,12 +73,12 @@ extension Array where Element: Atom {
       }
     }
   }
-  mutating func insertSorted<OrderByType: OrderBy>(_ newElement: Element, orderBy: [OrderByType]) where OrderByType.Element == Element {
+  mutating func insertSorted(_ newElement: Element, orderBy: [OrderBy<Element>]) {
     self.insert(newElement, at: indexSorted(newElement, orderBy: orderBy))
   }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [AnyOrderBy<Element>], offset: Int, result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [OrderBy<Element>], offset: Int, result: inout [Element]) {
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type

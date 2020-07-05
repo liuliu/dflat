@@ -1,19 +1,23 @@
 import FlatBuffers
 
-public struct OrderByField<T, Element>: OrderBy where T: DflatFriendlyValue, Element: Atom {
-  public typealias Element = Element
+final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyValue, Element: Atom {
   let field: FieldExpr<T, Element>
-  public var name: String { field.name }
-  public let sortingOrder: SortingOrder
-  public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+  override var name: String { field.name }
+  let _sortingOrder: SortingOrder
+  override var sortingOrder: SortingOrder { _sortingOrder }
+  init(field: FieldExpr<T, Element>, sortingOrder: SortingOrder) {
+    self.field = field
+    _sortingOrder = sortingOrder
+  }
+  override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     field.canUsePartialIndex(indexSurvey)
   }
-  public func existingIndex(_ existingIndexes: inout Set<String>) {
+  override func existingIndex(_ existingIndexes: inout Set<String>) {
     field.existingIndex(&existingIndexes)
   }
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
-  public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
+  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
     let lval = field.evaluate(object: lhs)
     let rval = field.evaluate(object: rhs)
     guard !lval.unknown || !rval.unknown else { return .same }
@@ -77,5 +81,5 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
       existingIndexes.insert(name)
     }
   }
-  public var ascending: OrderByField<T, Element> { OrderByField(field: self, sortingOrder: .ascending) }
-  public var descending: OrderByField<T, Element> { OrderByField(field: self, sortingOrder: .descending) }}
+  public var ascending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .ascending) }
+  public var descending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .descending) }}

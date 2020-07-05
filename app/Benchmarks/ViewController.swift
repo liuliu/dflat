@@ -805,6 +805,25 @@ final class BenchmarksViewController: UIViewController {
       let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
       assert(bigFetchedResults[i] == fetchedResult)
     }
+    let deleteGroup = DispatchGroup()
+    deleteGroup.enter()
+    let deleteStartTime = CACurrentMediaTime()
+    var deleteEndTime = deleteStartTime
+    var deletedCount = 0
+    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
+      guard let self = self else { return }
+      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+      deletedCount = allDocs.count
+      for i in allDocs {
+        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+        try! txnContext.submit(deletionRequest)
+      }
+    }) { (succeed) in
+      deleteEndTime = CACurrentMediaTime()
+      deleteGroup.leave()
+    }
+    deleteGroup.wait()
+    stats += "Delete \(deletedCount): \(deleteEndTime - deleteStartTime) sec\n"
     return stats
   }
 

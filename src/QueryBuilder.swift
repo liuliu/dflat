@@ -6,67 +6,17 @@ public enum SortingOrder {
   case descending
 }
 
-public protocol OrderBy {
-  associatedtype Element: Atom
-  var name: String { get }
-  var sortingOrder: SortingOrder { get }
-  func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder
-  func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness
-  func existingIndex(_ existingIndexes: inout Set<String>)
-}
-
-private class _AnyOrderByBase<Element: Atom>: OrderBy {
-  public typealias Element = Element
-  var name: String { fatalError() }
-  var sortingOrder: SortingOrder { fatalError() }
-  func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
-    fatalError()
-  }
-  func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
-    fatalError()
-  }
-  func existingIndex(_ existingIndexes: inout Set<String>) {
-    fatalError()
-  }
-}
-
-private class _AnyOrderBy<T: OrderBy, Element>: _AnyOrderByBase<Element> where T.Element == Element {
-  private let base: T
-  init(_ base: T) {
-    self.base = base
-  }
-  override var name: String { base.name }
-  override var sortingOrder: SortingOrder { base.sortingOrder }
-  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
-    base.areInSortingOrder(lhs, rhs)
-  }
-  override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
-    base.canUsePartialIndex(indexSurvey)
-  }
-  override func existingIndex(_ existingIndexes: inout Set<String>) {
-    base.existingIndex(&existingIndexes)
-  }
-}
-
-// We have to declare the type-erased here because we use it to provide empty array.
-// We can provide an empty array with a EmptyOrderBy: OrderBy, however, that just additional
-// type with no better gain.
-public final class AnyOrderBy<Element: Atom>: OrderBy {
-  public typealias Element = Element
-  private let base: _AnyOrderByBase<Element>
-  public init<T: OrderBy>(_ base: T) where T.Element == Element {
-    self.base = _AnyOrderBy(base)
-  }
-  public var name: String { base.name }
-  public var sortingOrder: SortingOrder { base.sortingOrder }
+public class OrderBy<Element: Atom> {
+  public var name: String { fatalError() }
+  public var sortingOrder: SortingOrder { fatalError() }
   public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
-    base.areInSortingOrder(lhs, rhs)
+    fatalError()
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
-    base.canUsePartialIndex(indexSurvey)
+    fatalError()
   }
   public func existingIndex(_ existingIndexes: inout Set<String>) {
-    base.existingIndex(&existingIndexes)
+    fatalError()
   }
 }
 
@@ -89,14 +39,8 @@ open class QueryBuilder<Element: Atom> {
    *
    * - Returns: Return a fetched result which interacts just like normal array.
    */
-  open func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
+  open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
     fatalError()
-  }
-  public func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, orderBy: [OrderByType]) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
-    self.where(query, limit: .noLimit, orderBy: orderBy)
-  }
-  public func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
-    self.where(query, limit: limit, orderBy: [AnyOrderBy<Element>]())
   }
   /**
    * Return all objects for a class.
@@ -107,13 +51,7 @@ open class QueryBuilder<Element: Atom> {
    *
    * - Returns: Return a fetched result which interacts just like normal array.
    */
-  open func all<OrderByType: OrderBy>(limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where OrderByType.Element == Element {
+  open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> {
     fatalError()
-  }
-  public func all<OrderByType: OrderBy>(orderBy: [OrderByType]) -> FetchedResult<Element> where OrderByType.Element == Element {
-    self.all(limit: .noLimit, orderBy: orderBy)
-  }
-  public func all(limit: Limit = .noLimit) -> FetchedResult<Element> {
-    self.all(limit: limit, orderBy: [AnyOrderBy<Element>]())
   }
 }
