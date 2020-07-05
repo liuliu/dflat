@@ -1,6 +1,7 @@
 import FlatBuffers
 
 public struct OrderByField<T, Element>: OrderBy where T: DflatFriendlyValue, Element: Atom {
+  public typealias Element = Element
   let field: FieldExpr<T, Element>
   public var name: String { field.name }
   public let sortingOrder: SortingOrder
@@ -12,7 +13,7 @@ public struct OrderByField<T, Element>: OrderBy where T: DflatFriendlyValue, Ele
   }
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
-  public func areInSortingOrder(_ lhs: Evaluable, _ rhs: Evaluable) -> SortingOrder {
+  public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
     let lval = field.evaluate(object: lhs)
     let rval = field.evaluate(object: rhs)
     guard !lval.unknown || !rval.unknown else { return .same }
@@ -33,6 +34,7 @@ public struct OrderByField<T, Element>: OrderBy where T: DflatFriendlyValue, Ele
 
 public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Element: Atom {
   public typealias ResultType = T
+  public typealias Element = Element
   public typealias TableReader = (_ table: ByteBuffer) -> (result: T, unknown: Bool)
   public typealias ObjectReader = (_ object: Element) -> (result: T, unknown: Bool)
   public let name: String
@@ -47,12 +49,12 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
     self.tableReader = tableReader
     self.objectReader = objectReader
   }
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     switch object {
     case .table(let table):
       return tableReader(table)
-    case .object(let atom):
-      return objectReader(atom as! Element)
+    case .object(let element):
+      return objectReader(element)
     }
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

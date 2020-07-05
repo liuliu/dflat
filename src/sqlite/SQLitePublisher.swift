@@ -100,9 +100,9 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
     }
   }
   private weak var workspace: SQLiteWorkspace?
-  private let query: AnySQLiteExpr<Bool>
+  private let query: AnySQLiteExpr<Bool, Element>
   private let limit: Limit
-  private let orderBy: [OrderBy]
+  private let orderBy: [AnyOrderBy<Element>]
   private var lock: os_unfair_lock_s
   // Unfortunately, I have to use computed property such that this is thread-safe (and only once).
   private var initialFetchedResult: FetchedResult<Element>? {
@@ -113,7 +113,7 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
     return _initialFetchedResult
   }
   private var _initialFetchedResult: FetchedResult<Element>? = nil
-  init<T: Expr>(workspace: SQLiteWorkspace, query: T, limit: Limit, orderBy: [OrderBy]) where T.ResultType == Bool {
+  init<T: Expr>(workspace: SQLiteWorkspace, query: T, limit: Limit, orderBy: [AnyOrderBy<Element>]) where T.ResultType == Bool, T.Element == Element {
     self.lock = os_unfair_lock()
     self.workspace = workspace
     self.query = AnySQLiteExpr(query, query as! SQLiteExpr)
@@ -131,10 +131,28 @@ final class SQLiteQueryPublisherBuilder<Element: Atom>: QueryPublisherBuilder<El
   init(workspace: SQLiteWorkspace) {
     self.workspace = workspace
   }
-  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> where T.ResultType == Bool {
-    return SQLiteQueryPublisher<Element>(workspace: workspace, query: query, limit: limit, orderBy: orderBy)
+  override func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderByType] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
+    if let anyOrderBy = orderBy as? [AnyOrderBy<Element>] {
+      return SQLiteQueryPublisher<Element>(workspace: workspace, query: query, limit: limit, orderBy: anyOrderBy)
+    } else {
+      // Type-erase.
+      var anyOrderBy = [AnyOrderBy<Element>]()
+      for i in orderBy {
+        anyOrderBy.append(AnyOrderBy(i))
+      }
+      return SQLiteQueryPublisher<Element>(workspace: workspace, query: query, limit: limit, orderBy: anyOrderBy)
+    }
   }
-  override func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> {
-    return SQLiteQueryPublisher<Element>(workspace: workspace, query: AllExpr(), limit: limit, orderBy: orderBy)
+  override func all<OrderByType: OrderBy>(limit: Limit = .noLimit, orderBy: [OrderByType] = []) -> QueryPublisher<Element> where OrderByType.Element == Element {
+    if let anyOrderBy = orderBy as? [AnyOrderBy<Element>] {
+      return SQLiteQueryPublisher<Element>(workspace: workspace, query: AllExpr<Element>(), limit: limit, orderBy: anyOrderBy)
+    } else {
+      // Type-erase.
+      var anyOrderBy = [AnyOrderBy<Element>]()
+      for i in orderBy {
+        anyOrderBy.append(AnyOrderBy(i))
+      }
+      return SQLiteQueryPublisher<Element>(workspace: workspace, query: AllExpr<Element>(), limit: limit, orderBy: anyOrderBy)
+    }
   }
 }

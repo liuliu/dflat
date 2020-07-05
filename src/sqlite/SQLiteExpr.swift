@@ -6,8 +6,8 @@ public protocol SQLiteExpr {
   func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32)
 }
 
-private class _AnyExprBase<ResultType>: Expr {
-  func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+private class _AnyExprBase<ResultType, Element: Atom>: Expr {
+  func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     fatalError()
   }
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -18,12 +18,12 @@ private class _AnyExprBase<ResultType>: Expr {
   }
 }
 
-private class _AnyExpr<T: Expr>: _AnyExprBase<T.ResultType> {
+private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element> where T.Element == Element {
   private let base: T
   init(_ base: T) {
     self.base = base
   }
-  override func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  override func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     base.evaluate(object: object)
   }
   override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -34,20 +34,20 @@ private class _AnyExpr<T: Expr>: _AnyExprBase<T.ResultType> {
   }
 }
 
-public final class AnySQLiteExpr<ResultType>: Expr, SQLiteExpr {
+public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
   private let sqlBase: SQLiteExpr
-  private let base: _AnyExprBase<ResultType>
-  public init<T: Expr>(_ base: T) where T.ResultType == ResultType, T: SQLiteExpr {
+  private let base: _AnyExprBase<ResultType, Element>
+  public init<T: Expr>(_ base: T) where T.ResultType == ResultType, T: SQLiteExpr, T.Element == Element {
     self.sqlBase = base
     self.base = _AnyExpr(base)
   }
   // This is the weird bit, since we have to force cast to SQLiteExpr, hence, we cannot really
   // Put them into one parameter. This has to be two.
-  public init<T: Expr>(_ base: T, _ sqlBase: SQLiteExpr) where T.ResultType == ResultType {
+  public init<T: Expr>(_ base: T, _ sqlBase: SQLiteExpr) where T.ResultType == ResultType, T.Element == Element {
     self.sqlBase = sqlBase
     self.base = _AnyExpr(base)
   }
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     base.evaluate(object: object)
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

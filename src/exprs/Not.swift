@@ -1,9 +1,10 @@
 import FlatBuffers
 
-public struct NotExpr<T: Expr>: Expr where T.ResultType == Bool {
+public struct NotExpr<T: Expr, Element>: Expr where T.ResultType == Bool, T.Element == Element {
   public typealias ResultType = Bool
+  public typealias Element = Element
   public let unary: T
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     let val = unary.evaluate(object: object)
     return (!val.result, val.unknown)
   }
@@ -15,6 +16,6 @@ public struct NotExpr<T: Expr>: Expr where T.ResultType == Bool {
   }
 }
 
-public prefix func ! <T>(unary: T) -> NotExpr<T> where T.ResultType == Bool {
+public prefix func ! <T, Element: Atom>(unary: T) -> NotExpr<T, Element> where T.ResultType == Bool, T.Element == Element {
   return NotExpr(unary: unary)
 }

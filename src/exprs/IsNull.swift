@@ -1,9 +1,10 @@
 import FlatBuffers
 
-public struct IsNullExpr<T: Expr>: Expr {
+public struct IsNullExpr<T: Expr, Element>: Expr where T.Element == Element {
   public typealias ResultType = Bool
+  public typealias Element = Element
   public let unary: T
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     let val = unary.evaluate(object: object)
     return (val.unknown, false)
   }
@@ -16,7 +17,7 @@ public struct IsNullExpr<T: Expr>: Expr {
 }
 
 public extension Expr {
-  var isNull: IsNullExpr<Self> {
+  var isNull: IsNullExpr<Self, Self.Element> {
     IsNullExpr(unary: self)
   }
 }

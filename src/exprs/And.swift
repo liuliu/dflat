@@ -1,10 +1,11 @@
 import FlatBuffers
 
-public struct AndExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType, L.ResultType == Bool {
+public struct AndExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element {
   public typealias ResultType = Bool
+  public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     let lval = left.evaluate(object: object)
     // Short-cut.
     if !lval.result && !lval.unknown {
@@ -56,14 +57,14 @@ public struct AndExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType
   }
 }
 
-public func && <L, R>(left: L, right: R) -> AndExpr<L, R> where L.ResultType == R.ResultType, L.ResultType == Bool {
+public func && <L, R, Element: Atom>(left: L, right: R) -> AndExpr<L, R, Element> where L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element {
   return AndExpr(left: left, right: right)
 }
 
-public func && <L>(left: L, right: Bool) -> AndExpr<L, ValueExpr<Bool>> where L.ResultType == Bool {
+public func && <L, Element: Atom>(left: L, right: Bool) -> AndExpr<L, ValueExpr<Bool, Element>, Element> where L.ResultType == Bool, L.Element == Element {
   return AndExpr(left: left, right: ValueExpr(right))
 }
 
-public func && <R>(left: Bool, right: R) -> AndExpr<ValueExpr<Bool>, R> where R.ResultType == Bool {
+public func && <R, Element: Atom>(left: Bool, right: R) -> AndExpr<ValueExpr<Bool, Element>, R, Element> where R.ResultType == Bool, Element == R.Element {
   return AndExpr(left: ValueExpr(left), right: right)
 }

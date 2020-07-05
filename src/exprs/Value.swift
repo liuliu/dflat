@@ -21,13 +21,14 @@ extension Float: DflatFriendlyValue {}
 extension Double: DflatFriendlyValue {}
 extension String: DflatFriendlyValue {}
 
-public struct ValueExpr<T>: Expr where T: DflatFriendlyValue {
+public struct ValueExpr<T, Element: Atom>: Expr where T: DflatFriendlyValue {
   public typealias ResultType = T
+  public typealias Element = Element
   public let value: T
   internal init(_ value: T) {
     self.value = value
   }
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     (value, false)
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

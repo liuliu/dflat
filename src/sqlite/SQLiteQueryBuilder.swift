@@ -2,9 +2,10 @@ import Dflat
 import SQLite3
 import FlatBuffers
 
-struct AllExpr: Expr, SQLiteExpr {
+struct AllExpr<Element: Atom>: Expr, SQLiteExpr {
   typealias ResultType = Bool
-  func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  typealias Element = Element
+  func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     return (true, false)
   }
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -27,38 +28,46 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
     self.changesTimestamp = changesTimestamp
     super.init()
   }
-  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool {
+  override func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
     let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
     var result = [Element]()
-    SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
-    return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
+    if let anyOrderBy = orderBy as? [AnyOrderBy<Element>] {
+      SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy, offset: 0, result: &result)
+      return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy)
+    } else {
+      // Type-erase.
+      var anyOrderBy = [AnyOrderBy<Element>]()
+      for i in orderBy {
+        anyOrderBy.append(AnyOrderBy(i))
+      }
+      SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy, offset: 0, result: &result)
+      return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: anyOrderBy)
+    }
   }
-  override func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> {
-    return self.where(AllExpr(), limit: limit, orderBy: orderBy)
+  override func all<OrderByType: OrderBy>(limit: Limit, orderBy: [OrderByType]) -> FetchedResult<Element> where OrderByType.Element == Element {
+    return self.where(AllExpr<Element>(), limit: limit, orderBy: orderBy)
   }
 }
 
 // MARK - Query
 
-extension Array where Element == OrderBy {
-  func areInIncreasingOrder(_ lhs: Atom, _ rhs: Atom) -> Bool {
-    for orderBy in self {
-      let sortingOrder = orderBy.areInSortingOrder(.object(lhs), .object(rhs))
-      guard sortingOrder != .same else { continue }
-      return sortingOrder == orderBy.sortingOrder
-    }
-    return lhs._rowid < rhs._rowid
+private func areInIncreasingOrder<Element, OrderByType: OrderBy>(_ lhs: Element, _ rhs: Element, orderBy: [OrderByType]) -> Bool where OrderByType.Element == Element {
+  for i in orderBy {
+    let sortingOrder = i.areInSortingOrder(.object(lhs), .object(rhs))
+    guard sortingOrder != .same else { continue }
+    return sortingOrder == i.sortingOrder
   }
+  return lhs._rowid < rhs._rowid
 }
 
 extension Array where Element: Atom {
-  func indexSorted(_ newElement: Element, orderBy: [OrderBy]) -> Int {
+  func indexSorted<OrderByType: OrderBy>(_ newElement: Element, orderBy: [OrderByType]) -> Int where OrderByType.Element == Element {
     var lb = 0
     var ub = self.count - 1
     var pivot = (ub - lb) / 2 + lb
     while lb < ub {
       pivot = (ub - lb) / 2 + lb
-      if orderBy.areInIncreasingOrder(self[pivot], newElement) {
+      if areInIncreasingOrder(self[pivot], newElement, orderBy: orderBy) {
         lb = pivot + 1
       } else {
         ub = pivot - 1
@@ -67,19 +76,19 @@ extension Array where Element: Atom {
     if lb == self.count {
       return lb
     } else {
-      if orderBy.areInIncreasingOrder(self[lb], newElement) {
+      if areInIncreasingOrder(self[lb], newElement, orderBy: orderBy) {
         return lb + 1
       } else {
         return lb
       }
     }
   }
-  mutating func insertSorted(_ newElement: Element, orderBy: [OrderBy]) {
+  mutating func insertSorted<OrderByType: OrderBy>(_ newElement: Element, orderBy: [OrderByType]) where OrderByType.Element == Element {
     self.insert(newElement, at: indexSorted(newElement, orderBy: orderBy))
   }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool>, limit: Limit, orderBy: [OrderBy], offset: Int, result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [AnyOrderBy<Element>], offset: Int, result: inout [Element]) {
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type

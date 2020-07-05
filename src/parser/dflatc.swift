@@ -1043,7 +1043,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   case .union:
     let unionDef = enumDefs[field.type.union!]!
     code += "\n  struct \(field.name) {\n"
-    code += "\n  public static func match<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32>> {\n"
+    code += "\n  public static func match<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32, \(GetFullyQualifiedName(structDef))>, \(GetFullyQualifiedName(structDef))> {\n"
     code += "    return ofType.zzz_match__\(structDef.name)__\(expandedName)\n"
     code += "  }\n"
     code += "  public static func `as`<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> T.zzz_AsType__\(structDef.name)__\(expandedName).Type {\n"
@@ -1069,7 +1069,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "\n  }\n"
     addon += "\npublic protocol \(structProtocolName)__\(expandedName) {\n"
     addon += "  associatedtype zzz_AsType__\(structDef.name)__\(expandedName)\n"
-    addon += "  static var zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32>> { get }\n"
+    addon += "  static var zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32, \(GetFullyQualifiedName(structDef))>, \(GetFullyQualifiedName(structDef))> { get }\n"
     addon += "}\n"
     for enumVal in unionDef.fields {
       guard enumVal.name != "NONE" else { continue }
@@ -1077,7 +1077,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
       let subStructDef = structDefs[enumVal.struct!]!
       var newAddon = ""
       addon += "\nextension \(GetFullyQualifiedName(subStructDef)): \(structProtocolName)__\(expandedName) {\n"
-      addon += "  public static let zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32>> = (\(GetFullyQualifiedName(structDef)).\(GetKeyPathQuery(keyPaths, field: field))._type == \(enumVal.value))\n"
+      addon += "  public static let zzz_match__\(structDef.name)__\(expandedName): EqualToExpr<FieldExpr<Int32, \(GetFullyQualifiedName(structDef))>, ValueExpr<Int32, \(GetFullyQualifiedName(structDef))>, \(GetFullyQualifiedName(structDef))> = (\(GetFullyQualifiedName(structDef)).\(GetKeyPathQuery(keyPaths, field: field))._type == \(enumVal.value))\n"
       addon += "\n  public struct zzz_\(expandedName)__\(subStructDef.name) {\n"
       for field in subStructDef.fields {
         guard IsDataField(field) else { continue }

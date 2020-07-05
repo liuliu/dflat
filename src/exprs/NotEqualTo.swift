@@ -1,10 +1,11 @@
 import FlatBuffers
 
-public struct NotEqualToExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType, L.ResultType: Equatable {
+public struct NotEqualToExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element, L.Element == Element {
   public typealias ResultType = Bool
+  public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     let lval = left.evaluate(object: object)
     let rval = right.evaluate(object: object)
     return (lval.result != rval.result, lval.unknown || rval.unknown)
@@ -25,14 +26,14 @@ public struct NotEqualToExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.Res
   }
 }
 
-public func != <L, R>(left: L, right: R) -> NotEqualToExpr<L, R> where L.ResultType == R.ResultType, L.ResultType: Equatable {
+public func != <L, R, Element: Atom>(left: L, right: R) -> NotEqualToExpr<L, R, Element> where L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element, L.Element == Element {
   return NotEqualToExpr(left: left, right: right)
 }
 
-public func != <L, R>(left: L, right: R) -> NotEqualToExpr<L, ValueExpr<R>> where L.ResultType == R, R: Equatable {
+public func != <L, R, Element: Atom>(left: L, right: R) -> NotEqualToExpr<L, ValueExpr<R, Element>, Element> where L.ResultType == R, R: Equatable, L.Element == Element {
   return NotEqualToExpr(left: left, right: ValueExpr(right))
 }
 
-public func != <L, R>(left: L, right: R) -> NotEqualToExpr<ValueExpr<L>, R> where L: Equatable, L == R.ResultType {
+public func != <L, R, Element: Atom>(left: L, right: R) -> NotEqualToExpr<ValueExpr<L, Element>, R, Element> where L: Equatable, L == R.ResultType, Element == R.Element {
   return NotEqualToExpr(left: ValueExpr(left), right: right)
 }

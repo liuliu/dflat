@@ -44,8 +44,14 @@ open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
    *
    * - Returns: A publisher object that can be interacted with Combine.
    */
-  open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> where T.ResultType == Bool {
+  open func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, limit: Limit, orderBy: [OrderByType]) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
     fatalError()
+  }
+  public func `where`<T: Expr, OrderByType: OrderBy>(_ query: T, orderBy: [OrderByType]) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element, OrderByType.Element == Element {
+    self.where(query, limit: .noLimit, orderBy: orderBy)
+  }
+  public func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element {
+    self.where(query, limit: limit, orderBy: [AnyOrderBy<Element>]())
   }
   /**
    * Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
@@ -57,7 +63,13 @@ open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
    *
    * - Returns: A publisher object that can be interacted with Combine.
    */
-  open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> {
+  open func all<OrderByType: OrderBy>(limit: Limit, orderBy: [OrderByType]) -> QueryPublisher<Element> where OrderByType.Element == Element {
     fatalError()
+  }
+  public func all<OrderByType: OrderBy>(orderBy: [OrderByType]) -> QueryPublisher<Element> where OrderByType.Element == Element {
+    self.all(limit: .noLimit, orderBy: orderBy)
+  }
+  public func all(limit: Limit = .noLimit) -> QueryPublisher<Element> {
+    self.all(limit: limit, orderBy: [AnyOrderBy<Element>]())
   }
 }

@@ -60,7 +60,7 @@ extension BenchDoc {
 
   struct content {
 
-  public static func match<T: zzz_DflatGen_Proto__BenchDoc__f12>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32>> {
+  public static func match<T: zzz_DflatGen_Proto__BenchDoc__f12>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32, BenchDoc>, BenchDoc> {
     return ofType.zzz_match__BenchDoc__f12
   }
   public static func `as`<T: zzz_DflatGen_Proto__BenchDoc__f12>(_ ofType: T.Type) -> T.zzz_AsType__BenchDoc__f12.Type {
@@ -108,11 +108,11 @@ extension BenchDoc {
 
 public protocol zzz_DflatGen_Proto__BenchDoc__f12 {
   associatedtype zzz_AsType__BenchDoc__f12
-  static var zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32>> { get }
+  static var zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32, BenchDoc>, BenchDoc> { get }
 }
 
 extension TextContent: zzz_DflatGen_Proto__BenchDoc__f12 {
-  public static let zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32>> = (BenchDoc.content._type == 1)
+  public static let zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32, BenchDoc>, BenchDoc> = (BenchDoc.content._type == 1)
 
   public struct zzz_f12__TextContent {
 
@@ -134,7 +134,7 @@ extension TextContent: zzz_DflatGen_Proto__BenchDoc__f12 {
 }
 
 extension ImageContent: zzz_DflatGen_Proto__BenchDoc__f12 {
-  public static let zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32>> = (BenchDoc.content._type == 2)
+  public static let zzz_match__BenchDoc__f12: EqualToExpr<FieldExpr<Int32, BenchDoc>, ValueExpr<Int32, BenchDoc>, BenchDoc> = (BenchDoc.content._type == 2)
 
   public struct zzz_f12__ImageContent {
   }

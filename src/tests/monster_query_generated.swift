@@ -78,7 +78,7 @@ extension MyGame.Sample.Monster {
 
   struct equipped {
 
-  public static func match<T: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32>> {
+  public static func match<T: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32, MyGame.Sample.Monster>, MyGame.Sample.Monster> {
     return ofType.zzz_match__Monster__f26
   }
   public static func `as`<T: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26>(_ ofType: T.Type) -> T.zzz_AsType__Monster__f26.Type {
@@ -106,11 +106,11 @@ extension MyGame.Sample.Monster {
 
 public protocol zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {
   associatedtype zzz_AsType__Monster__f26
-  static var zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32>> { get }
+  static var zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32, MyGame.Sample.Monster>, MyGame.Sample.Monster> { get }
 }
 
 extension MyGame.Sample.Weapon: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {
-  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32>> = (MyGame.Sample.Monster.equipped._type == 1)
+  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32, MyGame.Sample.Monster>, MyGame.Sample.Monster> = (MyGame.Sample.Monster.equipped._type == 1)
 
   public struct zzz_f26__Weapon {
 
@@ -143,7 +143,7 @@ extension MyGame.Sample.Weapon: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26
 }
 
 extension MyGame.Sample.Orb: zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {
-  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32>> = (MyGame.Sample.Monster.equipped._type == 2)
+  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.Sample.Monster>, ValueExpr<Int32, MyGame.Sample.Monster>, MyGame.Sample.Monster> = (MyGame.Sample.Monster.equipped._type == 2)
 
   public struct zzz_f26__Orb {
 

@@ -1,10 +1,11 @@
 import FlatBuffers
 
-public struct LessThanExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.ResultType, L.ResultType: Comparable {
+public struct LessThanExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.ResultType, L.ResultType: Comparable, L.Element == R.Element, L.Element == Element {
   public typealias ResultType = Bool
+  public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
     let lval = left.evaluate(object: object)
     let rval = right.evaluate(object: object)
     return (lval.result < rval.result, lval.unknown || rval.unknown)
@@ -25,14 +26,14 @@ public struct LessThanExpr<L: Expr, R: Expr>: Expr where L.ResultType == R.Resul
   }
 }
 
-public func < <L, R>(left: L, right: R) -> LessThanExpr<L, R> where L.ResultType == R.ResultType, L.ResultType: Comparable {
+public func < <L, R, Element: Atom>(left: L, right: R) -> LessThanExpr<L, R, Element> where L.ResultType == R.ResultType, L.ResultType: Comparable, L.Element == R.Element, L.Element == Element {
   return LessThanExpr(left: left, right: right)
 }
 
-public func < <L, R>(left: L, right: R) -> LessThanExpr<L, ValueExpr<R>> where L.ResultType == R, R: Comparable {
+public func < <L, R, Element: Atom>(left: L, right: R) -> LessThanExpr<L, ValueExpr<R, Element>, Element> where L.ResultType == R, R: Comparable, L.Element == Element {
   return LessThanExpr(left: left, right: ValueExpr(right))
 }
 
-public func < <L, R>(left: L, right: R) -> LessThanExpr<ValueExpr<L>, R> where L: Comparable, L == R.ResultType {
+public func < <L, R, Element: Atom>(left: L, right: R) -> LessThanExpr<ValueExpr<L, Element>, R, Element> where L: Comparable, L == R.ResultType, Element == R.Element {
   return LessThanExpr(left: ValueExpr(left), right: right)
 }

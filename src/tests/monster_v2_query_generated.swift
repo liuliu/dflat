@@ -78,7 +78,7 @@ extension MyGame.SampleV2.Monster {
 
   struct equipped {
 
-  public static func match<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> {
+  public static func match<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> {
     return ofType.zzz_match__Monster__f26
   }
   public static func `as`<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26>(_ ofType: T.Type) -> T.zzz_AsType__Monster__f26.Type {
@@ -107,7 +107,7 @@ extension MyGame.SampleV2.Monster {
 
   struct wear {
 
-  public static func match<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> {
+  public static func match<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34>(_ ofType: T.Type) -> EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> {
     return ofType.zzz_match__Monster__f34
   }
   public static func `as`<T: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34>(_ ofType: T.Type) -> T.zzz_AsType__Monster__f34.Type {
@@ -137,11 +137,11 @@ extension MyGame.SampleV2.Monster {
 
 public protocol zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26 {
   associatedtype zzz_AsType__Monster__f26
-  static var zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> { get }
+  static var zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> { get }
 }
 
 extension MyGame.SampleV2.Weapon: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26 {
-  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.equipped._type == 1)
+  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.equipped._type == 1)
 
   public struct zzz_f26__Weapon {
 
@@ -174,7 +174,7 @@ extension MyGame.SampleV2.Weapon: zzz_DflatGen_Proto__MyGame__SampleV2__Monster_
 }
 
 extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26 {
-  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.equipped._type == 2)
+  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.equipped._type == 2)
 
   public struct zzz_f26__Orb {
 
@@ -207,7 +207,7 @@ extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f2
 }
 
 extension MyGame.SampleV2.Empty: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f26 {
-  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.equipped._type == 3)
+  public static let zzz_match__Monster__f26: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.equipped._type == 3)
 
   public struct zzz_f26__Empty {
   }
@@ -217,11 +217,11 @@ extension MyGame.SampleV2.Empty: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__
 
 public protocol zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34 {
   associatedtype zzz_AsType__Monster__f34
-  static var zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> { get }
+  static var zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> { get }
 }
 
 extension MyGame.SampleV2.Weapon: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34 {
-  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.wear._type == 1)
+  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.wear._type == 1)
 
   public struct zzz_f34__Weapon {
 
@@ -254,7 +254,7 @@ extension MyGame.SampleV2.Weapon: zzz_DflatGen_Proto__MyGame__SampleV2__Monster_
 }
 
 extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34 {
-  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.wear._type == 2)
+  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.wear._type == 2)
 
   public struct zzz_f34__Orb {
 
@@ -287,7 +287,7 @@ extension MyGame.SampleV2.Orb: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f3
 }
 
 extension MyGame.SampleV2.Empty: zzz_DflatGen_Proto__MyGame__SampleV2__Monster__f34 {
-  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32>> = (MyGame.SampleV2.Monster.wear._type == 3)
+  public static let zzz_match__Monster__f34: EqualToExpr<FieldExpr<Int32, MyGame.SampleV2.Monster>, ValueExpr<Int32, MyGame.SampleV2.Monster>, MyGame.SampleV2.Monster> = (MyGame.SampleV2.Monster.wear._type == 3)
 
   public struct zzz_f34__Empty {
   }
