@@ -249,7 +249,7 @@ final class BenchmarksViewController: UIViewController {
       newAllDocs.append(docs[0])
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
@@ -289,6 +289,13 @@ final class BenchmarksViewController: UIViewController {
   }
 
   var coreDataSubs: [CoreDataSubController]? = nil
+  var objSubEndTime = CACurrentMediaTime()
+
+  @objc
+  func managedObjectContextObjectsDidChange(notification: NSNotification) {
+    guard let userInfo = notification.userInfo else { return }
+    self.objSubEndTime = CACurrentMediaTime()
+  }
 
   @objc
   func runCoreDataSubBenchmark() {
@@ -338,7 +345,7 @@ final class BenchmarksViewController: UIViewController {
       newAllDocs.append(subController)
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     var subEndTime = CACurrentMediaTime()
     for docSub in newAllDocs {
       docSub.callback = {
@@ -386,26 +393,102 @@ final class BenchmarksViewController: UIViewController {
     }
     updateGroup.notify(queue: DispatchQueue.main) { [weak self] in
       guard let self = self else { return }
+      self.coreDataSubs = nil
       stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
       stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
-      let deleteGroup = DispatchGroup()
-      deleteGroup.enter()
-      let deleteStartTime = CACurrentMediaTime()
-      var deleteEndTime = deleteStartTime
-      self.persistentContainer.performBackgroundTask { (objectContext) in
+      let notificationCenter = NotificationCenter.default
+      notificationCenter.addObserver(self, selector: #selector(self.managedObjectContextObjectsDidChange), name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: viewContext)
+      let objUpdateGroup = DispatchGroup()
+      objUpdateGroup.enter()
+      let objUpdateStartTime = CACurrentMediaTime()
+      var objUpdateEndTime = updateStartTime
+      var objSubStartTime = CACurrentMediaTime()
+      backgroundContext.perform {
         let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-        let allDocs = try! objectContext.fetch(fetchRequest)
-        for i in allDocs {
-          objectContext.delete(i)
+        let allDocs = try! backgroundContext.fetch(fetchRequest)
+        for (i, doc) in allDocs.enumerated() {
+          doc.setValue(-i, forKeyPath: "priority")
         }
-        try! objectContext.save()
-        deleteEndTime = CACurrentMediaTime()
-        deleteGroup.leave()
+        objSubStartTime = CACurrentMediaTime() // This is not exactly accurate.
+        try! backgroundContext.save()
+        viewContext.performAndWait {
+          try! viewContext.save()
+          objUpdateEndTime = CACurrentMediaTime()
+          objUpdateGroup.leave()
+        }
       }
-      deleteGroup.wait()
-      stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
-      print(stats)
-      self.text.text = stats
+      objUpdateGroup.notify(queue: DispatchQueue.main) { [weak self] in
+        guard let self = self else { return }
+        stats += "Update \(Self.NumberOfEntities): \(objUpdateEndTime - objUpdateStartTime) sec\n"
+        stats += "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(self.objSubEndTime - objSubStartTime) sec\n"
+        notificationCenter.removeObserver(self, name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: viewContext)
+        let individualFetchStartTime = CACurrentMediaTime()
+        var newAllDocs = [CoreDataSubController]()
+        var count = 0
+        for i in 0..<Self.NumberOfSubscriptions {
+          let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+          individualFetchRequest.predicate = NSPredicate(format: "priority < %@ && priority >= %@", argumentArray: [-i, -i - 1000])
+          individualFetchRequest.sortDescriptors = [NSSortDescriptor(key: "priority", ascending: true)]
+          let controller = NSFetchedResultsController(fetchRequest: individualFetchRequest, managedObjectContext: viewContext, sectionNameKeyPath: nil, cacheName: nil)
+          try! controller.performFetch()
+          let subController = CoreDataSubController(controller: controller)
+          count += subController.fetchedObjects?.count ?? 0
+          newAllDocs.append(subController)
+        }
+        count = count / Self.NumberOfSubscriptions
+        let individualFetchEndTime = CACurrentMediaTime()
+        stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+        var bigSubEndTime = CACurrentMediaTime()
+        for docSub in newAllDocs {
+          docSub.callback = {
+            bigSubEndTime = CACurrentMediaTime()
+          }
+        }
+        self.coreDataSubs = newAllDocs
+        let bigUpdateGroup = DispatchGroup()
+        bigUpdateGroup.enter()
+        let bigUpdateStartTime = CACurrentMediaTime()
+        var bigUpdateEndTime = updateStartTime
+        var bigSubStartTime = CACurrentMediaTime()
+        backgroundContext.perform {
+          let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+          let allDocs = try! backgroundContext.fetch(fetchRequest)
+          for (i, doc) in allDocs.enumerated() {
+            doc.setValue(-Self.NumberOfEntities + i, forKeyPath: "priority")
+          }
+          bigSubStartTime = CACurrentMediaTime() // This is not exactly accurate.
+          try! backgroundContext.save()
+          viewContext.performAndWait {
+            try! viewContext.save()
+            bigUpdateEndTime = CACurrentMediaTime()
+            bigUpdateGroup.leave()
+          }
+        }
+        bigUpdateGroup.notify(queue: DispatchQueue.main) { [weak self] in
+          guard let self = self else { return }
+          self.coreDataSubs = nil
+          stats += "Update \(Self.NumberOfEntities): \(bigUpdateEndTime - bigUpdateStartTime) sec\n"
+          stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
+          let deleteGroup = DispatchGroup()
+          deleteGroup.enter()
+          let deleteStartTime = CACurrentMediaTime()
+          var deleteEndTime = deleteStartTime
+          self.persistentContainer.performBackgroundTask { (objectContext) in
+            let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+            let allDocs = try! objectContext.fetch(fetchRequest)
+            for i in allDocs {
+              objectContext.delete(i)
+            }
+            try! objectContext.save()
+            deleteEndTime = CACurrentMediaTime()
+            deleteGroup.leave()
+          }
+          deleteGroup.wait()
+          stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
+          print(stats)
+          self.text.text = stats
+        }
+      }
     }
   }
 
@@ -561,7 +644,7 @@ final class BenchmarksViewController: UIViewController {
       newAllDocs.append(docs[0])
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
