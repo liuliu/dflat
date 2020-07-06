@@ -167,7 +167,7 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element> where T.ResultType == Bool
+open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Make query against the Workspace. This is coupled with `fetch(for:)` method and shouldn't be used independently.
@@ -190,7 +190,7 @@ open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderB
 ### `all(limit:orderBy:)`
 
 ```swift
-open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> FetchedResult<Element>
+open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element>
 ```
 
  Return all objects for a class.
@@ -271,7 +271,7 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element> where T.ResultType == Bool
+open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
@@ -295,7 +295,7 @@ open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderB
 ### `all(limit:orderBy:)`
 
 ```swift
-open func all(limit: Limit = .noLimit, orderBy: [OrderBy] = []) -> QueryPublisher<Element>
+open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element>
 ```
 
  Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
