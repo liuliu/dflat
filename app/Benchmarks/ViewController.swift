@@ -346,15 +346,17 @@ final class BenchmarksViewController: UIViewController {
       }
     }
     self.coreDataSubs = newAllDocs
-    persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
     let updateGroup = DispatchGroup()
     updateGroup.enter()
     let updateStartTime = CACurrentMediaTime()
     var updateEndTime = updateStartTime
     var subStartTime = CACurrentMediaTime()
-    persistentContainer.performBackgroundTask { (objectContext) in
+    let backgroundContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+    let viewContext = persistentContainer.viewContext
+    backgroundContext.parent = viewContext
+    backgroundContext.perform {
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-      let allDocs = try! objectContext.fetch(fetchRequest)
+      let allDocs = try! backgroundContext.fetch(fetchRequest)
       for (i, doc) in allDocs.enumerated() {
         doc.setValue("tag\(i + 1)", forKeyPath: "tag")
         doc.setValue(11, forKeyPath: "priority")
@@ -374,10 +376,13 @@ final class BenchmarksViewController: UIViewController {
           break
         }
       }
-      try! objectContext.save()
       subStartTime = CACurrentMediaTime() // This is not exactly accurate.
-      updateEndTime = CACurrentMediaTime()
-      updateGroup.leave()
+      try! backgroundContext.save()
+      viewContext.performAndWait {
+        try! viewContext.save()
+        updateEndTime = CACurrentMediaTime()
+        updateGroup.leave()
+      }
     }
     updateGroup.notify(queue: DispatchQueue.main) { [weak self] in
       guard let self = self else { return }
