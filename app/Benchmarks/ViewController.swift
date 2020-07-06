@@ -57,8 +57,17 @@ final class BenchmarksViewController: UIViewController {
     button.addTarget(self, action: #selector(runDflatSubBenchmark), for: .touchUpInside)
     return button
   }()
+  private lazy var runCoreDataSubButton: UIButton = {
+    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 138, width: 200, height: 36))
+    button.setTitle("Run Core Data Subscription", for: .normal)
+    button.titleLabel?.textColor = .black
+    button.backgroundColor = .lightGray
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runCoreDataSubBenchmark), for: .touchUpInside)
+    return button
+  }()
   private lazy var text: UILabel = {
-    let text = UILabel(frame: CGRect(x: 20, y: 138, width: UIScreen.main.bounds.width - 40, height: 400))
+    let text = UILabel(frame: CGRect(x: 20, y: 180, width: UIScreen.main.bounds.width - 40, height: 320))
     text.textColor = .black
     text.numberOfLines = 0
     text.textAlignment = .center
@@ -71,6 +80,7 @@ final class BenchmarksViewController: UIViewController {
     view.addSubview(runDflatButton)
     view.addSubview(runCoreDataButton)
     view.addSubview(runDflatSubButton)
+    view.addSubview(runCoreDataSubButton)
     view.addSubview(text)
   }
 
@@ -258,6 +268,140 @@ final class BenchmarksViewController: UIViewController {
     stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
     print(stats)
     text.text = stats
+  }
+
+  @objc
+  final class CoreDataSubController: NSObject, NSFetchedResultsControllerDelegate {
+    var callback: (() -> Void)?
+    var fetchedObjects: [NSManagedObject]?
+    var controller: NSFetchedResultsController<NSManagedObject>
+    init(controller: NSFetchedResultsController<NSManagedObject>) {
+      self.controller = controller
+      fetchedObjects = controller.fetchedObjects
+      super.init()
+      controller.delegate = self
+    }
+    @objc
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+      fetchedObjects = self.controller.fetchedObjects
+      callback?()
+    }
+  }
+
+  var coreDataSubs: [CoreDataSubController]? = nil
+
+  @objc
+  func runCoreDataSubBenchmark() {
+    let insertGroup = DispatchGroup()
+    insertGroup.enter()
+    let insertStartTime = CACurrentMediaTime()
+    var insertEndTime = insertStartTime
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let entity = NSEntityDescription.entity(forEntityName: "BenchDoc", in: objectContext)!
+      for i in 0..<Self.NumberOfEntities {
+        let doc = NSManagedObject(entity: entity, insertInto: objectContext)
+        doc.setValue("title\(i)", forKeyPath: "title")
+        doc.setValue("tag\(i)", forKeyPath: "tag")
+        doc.setValue(0, forKeyPath: "pos_x")
+        doc.setValue(0, forKeyPath: "pos_y")
+        doc.setValue(0, forKeyPath: "pos_z")
+        switch i % 3 {
+        case 0:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(Self.NumberOfEntities / 2 - i, forKeyPath: "priority")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 1:
+          doc.setValue(0, forKeyPath: "color")
+          doc.setValue(i - Self.NumberOfEntities / 2, forKeyPath: "priority")
+        case 2:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
+      }
+      try! objectContext.save()
+      insertEndTime = CACurrentMediaTime()
+      insertGroup.leave()
+    }
+    insertGroup.wait()
+    var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
+    let individualFetchStartTime = CACurrentMediaTime()
+    var newAllDocs = [CoreDataSubController]()
+    for i in 0..<Self.NumberOfSubscriptions {
+      let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      individualFetchRequest.predicate = NSPredicate(format: "title = %@", argumentArray: ["title\(i)"])
+      individualFetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+      let controller = NSFetchedResultsController(fetchRequest: individualFetchRequest, managedObjectContext: persistentContainer.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+      try! controller.performFetch()
+      let subController = CoreDataSubController(controller: controller)
+      newAllDocs.append(subController)
+    }
+    let individualFetchEndTime = CACurrentMediaTime()
+    stats += "Fetched \(newAllDocs.count) objects individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    var subEndTime = CACurrentMediaTime()
+    for docSub in newAllDocs {
+      docSub.callback = {
+        subEndTime = CACurrentMediaTime()
+      }
+    }
+    self.coreDataSubs = newAllDocs
+    persistentContainer.viewContext.automaticallyMergesChangesFromParent = true
+    let updateGroup = DispatchGroup()
+    updateGroup.enter()
+    let updateStartTime = CACurrentMediaTime()
+    var updateEndTime = updateStartTime
+    var subStartTime = CACurrentMediaTime()
+    persistentContainer.performBackgroundTask { (objectContext) in
+      let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+      let allDocs = try! objectContext.fetch(fetchRequest)
+      for (i, doc) in allDocs.enumerated() {
+        doc.setValue("tag\(i + 1)", forKeyPath: "tag")
+        doc.setValue(11, forKeyPath: "priority")
+        doc.setValue(1, forKeyPath: "pos_x")
+        doc.setValue(2, forKeyPath: "pos_y")
+        doc.setValue(3, forKeyPath: "pos_z")
+        switch i % 3 {
+        case 1:
+          doc.setValue(1, forKeyPath: "color")
+          doc.setValue(["image\(i)"], forKeyPath: "images")
+        case 2:
+          doc.setValue(0, forKeyPath: "color")
+        case 0:
+          doc.setValue(2, forKeyPath: "color")
+          doc.setValue("text\(i)", forKeyPath: "text")
+        default:
+          break
+        }
+      }
+      try! objectContext.save()
+      subStartTime = CACurrentMediaTime() // This is not exactly accurate.
+      updateEndTime = CACurrentMediaTime()
+      updateGroup.leave()
+    }
+    updateGroup.notify(queue: DispatchQueue.main) { [weak self] in
+      guard let self = self else { return }
+      stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
+      stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
+      let deleteGroup = DispatchGroup()
+      deleteGroup.enter()
+      let deleteStartTime = CACurrentMediaTime()
+      var deleteEndTime = deleteStartTime
+      self.persistentContainer.performBackgroundTask { (objectContext) in
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
+        let allDocs = try! objectContext.fetch(fetchRequest)
+        for i in allDocs {
+          objectContext.delete(i)
+        }
+        try! objectContext.save()
+        deleteEndTime = CACurrentMediaTime()
+        deleteGroup.leave()
+      }
+      deleteGroup.wait()
+      stats += "Delete \(Self.NumberOfEntities): \(deleteEndTime - deleteStartTime) sec\n"
+      print(stats)
+      self.text.text = stats
+    }
   }
 
   func runDflatCRUD() -> String {
@@ -664,7 +808,7 @@ final class BenchmarksViewController: UIViewController {
       fetchedResults.append(fetchedResult)
     }
     let fetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(Self.NumberOfSubscriptions) Individually: \(fetchEndTime - fetchStartTime) sec\n"
+    stats += "Fetched \(fetchedResults.count) Individually: \(fetchEndTime - fetchStartTime) sec\n"
     var subs = [Workspace.Subscription]()
     let subGroup = DispatchGroup()
     for fetchedResult in fetchedResults {
