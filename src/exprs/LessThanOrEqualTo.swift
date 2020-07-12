@@ -37,3 +37,17 @@ public func <= <L, R, Element: Atom>(left: L, right: R) -> LessThanOrEqualToExpr
 public func <= <L, R, Element: Atom>(left: L, right: R) -> LessThanOrEqualToExpr<ValueExpr<L, Element>, R, Element> where L: Comparable, L == R.ResultType, Element == R.Element {
   return LessThanOrEqualToExpr(left: ValueExpr(left), right: right)
 }
+
+// GreaterThanOrEqualTo is just a mirror of LessThanOrEqualTo.
+
+public func >= <L, R, Element: Atom>(left: L, right: R) -> LessThanOrEqualToExpr<R, L, Element> where L.ResultType == R.ResultType, L.ResultType: Comparable, L.Element == R.Element, L.Element == Element {
+  return LessThanOrEqualToExpr(left: right, right: left)
+}
+
+public func >= <L, R, Element: Atom>(left: L, right: R) -> LessThanOrEqualToExpr<ValueExpr<R, Element>, L, Element> where L.ResultType == R, R: Comparable, L.Element == Element {
+  return LessThanOrEqualToExpr(left: ValueExpr(right), right: left)
+}
+
+public func >= <L, R, Element: Atom>(left: L, right: R) -> LessThanOrEqualToExpr<R, ValueExpr<L, Element>, Element> where L: Comparable, L == R.ResultType, Element == R.Element {
+  return LessThanOrEqualToExpr(left: right, right: ValueExpr(left))
+}
