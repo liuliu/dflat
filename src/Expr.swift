@@ -22,7 +22,7 @@ public struct IndexSurvey {
 public protocol Expr {
   associatedtype ResultType
   associatedtype Element: Atom
-  func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool)
+  func evaluate(object: Evaluable<Element>) -> ResultType?
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness
   func existingIndex(_ existingIndexes: inout Set<String>)
 }

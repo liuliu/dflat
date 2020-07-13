@@ -5,8 +5,8 @@ import FlatBuffers
 struct AllExpr<Element: Atom>: Expr, SQLiteExpr {
   typealias ResultType = Bool
   typealias Element = Element
-  func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
-    return (true, false)
+  func evaluate(object: Evaluable<Element>) -> ResultType? {
+    return true
   }
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     return .full
@@ -185,7 +185,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
       let rowid = sqlite3_column_int64(preparedQuery, 0)
       let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let retval = query.evaluate(object: .table(bb))
-      if retval.result && !retval.unknown {
+      if retval == true {
         let element = Element.fromFlatBuffers(bb)
         element._rowid = rowid
         element._changesTimestamp = changesTimestamp

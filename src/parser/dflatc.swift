@@ -304,7 +304,7 @@ func GetEnumDefaultValue(_ en: String) -> String {
     return ".\(enumVal.name.firstLowercased())"
 }
 
-func GetFieldDefaultValue(_ field: Field, required: Bool = false) -> String {
+func GetFieldDefaultValue(_ field: Field) -> String {
   if let val = field.default {
     if field.type.type == .enum {
       let enumDef = enumDefs[field.type.enum!]!
@@ -313,7 +313,7 @@ func GetFieldDefaultValue(_ field: Field, required: Bool = false) -> String {
     }
     return val
   }
-  if (field.isPrimary || required) && field.type.type == .string {
+  if field.isPrimary && field.type.type == .string {
     return "\"\""
   }
   if field.type.type == .string || field.type.type == .struct ||
@@ -667,28 +667,28 @@ func GetKeyName(keyPaths: [KeyPath], field: Field, pkCount: inout Int) -> String
   }
 }
 
-func GetTraverseKeyFlatBuffers(_ keyPaths: [KeyPath], defaultValue: String) -> String {
+func GetTraverseKeyFlatBuffers(_ keyPaths: [KeyPath]) -> String {
   var code = ""
   for (i, keyPath) in keyPaths.enumerated() {
     switch keyPath {
     case .field(let field):
-      code += "    guard let tr\(i + 1) = tr\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+      code += "    guard let tr\(i + 1) = tr\(i).\(field.name) else { return nil }\n"
     case .union(let field, let union):
       let subStructDef = structDefs[union.struct!]!
-      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self) else { return (\(defaultValue), true) }\n"
+      code += "    guard let tr\(i + 1) = tr\(i).\(field.name)(type: \(DflatGenNamespace).\(GetFullyQualifiedName(subStructDef)).self) else { return nil }\n"
     }
   }
   return code
 }
 
-func GetTraverseKeyDflat(_ keyPaths: [KeyPath], defaultValue: String) -> String {
+func GetTraverseKeyDflat(_ keyPaths: [KeyPath]) -> String {
   var code = ""
   for (i, keyPath) in keyPaths.enumerated() {
     switch keyPath {
     case .field(let field):
-      code += "    guard let or\(i + 1) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+      code += "    guard let or\(i + 1) = or\(i).\(field.name) else { return nil }\n"
     case .union(let field, let union):
-      code += "    guard case let .\(union.name.firstLowercased())(or\(i + 1)) = or\(i).\(field.name) else { return (\(defaultValue), true) }\n"
+      code += "    guard case let .\(union.name.firstLowercased())(or\(i + 1)) = or\(i).\(field.name) else { return nil }\n"
     }
   }
   return code
@@ -818,11 +818,10 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
       code += "    case \"\(indexedField.keyName)\":\n"
       code += "      guard let insert = sqlite.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return false }\n"
       code += "      rowid.bindSQLite(insert, parameterId: 1)\n"
-      code += "      let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .table(table))\n"
-      code += "      if retval.unknown {\n"
-      code += "        sqlite3_bind_null(insert, 2)\n"
+      code += "      if let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .table(table)) {\n"
+      code += "        retval.bindSQLite(insert, parameterId: 2)\n"
       code += "      } else {\n"
-      code += "        retval.result.bindSQLite(insert, parameterId: 2)\n"
+      code += "        sqlite3_bind_null(insert, 2)\n"
       code += "      }\n"
       code += "      guard SQLITE_DONE == sqlite3_step(insert) else { return false }\n"
     }
@@ -919,11 +918,10 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
     code += "        guard let i\(i) = toolbox.connection.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
     code += "        _rowid.bindSQLite(i\(i), parameterId: 1)\n"
-    code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
-    code += "        if r\(i).unknown {\n"
-    code += "          sqlite3_bind_null(i\(i), 2)\n"
+    code += "        if let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom)) {\n"
+    code += "          r\(i).bindSQLite(i\(i), parameterId: 2)\n"
     code += "        } else {\n"
-    code += "          r\(i).result.bindSQLite(i\(i), parameterId: 2)\n"
+    code += "          sqlite3_bind_null(i\(i), 2)\n"
     code += "        }\n"
     code += "        guard SQLITE_DONE == sqlite3_step(i\(i)) else { return nil }\n"
     code += "      }\n"
@@ -958,14 +956,13 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
     code += "        let or\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(o))\n"
     code += "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
-    code += "        if or\(i).unknown != r\(i).unknown || or\(i).result != r\(i).result {\n"
+    code += "        if or\(i) != r\(i) {\n"
     code += "          guard let u\(i) = toolbox.connection.prepareStaticStatement(\"REPLACE INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
     code += "          _rowid.bindSQLite(u\(i), parameterId: 1)\n"
-    code += "          let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
-    code += "          if r\(i).unknown {\n"
-    code += "            sqlite3_bind_null(u\(i), 2)\n"
+    code += "          if let ur\(i) = r\(i) {\n"
+    code += "            ur\(i).bindSQLite(u\(i), parameterId: 2)\n"
     code += "          } else {\n"
-    code += "            r\(i).result.bindSQLite(u\(i), parameterId: 2)\n"
+    code += "            sqlite3_bind_null(u\(i), 2)\n"
     code += "          }\n"
     code += "          guard SQLITE_DONE == sqlite3_step(u\(i)) else { return nil }\n"
     code += "        }\n"
@@ -1049,19 +1046,19 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "  public static func `as`<T: \(structProtocolName)__\(expandedName)>(_ ofType: T.Type) -> T.zzz_AsType__\(structDef.name)__\(expandedName).Type {\n"
     code += "    return ofType.zzz_AsType__\(structDef.name)__\(expandedName).self\n"
     code += "  }\n"
-    code += "\n  private static func _tr__\(expandedName)__type(_ table: ByteBuffer) -> (result: Int32, unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)__type(_ table: ByteBuffer) -> Int32? {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
-    code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "-1")
-    code += "    return (Int32(tr\(keyPaths.count).\(field.name)Type.rawValue), false)\n"
+    code += GetTraverseKeyFlatBuffers(keyPaths)
+    code += "    return Int32(tr\(keyPaths.count).\(field.name)Type.rawValue)\n"
     code += "  }\n"
-    code += "\n  private static func _or__\(expandedName)__type(_ or0: \(GetFullyQualifiedName(structDef))) -> (result: Int32, unknown: Bool) {\n"
-    code += GetTraverseKeyDflat(keyPaths, defaultValue: "-1")
-    code += "    guard let o = or\(keyPaths.count).\(field.name) else { return (-1, true) }\n"
+    code += "\n  private static func _or__\(expandedName)__type(_ or0: \(GetFullyQualifiedName(structDef))) -> Int32? {\n"
+    code += GetTraverseKeyDflat(keyPaths)
+    code += "    guard let o = or\(keyPaths.count).\(field.name) else { return nil }\n"
     code += "    switch o {\n"
     for enumVal in unionDef.fields {
       guard enumVal.name != "NONE" else { continue }
       code += "    case .\(enumVal.name.firstLowercased()):\n"
-      code += "      return (\(enumVal.value), false)\n"
+      code += "      return \(enumVal.value)\n"
     }
     code += "    }\n"
     code += "  }\n"
@@ -1100,23 +1097,23 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
   case .vector: // We cannot query vector, skip.
     break
   case .string:
-    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: String, unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> String? {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
-    code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: "\"\"")
+    code += GetTraverseKeyFlatBuffers(keyPaths)
     if !field.isPrimary {
-      code += "    guard let s = tr\(keyPaths.count).\(field.name) else { return (\"\", true) }\n"
-      code += "    return (s, false)\n"
+      code += "    guard let s = tr\(keyPaths.count).\(field.name) else { return nil }\n"
+      code += "    return s\n"
     } else {
-      code += "    return (tr\(keyPaths.count).\(field.name)!, false)\n"
+      code += "    return tr\(keyPaths.count).\(field.name)!\n"
     }
     code += "  }\n"
-    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> (result: String, unknown: Bool) {\n"
-    code += GetTraverseKeyDflat(keyPaths, defaultValue: "\"\"")
+    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> String? {\n"
+    code += GetTraverseKeyDflat(keyPaths)
     if !field.isPrimary {
-      code += "    guard let s = or\(keyPaths.count).\(field.name) else { return (\"\", true) }\n"
-      code += "    return (s, false)\n"
+      code += "    guard let s = or\(keyPaths.count).\(field.name) else { return nil }\n"
+      code += "    return s\n"
     } else {
-      code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+      code += "    return or\(keyPaths.count).\(field.name)\n"
     }
     code += "  }\n"
     if keyPaths.count > 0 {
@@ -1127,14 +1124,14 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "static let \(field.name): FieldExpr<String, \(GetFullyQualifiedName(structDef))> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
   case .enum:
     let enumDef = enumDefs[field.type.enum!]!
-    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> \(GetFullyQualifiedName(enumDef))? {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
-    code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
-    code += "    return (\(GetFullyQualifiedName(enumDef))(rawValue: tr\(keyPaths.count).\(field.name).rawValue)!, false)\n"
+    code += GetTraverseKeyFlatBuffers(keyPaths)
+    code += "    return \(GetFullyQualifiedName(enumDef))(rawValue: tr\(keyPaths.count).\(field.name).rawValue)!\n"
     code += "  }\n"
-    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> (result: \(GetFullyQualifiedName(enumDef)), unknown: Bool) {\n"
-    code += GetTraverseKeyDflat(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
-    code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> \(GetFullyQualifiedName(enumDef))? {\n"
+    code += GetTraverseKeyDflat(keyPaths)
+    code += "    return or\(keyPaths.count).\(field.name)\n"
     code += "  }\n"
     if keyPaths.count > 0 {
       code += "  public "
@@ -1144,14 +1141,14 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
     code += "static let \(field.name): FieldExpr<\(GetFullyQualifiedName(enumDef)), \(GetFullyQualifiedName(structDef))> = FieldExpr(name: \"\(key)\", primaryKey: \(field.isPrimary ? "true" : "false"), hasIndex: \(field.hasIndex ? "true" : "false"), tableReader: _tr__\(expandedName), objectReader: _or__\(expandedName))\n"
   default: // These are the simple types (scalar) or enum
     let swiftType = SwiftType[field.type.type.rawValue]!
-    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> (result: \(swiftType), unknown: Bool) {\n"
+    code += "\n  private static func _tr__\(expandedName)(_ table: ByteBuffer) -> \(swiftType)? {\n"
     code += "    let tr0 = \(DflatGenNamespace).\(GetFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: table)\n"
-    code += GetTraverseKeyFlatBuffers(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
-    code += "    return (tr\(keyPaths.count).\(field.name), false)\n"
+    code += GetTraverseKeyFlatBuffers(keyPaths)
+    code += "    return tr\(keyPaths.count).\(field.name)\n"
     code += "  }\n"
-    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> (result: \(swiftType), unknown: Bool) {\n"
-    code += GetTraverseKeyDflat(keyPaths, defaultValue: GetFieldDefaultValue(field, required: true))
-    code += "    return (or\(keyPaths.count).\(field.name), false)\n"
+    code += "  private static func _or__\(expandedName)(_ or0: \(GetFullyQualifiedName(structDef))) -> \(swiftType)? {\n"
+    code += GetTraverseKeyDflat(keyPaths)
+    code += "    return or\(keyPaths.count).\(field.name)\n"
     code += "  }\n"
     if keyPaths.count > 0 {
       code += "  public "

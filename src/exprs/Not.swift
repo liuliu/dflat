@@ -4,9 +4,9 @@ public struct NotExpr<T: Expr, Element>: Expr where T.ResultType == Bool, T.Elem
   public typealias ResultType = Bool
   public typealias Element = Element
   public let unary: T
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
-    let val = unary.evaluate(object: object)
-    return (!val.result, val.unknown)
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+    guard let val = unary.evaluate(object: object) else { return nil }
+    return !val
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     unary.canUsePartialIndex(indexSurvey) == .full ? .full : .none

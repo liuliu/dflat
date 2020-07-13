@@ -20,15 +20,15 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
   override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
     let lval = field.evaluate(object: lhs)
     let rval = field.evaluate(object: rhs)
-    guard !lval.unknown || !rval.unknown else { return .same }
-    if lval.unknown && !rval.unknown {
+    if lval == nil && rval != nil {
       return .ascending
-    } else if !lval.unknown && rval.unknown {
+    } else if lval != nil && rval == nil {
       return .descending
     }
-    if lval.result < rval.result {
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else { return .same }
+    if lvalUnwrapped < rvalUnwrapped {
       return .ascending
-    } else if lval.result == rval.result {
+    } else if lvalUnwrapped == rvalUnwrapped {
       return .same
     } else {
       return .descending
@@ -39,8 +39,8 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
 public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Element: Atom {
   public typealias ResultType = T
   public typealias Element = Element
-  public typealias TableReader = (_ table: ByteBuffer) -> (result: T, unknown: Bool)
-  public typealias ObjectReader = (_ object: Element) -> (result: T, unknown: Bool)
+  public typealias TableReader = (_ table: ByteBuffer) -> T?
+  public typealias ObjectReader = (_ object: Element) -> T?
   public let name: String
   let tableReader: TableReader
   let objectReader: ObjectReader
@@ -53,7 +53,7 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
     self.tableReader = tableReader
     self.objectReader = objectReader
   }
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
     switch object {
     case .table(let table):
       return tableReader(table)

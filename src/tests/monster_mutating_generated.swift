@@ -145,31 +145,28 @@ extension MyGame.Sample.Monster: SQLiteDflat.SQLiteAtom {
     case "f6":
       guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)") else { return false }
       rowid.bindSQLite(insert, parameterId: 1)
-      let retval = MyGame.Sample.Monster.mana.evaluate(object: .table(table))
-      if retval.unknown {
-        sqlite3_bind_null(insert, 2)
+      if let retval = MyGame.Sample.Monster.mana.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
       } else {
-        retval.result.bindSQLite(insert, parameterId: 2)
+        sqlite3_bind_null(insert, 2)
       }
       guard SQLITE_DONE == sqlite3_step(insert) else { return false }
     case "f26__type":
       guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return false }
       rowid.bindSQLite(insert, parameterId: 1)
-      let retval = MyGame.Sample.Monster.equipped._type.evaluate(object: .table(table))
-      if retval.unknown {
-        sqlite3_bind_null(insert, 2)
+      if let retval = MyGame.Sample.Monster.equipped._type.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
       } else {
-        retval.result.bindSQLite(insert, parameterId: 2)
+        sqlite3_bind_null(insert, 2)
       }
       guard SQLITE_DONE == sqlite3_step(insert) else { return false }
     case "f26__u2__f4":
       guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return false }
       rowid.bindSQLite(insert, parameterId: 1)
-      let retval = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .table(table))
-      if retval.unknown {
-        sqlite3_bind_null(insert, 2)
+      if let retval = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
       } else {
-        retval.result.bindSQLite(insert, parameterId: 2)
+        sqlite3_bind_null(insert, 2)
       }
       guard SQLITE_DONE == sqlite3_step(insert) else { return false }
     default:
@@ -281,33 +278,30 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       if indexSurvey.full.contains("f6") {
         guard let i0 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)") else { return nil }
         _rowid.bindSQLite(i0, parameterId: 1)
-        let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
-        if r0.unknown {
-          sqlite3_bind_null(i0, 2)
+        if let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom)) {
+          r0.bindSQLite(i0, parameterId: 2)
         } else {
-          r0.result.bindSQLite(i0, parameterId: 2)
+          sqlite3_bind_null(i0, 2)
         }
         guard SQLITE_DONE == sqlite3_step(i0) else { return nil }
       }
       if indexSurvey.full.contains("f26__type") {
         guard let i1 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return nil }
         _rowid.bindSQLite(i1, parameterId: 1)
-        let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
-        if r1.unknown {
-          sqlite3_bind_null(i1, 2)
+        if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom)) {
+          r1.bindSQLite(i1, parameterId: 2)
         } else {
-          r1.result.bindSQLite(i1, parameterId: 2)
+          sqlite3_bind_null(i1, 2)
         }
         guard SQLITE_DONE == sqlite3_step(i1) else { return nil }
       }
       if indexSurvey.full.contains("f26__u2__f4") {
         guard let i2 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return nil }
         _rowid.bindSQLite(i2, parameterId: 1)
-        let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
-        if r2.unknown {
-          sqlite3_bind_null(i2, 2)
+        if let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom)) {
+          r2.bindSQLite(i2, parameterId: 2)
         } else {
-          r2.result.bindSQLite(i2, parameterId: 2)
+          sqlite3_bind_null(i2, 2)
         }
         guard SQLITE_DONE == sqlite3_step(i2) else { return nil }
       }
@@ -337,14 +331,13 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       if indexSurvey.full.contains("f6") {
         let or0 = MyGame.Sample.Monster.mana.evaluate(object: .object(o))
         let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
-        if or0.unknown != r0.unknown || or0.result != r0.result {
+        if or0 != r0 {
           guard let u0 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)") else { return nil }
           _rowid.bindSQLite(u0, parameterId: 1)
-          let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
-          if r0.unknown {
-            sqlite3_bind_null(u0, 2)
+          if let ur0 = r0 {
+            ur0.bindSQLite(u0, parameterId: 2)
           } else {
-            r0.result.bindSQLite(u0, parameterId: 2)
+            sqlite3_bind_null(u0, 2)
           }
           guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
         }
@@ -352,14 +345,13 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       if indexSurvey.full.contains("f26__type") {
         let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(o))
         let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
-        if or1.unknown != r1.unknown || or1.result != r1.result {
+        if or1 != r1 {
           guard let u1 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return nil }
           _rowid.bindSQLite(u1, parameterId: 1)
-          let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
-          if r1.unknown {
-            sqlite3_bind_null(u1, 2)
+          if let ur1 = r1 {
+            ur1.bindSQLite(u1, parameterId: 2)
           } else {
-            r1.result.bindSQLite(u1, parameterId: 2)
+            sqlite3_bind_null(u1, 2)
           }
           guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
         }
@@ -367,14 +359,13 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
       if indexSurvey.full.contains("f26__u2__f4") {
         let or2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(o))
         let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
-        if or2.unknown != r2.unknown || or2.result != r2.result {
+        if or2 != r2 {
           guard let u2 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return nil }
           _rowid.bindSQLite(u2, parameterId: 1)
-          let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
-          if r2.unknown {
-            sqlite3_bind_null(u2, 2)
+          if let ur2 = r2 {
+            ur2.bindSQLite(u2, parameterId: 2)
           } else {
-            r2.result.bindSQLite(u2, parameterId: 2)
+            sqlite3_bind_null(u2, 2)
           }
           guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
         }

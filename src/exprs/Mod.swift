@@ -5,10 +5,9 @@ public struct ModExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.R
   public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
-    let lval = left.evaluate(object: object)
-    let rval = right.evaluate(object: object)
-    return (lval.result % rval.result, lval.unknown || rval.unknown)
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+    guard let lval = left.evaluate(object: object), let rval = right.evaluate(object: object) else { return nil }
+    return lval % rval
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     if left.canUsePartialIndex(indexSurvey) == .full && right.canUsePartialIndex(indexSurvey) == .full {

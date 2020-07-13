@@ -84,14 +84,14 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
         case .inserted(let object):
           let element = object as! Element
           let retval = fetchedResult.query.evaluate(object: .object(element))
-          if retval.result && !retval.unknown {
+          if retval == true {
             elementsToBeInserted.append(element)
           }
           break
         case .updated(let object):
           let element = object as! Element
           let retval = query.evaluate(object: .object(element))
-          if retval.result && !retval.unknown {
+          if retval == true {
             // It belongs to the output.
             if objects.contains(rowid) {
               // This object is in the list, now just need to check whether we need to update the order.

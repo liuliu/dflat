@@ -5,19 +5,21 @@ public struct AndExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.R
   public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
     let lval = left.evaluate(object: object)
     // Short-cut.
-    if !lval.result && !lval.unknown {
-      return (false, false)
+    if lval == false {
+      return false
     }
     let rval = right.evaluate(object: object)
     // If any of these result is false and !unknown, the whole expression evaluated to false and !unknown
-    if !rval.result && !rval.unknown {
-      return (false, false)
-    } else {
-      return (true, lval.unknown || rval.unknown)
+    if rval == false {
+      return false
     }
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else {
+      return nil
+    }
+    return lvalUnwrapped && rvalUnwrapped
   }
   /*
    * All expressions except And would return either .full or .none for index usefulness. Thus, if a field

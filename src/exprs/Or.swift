@@ -5,18 +5,20 @@ public struct OrExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.Re
   public typealias Element = Element
   public let left: L
   public let right: R
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
     let lval = left.evaluate(object: object)
-    if lval.result && !lval.unknown {
-      return (true, false)
+    if lval == true {
+      return true
     }
     let rval = right.evaluate(object: object)
     // If any of these result is true and !unknown, the whole expression evaluated to true and !unknown
-    if rval.result && !rval.unknown {
-      return (true, false)
-    } else {
-      return (false, lval.unknown || rval.unknown)
+    if rval == true {
+      return true
     }
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else {
+      return nil
+    }
+    return lvalUnwrapped || rvalUnwrapped
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     if left.canUsePartialIndex(indexSurvey) == .full && right.canUsePartialIndex(indexSurvey) == .full {

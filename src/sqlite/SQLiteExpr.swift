@@ -7,7 +7,7 @@ public protocol SQLiteExpr {
 }
 
 private class _AnyExprBase<ResultType, Element: Atom>: Expr {
-  func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  func evaluate(object: Evaluable<Element>) -> ResultType? {
     fatalError()
   }
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -23,7 +23,7 @@ private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element> wh
   init(_ base: T) {
     self.base = base
   }
-  override func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  override func evaluate(object: Evaluable<Element>) -> ResultType? {
     base.evaluate(object: object)
   }
   override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -47,7 +47,7 @@ public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
     self.sqlBase = sqlBase
     self.base = _AnyExpr(base)
   }
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
     base.evaluate(object: object)
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

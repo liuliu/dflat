@@ -5,10 +5,9 @@ public struct NotInExpr<T: Expr, Element>: Expr where T.ResultType: Hashable, T.
   public typealias Element = Element
   public let unary: T
   public let set: Set<T.ResultType>
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
-    let val = unary.evaluate(object: object)
-    guard (!val.unknown) else { return (false, true) }
-    return (!set.contains(val.result), false)
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+    guard let val = unary.evaluate(object: object) else { return nil }
+    return !set.contains(val)
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     unary.canUsePartialIndex(indexSurvey) == .full ? .full : .none

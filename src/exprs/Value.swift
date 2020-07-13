@@ -28,8 +28,8 @@ public struct ValueExpr<T, Element: Atom>: Expr where T: DflatFriendlyValue {
   internal init(_ value: T) {
     self.value = value
   }
-  public func evaluate(object: Evaluable<Element>) -> (result: ResultType, unknown: Bool) {
-    (value, false)
+  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+    value
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     .full
