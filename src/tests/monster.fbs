@@ -1,12 +1,8 @@
 // Example IDL file for our monster's schema.
 
-namespace MyGame.Sample;
+include "orb_weapon.fbs";
 
-enum Color:byte {
-  Red = 0,
-  Green,
-  Blue = 2
-}
+namespace MyGame.Sample;
 
 union Equipment {
   Weapon,
@@ -32,16 +28,6 @@ table Monster {
   equipped:Equipment (indexed);
   colors:[Color];
   path:[Vec3];
-}
-
-table Weapon {
-  name:string;
-  damage:short;
-}
-
-table Orb {
-  name:string (unique);
-  color:Color;
 }
 
 root_type Monster;

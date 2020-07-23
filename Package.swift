@@ -15,25 +15,6 @@ let package = Package(
     .package(name: "SwiftAtomics", url: "https://github.com/glessard/swift-atomics.git", from: "6.0.0"),
   ],
   targets: [
-  /*
-    .target(
-      name: "FlatBuffers",
-      path: "src/FlatBuffers",
-      sources: [
-        "ByteBuffer.swift",
-        "FlatBufferBuilder.swift",
-        "FlatBuffersUtils.swift",
-        "Message.swift",
-        "Offset.swift",
-        "Table.swift",
-        "Constants.swift",
-        "FlatBufferObject.swift",
-        "Int+extension.swift",
-        "Mutable.swift",
-        "Struct.swift"
-      ]
-    ),
-    */
     .target(
       name: "Dflat",
       dependencies: ["FlatBuffers", "SwiftAtomics"],
@@ -121,6 +102,9 @@ let package = Package(
         "monster_data_model_generated.swift",
         "monster_mutating_generated.swift",
         "monster_query_generated.swift",
+        "orb_weapon_generated.swift",
+        "orb_weapon_data_model_generated.swift",
+        "orb_weapon_mutating_generated.swift",
         "monster_v2_generated.swift",
         "monster_v2_data_model_generated.swift",
         "monster_v2_mutating_generated.swift",

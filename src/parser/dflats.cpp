@@ -111,6 +111,8 @@ const std::string GenAttributes(const flatbuffers::SymbolTable<flatbuffers::Valu
 const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 	std::string json = std::string("{\"is_union\": ") + (enum_def.is_union ? "true" : "false") + ", ";
 	json += "\"name\": \"" + enum_def.name + "\", ";
+	json += "\"generated\": ";
+	json += (enum_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*enum_def.defined_namespace) + "], ";
 	if (!enum_def.is_union) {
 		json += std::string("\"underlying_type\": \"") + idl_types[enum_def.underlying_type.base_type] + "\", ";
@@ -136,6 +138,8 @@ const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 const std::string GenStruct(const flatbuffers::StructDef &struct_def) {
 	std::string json = std::string("{\"fixed\": ") + (struct_def.fixed ? "true" : "false") + ", ";
 	json += "\"name\": \"" + struct_def.name + "\", ";
+	json += "\"generated\": ";
+	json += (struct_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*struct_def.defined_namespace) + "], ";
 	json += "\"fields\": [";
 	for (auto it = struct_def.fields.vec.begin(); it != struct_def.fields.vec.end(); ++it) {
@@ -158,9 +162,7 @@ static void GenerateJSONAdapter(const flatbuffers::Parser &parser, const std::st
 	std::string json = "{\"enums\": [";
 	for (auto it = parser.enums_.vec.begin(); it != parser.enums_.vec.end(); ++it) {
 		const auto &enum_def = **it;
-		if (!enum_def.generated) {
-			json += GenUnion(enum_def) + ", ";
-		}
+		json += GenUnion(enum_def) + ", ";
 	}
 	if (parser.enums_.vec.size() > 0) {
 		json = json.substr(0, json.size() - 2) + "], \"structs\": [";
@@ -169,36 +171,40 @@ static void GenerateJSONAdapter(const flatbuffers::Parser &parser, const std::st
 	}
 	for (auto it = parser.structs_.vec.begin(); it != parser.structs_.vec.end(); ++it) {
 		const auto &struct_def = **it;
-		if (struct_def.fixed && !struct_def.generated) {
+		if (struct_def.fixed) {
 			json += GenStruct(struct_def) + ", ";
 		}
 	}
 	for (auto it = parser.structs_.vec.begin(); it != parser.structs_.vec.end(); ++it) {
 		const auto &struct_def = **it;
-		if (!struct_def.fixed && !struct_def.generated) {
+		if (!struct_def.fixed) {
 			json += GenStruct(struct_def) + ", ";
 		}
 	}
-	if (parser.structs_.vec.size() > 0) {
-		json = json.substr(0, json.size() - 2) + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+	if (parser.root_struct_def_) {
+		if (parser.structs_.vec.size() > 0) {
+			json = json.substr(0, json.size() - 2) + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+		} else {
+			json = json + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+		}
 	} else {
-		json = json + "], \"root\": \"" + parser.root_struct_def_->name + "\"}";
+		json = json + "]}";
 	}
 	auto filename = path + "/" + filebase + "_generated.json";
 	flatbuffers::SaveFile(filename.c_str(), json, false);
 }
 
-static void InsertNamespace(const flatbuffers::Parser &parser, const std::string &ns) {
+static void InsertNamespace(flatbuffers::Parser &parser, const std::string &given) {
 	for (auto it = parser.enums_.vec.begin(); it != parser.enums_.vec.end(); ++it) {
-		const auto &enum_def = **it;
-		if (!enum_def.generated && (enum_def.defined_namespace->components.size() < 1 || enum_def.defined_namespace->components[0] != ns)) {
-			enum_def.defined_namespace->components.insert(enum_def.defined_namespace->components.begin(), ns);
+		auto &enum_def = **it;
+		if (enum_def.defined_namespace->components.size() < 1 || enum_def.defined_namespace->components[0].rfind(given, 0) != 0) {
+			enum_def.defined_namespace->components.insert(enum_def.defined_namespace->components.begin(), given);
 		}
 	}
 	for (auto it = parser.structs_.vec.begin(); it != parser.structs_.vec.end(); ++it) {
-		const auto &struct_def = **it;
-		if (!struct_def.generated && (struct_def.defined_namespace->components.size() < 1 || struct_def.defined_namespace->components[0] != ns)) {
-			struct_def.defined_namespace->components.insert(struct_def.defined_namespace->components.begin(), ns);
+		auto &struct_def = **it;
+		if (struct_def.defined_namespace->components.size() < 1 || struct_def.defined_namespace->components[0].rfind(given, 0) != 0) {
+			struct_def.defined_namespace->components.insert(struct_def.defined_namespace->components.begin(), given);
 		}
 	}
 }
@@ -260,7 +266,7 @@ int main(int argc, const char **argv) {
     parser->known_attributes_["unique"] = true;
     ParseFile(*parser.get(), filename, contents, include_directories);
 
-    if (parser->root_struct_def_->fixed) {
+    if (parser->root_struct_def_ && parser->root_struct_def_->fixed) {
       Error("root type must be a table");
     }
 
@@ -269,14 +275,8 @@ int main(int argc, const char **argv) {
 
     flatbuffers::EnsureDirExists(output_path);
     GenerateJSONAdapter(*parser.get(), output_path, filebase);
-    std::string prefix = "zzz_DflatGen";
-    std::vector<std::string> ns = parser->root_struct_def_->defined_namespace->components;
-    for (auto &name: ns) {
-        prefix += "__" + name;
-    }
-    prefix += "__" + parser->root_struct_def_->name;
     // Attach additional namespace to it.
-    InsertNamespace(*parser.get(), prefix);
+    InsertNamespace(*parser.get(), "zzz_DflatGen");
     flatbuffers::GenerateSwift(*parser.get(), output_path, filebase);
 
     // We do not want to generate code for the definitions in this file

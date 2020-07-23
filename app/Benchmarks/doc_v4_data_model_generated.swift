@@ -19,13 +19,13 @@ public final class BenchDocV4: Dflat.Atom, Equatable {
     self.priority = priority
     self.text = text
   }
-  public init(_ obj: zzz_DflatGen__BenchDocV4.BenchDocV4) {
+  public init(_ obj: zzz_DflatGen_BenchDocV4) {
     self.title = obj.title!
     self.tag = obj.tag
     self.priority = obj.priority
     self.text = obj.text
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    Self(zzz_DflatGen__BenchDocV4.BenchDocV4.getRootAsBenchDocV4(bb: bb))
+    Self(zzz_DflatGen_BenchDocV4.getRootAsBenchDocV4(bb: bb))
   }
 }

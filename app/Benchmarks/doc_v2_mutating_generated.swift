@@ -15,11 +15,11 @@ extension ColorV2: SQLiteValue {
 
 extension BenchDocV2 {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __color = zzz_DflatGen__BenchDocV2.ColorV2(rawValue: self.color.rawValue) ?? .red
+    let __color = zzz_DflatGen_ColorV2(rawValue: self.color.rawValue) ?? .red
     let __title = flatBufferBuilder.create(string: self.title)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen__BenchDocV2.BenchDocV2.createBenchDocV2(&flatBufferBuilder, color: __color, offsetOfTitle: __title, offsetOfTag: __tag, priority: self.priority, offsetOfText: __text)
+    return zzz_DflatGen_BenchDocV2.createBenchDocV2(&flatBufferBuilder, color: __color, offsetOfTitle: __title, offsetOfTag: __tag, priority: self.priority, offsetOfText: __text)
   }
 }
 

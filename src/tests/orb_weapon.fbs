@@ -1,0 +1,18 @@
+
+namespace MyGame.Sample;
+
+enum Color:byte {
+  Red = 0,
+  Green,
+  Blue = 2
+}
+
+table Weapon {
+  name:string;
+  damage:short;
+}
+
+table Orb {
+  name:string (unique);
+  color:Color;
+}

@@ -31,7 +31,7 @@ public final class BenchDocV2: Dflat.Atom, Equatable {
     self.priority = priority
     self.text = text
   }
-  public init(_ obj: zzz_DflatGen__BenchDocV2.BenchDocV2) {
+  public init(_ obj: zzz_DflatGen_BenchDocV2) {
     self.color = ColorV2(rawValue: obj.color.rawValue) ?? .red
     self.title = obj.title!
     self.tag = obj.tag
@@ -39,6 +39,6 @@ public final class BenchDocV2: Dflat.Atom, Equatable {
     self.text = obj.text
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    Self(zzz_DflatGen__BenchDocV2.BenchDocV2.getRootAsBenchDocV2(bb: bb))
+    Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
   }
 }

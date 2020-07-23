@@ -5,12 +5,6 @@ import FlatBuffers
 
 // MARK - SQLiteValue for Enumerations
 
-extension MyGame.Sample.Color: SQLiteValue {
-  public func bindSQLite(_ query: OpaquePointer, parameterId: Int32) {
-    self.rawValue.bindSQLite(query, parameterId: parameterId)
-  }
-}
-
 // MARK - Serializer
 
 extension MyGame.Sample.Equipment {
@@ -22,12 +16,12 @@ extension MyGame.Sample.Equipment {
       return o.to(flatBufferBuilder: &flatBufferBuilder)
     }
   }
-  var _type: zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Equipment {
+  var _type: zzz_DflatGen_MyGame_Sample_Equipment {
     switch self {
     case .weapon(_):
-      return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Equipment.weapon
+      return zzz_DflatGen_MyGame_Sample_Equipment.weapon
     case .orb(_):
-      return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Equipment.orb
+      return zzz_DflatGen_MyGame_Sample_Equipment.orb
     }
   }
 }
@@ -36,14 +30,14 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
-  var _type: zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Equipment {
+  var _type: zzz_DflatGen_MyGame_Sample_Equipment {
     self.map { $0._type } ?? .none_
   }
 }
 
 extension MyGame.Sample.Vec3 {
   func toRawMemory() -> UnsafeMutableRawPointer {
-    return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.createVec3(x: self.x, y: self.y, z: self.z)
+    return zzz_DflatGen_MyGame_Sample_Vec3.createVec3(x: self.x, y: self.y, z: self.z)
   }
 }
 
@@ -53,40 +47,13 @@ extension Optional where Wrapped == MyGame.Sample.Vec3 {
   }
 }
 
-extension MyGame.Sample.Weapon {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Weapon.createWeapon(&flatBufferBuilder, offsetOfName: __name, damage: self.damage)
-  }
-}
-
-extension Optional where Wrapped == MyGame.Sample.Weapon {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
-  }
-}
-
-extension MyGame.Sample.Orb {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    let __color = zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Color(rawValue: self.color.rawValue) ?? .red
-    return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Orb.createOrb(&flatBufferBuilder, offsetOfName: __name, color: __color)
-  }
-}
-
-extension Optional where Wrapped == MyGame.Sample.Orb {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
-  }
-}
-
 extension MyGame.Sample.Monster {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __pos = self.pos.toRawMemory()
     let __name = flatBufferBuilder.create(string: self.name)
-    let __color = zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Color(rawValue: self.color.rawValue) ?? .blue
+    let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .blue
     let __inventory = flatBufferBuilder.createVector(self.inventory)
-    var __bagType = [zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Equipment]()
+    var __bagType = [zzz_DflatGen_MyGame_Sample_Equipment]()
     for i in self.bag {
       __bagType.append(i._type)
     }
@@ -103,17 +70,17 @@ extension MyGame.Sample.Monster {
     let __vector_weapons = flatBufferBuilder.createVector(ofOffsets: __weapons)
     let __equippedType = self.equipped._type
     let __equipped = self.equipped.to(flatBufferBuilder: &flatBufferBuilder)
-    var __colors = [zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Color]()
+    var __colors = [zzz_DflatGen_MyGame_Sample_Color]()
     for i in self.colors {
-      __colors.append(zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Color(rawValue: i.rawValue) ?? .red)
+      __colors.append(zzz_DflatGen_MyGame_Sample_Color(rawValue: i.rawValue) ?? .red)
     }
     let __vector_colors = flatBufferBuilder.createVector(__colors)
     var __path = [UnsafeMutableRawPointer]()
     for i in self.path {
       __path.append(i.toRawMemory())
     }
-    let __vector_path = flatBufferBuilder.createVector(structs: __path, type: zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Vec3.self)
-    return zzz_DflatGen__MyGame__Sample__Monster.MyGame.Sample.Monster.createMonster(&flatBufferBuilder, structOfPos: __pos, mana: self.mana, hp: self.hp, offsetOfName: __name, color: __color, vectorOfInventory: __inventory, vectorOfBagType: __vector_bagType, vectorOfBag: __vector_bag, vectorOfWeapons: __vector_weapons, equippedType: __equippedType, offsetOfEquipped: __equipped, vectorOfColors: __vector_colors, vectorOfPath: __vector_path)
+    let __vector_path = flatBufferBuilder.createVector(structs: __path, type: zzz_DflatGen_MyGame_Sample_Vec3.self)
+    return zzz_DflatGen_MyGame_Sample_Monster.createMonster(&flatBufferBuilder, structOfPos: __pos, mana: self.mana, hp: self.hp, offsetOfName: __name, color: __color, vectorOfInventory: __inventory, vectorOfBagType: __vector_bagType, vectorOfBag: __vector_bag, vectorOfWeapons: __vector_weapons, equippedType: __equippedType, offsetOfEquipped: __equipped, vectorOfColors: __vector_colors, vectorOfPath: __vector_path)
   }
 }
 

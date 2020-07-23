@@ -6,7 +6,7 @@ extension BenchDoc {
   struct pos {
 
   private static func _tr__f4__f0(_ table: ByteBuffer) -> Float32? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     guard let tr1 = tr0.pos else { return nil }
     return tr1.x
   }
@@ -17,7 +17,7 @@ extension BenchDoc {
   public static let x: FieldExpr<Float32, BenchDoc> = FieldExpr(name: "f4__f0", primaryKey: false, hasIndex: false, tableReader: _tr__f4__f0, objectReader: _or__f4__f0)
 
   private static func _tr__f4__f4(_ table: ByteBuffer) -> Float32? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     guard let tr1 = tr0.pos else { return nil }
     return tr1.y
   }
@@ -28,7 +28,7 @@ extension BenchDoc {
   public static let y: FieldExpr<Float32, BenchDoc> = FieldExpr(name: "f4__f4", primaryKey: false, hasIndex: false, tableReader: _tr__f4__f4, objectReader: _or__f4__f4)
 
   private static func _tr__f4__f8(_ table: ByteBuffer) -> Float32? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     guard let tr1 = tr0.pos else { return nil }
     return tr1.z
   }
@@ -41,7 +41,7 @@ extension BenchDoc {
   }
 
   private static func _tr__f6(_ table: ByteBuffer) -> Color? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     return Color(rawValue: tr0.color.rawValue)!
   }
   private static func _or__f6(_ or0: BenchDoc) -> Color? {
@@ -50,7 +50,7 @@ extension BenchDoc {
   static let color: FieldExpr<Color, BenchDoc> = FieldExpr(name: "f6", primaryKey: false, hasIndex: false, tableReader: _tr__f6, objectReader: _or__f6)
 
   private static func _tr__f8(_ table: ByteBuffer) -> String? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     return tr0.title!
   }
   private static func _or__f8(_ or0: BenchDoc) -> String? {
@@ -68,7 +68,7 @@ extension BenchDoc {
   }
 
   private static func _tr__f12__type(_ table: ByteBuffer) -> Int32? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     return Int32(tr0.contentType.rawValue)
   }
 
@@ -86,7 +86,7 @@ extension BenchDoc {
   }
 
   private static func _tr__f14(_ table: ByteBuffer) -> String? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     guard let s = tr0.tag else { return nil }
     return s
   }
@@ -97,7 +97,7 @@ extension BenchDoc {
   static let tag: FieldExpr<String, BenchDoc> = FieldExpr(name: "f14", primaryKey: false, hasIndex: false, tableReader: _tr__f14, objectReader: _or__f14)
 
   private static func _tr__f16(_ table: ByteBuffer) -> Int32? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
     return tr0.priority
   }
   private static func _or__f16(_ or0: BenchDoc) -> Int32? {
@@ -117,8 +117,8 @@ extension TextContent: zzz_DflatGen_Proto__BenchDoc__f12 {
   public struct zzz_f12__TextContent {
 
   private static func _tr__f12__u1__f4(_ table: ByteBuffer) -> String? {
-    let tr0 = zzz_DflatGen__BenchDoc.BenchDoc.getRootAsBenchDoc(bb: table)
-    guard let tr1 = tr0.content(type: zzz_DflatGen__BenchDoc.TextContent.self) else { return nil }
+    let tr0 = zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: table)
+    guard let tr1 = tr0.content(type: zzz_DflatGen_TextContent.self) else { return nil }
     guard let s = tr1.text else { return nil }
     return s
   }
