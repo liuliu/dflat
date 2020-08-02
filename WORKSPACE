@@ -32,8 +32,8 @@ git_repository(
 new_git_repository(
   name = "flatbuffers",
   remote = "https://github.com/google/flatbuffers.git",
-  commit = "f1025b284735d184f4a22dfe999ad65bfe558096",
-  shallow_since = "1595869070 -0700",
+  commit = "a0fb30575c2425512ebc2757910d106e15114b58",
+  shallow_since = "1596179265 +0300",
   build_file = "flatbuffers.BUILD",
 )
 
