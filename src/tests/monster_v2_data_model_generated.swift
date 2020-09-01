@@ -19,9 +19,9 @@ public enum Equipment: Equatable {
 }
 
 public struct Vec3: Equatable {
-  var x: Float32
-  var y: Float32
-  var z: Float32
+  public var x: Float32
+  public var y: Float32
+  public var z: Float32
   public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
     self.x = x
     self.y = y
@@ -42,8 +42,8 @@ public struct Empty: Equatable {
 }
 
 public struct Weapon: Equatable {
-  var name: String?
-  var damage: Int16
+  public var name: String?
+  public var damage: Int16
   public init(name: String? = nil, damage: Int16 = 0) {
     self.name = name
     self.damage = damage
@@ -55,8 +55,8 @@ public struct Weapon: Equatable {
 }
 
 public struct Orb: Equatable {
-  var name: String?
-  var color: Color
+  public var name: String?
+  public var color: Color
   public init(name: String? = nil, color: Color = .red) {
     self.name = name
     self.color = color
@@ -82,17 +82,17 @@ public final class Monster: Dflat.Atom, Equatable {
     guard lhs.wear == rhs.wear else { return false }
     return true
   }
-  let pos: Vec3?
-  let mana: Int16
-  let hp: Int16
-  let name: String
-  let color: Color
-  let inventory: [UInt8]
-  let weapons: [Weapon]
-  let equipped: Equipment?
-  let colors: [Color]
-  let path: [Vec3]
-  let wear: Equipment?
+  public let pos: Vec3?
+  public let mana: Int16
+  public let hp: Int16
+  public let name: String
+  public let color: Color
+  public let inventory: [UInt8]
+  public let weapons: [Weapon]
+  public let equipped: Equipment?
+  public let colors: [Color]
+  public let path: [Vec3]
+  public let wear: Equipment?
   public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], wear: Equipment? = nil) {
     self.pos = pos
     self.mana = mana

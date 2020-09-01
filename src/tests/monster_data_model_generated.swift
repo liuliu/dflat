@@ -9,9 +9,9 @@ public enum Equipment: Equatable {
 }
 
 public struct Vec3: Equatable {
-  var x: Float32
-  var y: Float32
-  var z: Float32
+  public var x: Float32
+  public var y: Float32
+  public var z: Float32
   public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
     self.x = x
     self.y = y
@@ -39,17 +39,17 @@ public final class Monster: Dflat.Atom, Equatable {
     guard lhs.path == rhs.path else { return false }
     return true
   }
-  let pos: Vec3?
-  let mana: Int16
-  let hp: Int16
-  let name: String
-  let color: Color
-  let inventory: [UInt8]
-  let bag: [Equipment]
-  let weapons: [Weapon]
-  let equipped: Equipment?
-  let colors: [Color]
-  let path: [Vec3]
+  public let pos: Vec3?
+  public let mana: Int16
+  public let hp: Int16
+  public let name: String
+  public let color: Color
+  public let inventory: [UInt8]
+  public let bag: [Equipment]
+  public let weapons: [Weapon]
+  public let equipped: Equipment?
+  public let colors: [Color]
+  public let path: [Vec3]
   public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = []) {
     self.pos = pos
     self.mana = mana

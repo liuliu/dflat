@@ -16,9 +16,9 @@ public enum Content: Equatable {
 }
 
 public struct Vec3: Equatable {
-  var x: Float32
-  var y: Float32
-  var z: Float32
+  public var x: Float32
+  public var y: Float32
+  public var z: Float32
   public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
     self.x = x
     self.y = y
@@ -32,7 +32,7 @@ public struct Vec3: Equatable {
 }
 
 public struct TextContent: Equatable {
-  var text: String?
+  public var text: String?
   public init(text: String? = nil) {
     self.text = text
   }
@@ -42,7 +42,7 @@ public struct TextContent: Equatable {
 }
 
 public struct ImageContent: Equatable {
-  var images: [String]
+  public var images: [String]
   public init(images: [String] = []) {
     self.images = images
   }
@@ -66,12 +66,12 @@ public final class BenchDoc: Dflat.Atom, Equatable {
     guard lhs.priority == rhs.priority else { return false }
     return true
   }
-  let pos: Vec3?
-  let color: Color
-  let title: String
-  let content: Content?
-  let tag: String?
-  let priority: Int32
+  public let pos: Vec3?
+  public let color: Color
+  public let title: String
+  public let content: Content?
+  public let tag: String?
+  public let priority: Int32
   public init(title: String, pos: Vec3? = nil, color: Color = .red, content: Content? = nil, tag: String? = nil, priority: Int32 = 0) {
     self.pos = pos
     self.color = color

@@ -426,7 +426,7 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "\npublic struct \(structDef.name): Equatable {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
-    code += "  var \(field.name): \(GetFieldType(field))\n"
+    code += "  public var \(field.name): \(GetFieldType(field))\n"
   }
   code += "  public init(\(GetStructInit(structDef))) {\n"
   for field in structDef.fields {
@@ -451,7 +451,7 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "  }\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
-    code += "  let \(field.name): \(GetFieldType(field))\n"
+    code += "  public let \(field.name): \(GetFieldType(field))\n"
   }
   code += "  public init(\(GetStructInit(structDef))) {\n"
   for field in structDef.fields {

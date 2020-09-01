@@ -19,11 +19,11 @@ public final class BenchDocV2: Dflat.Atom, Equatable {
     guard lhs.text == rhs.text else { return false }
     return true
   }
-  let color: ColorV2
-  let title: String
-  let tag: String?
-  let priority: Int32
-  let text: String?
+  public let color: ColorV2
+  public let title: String
+  public let tag: String?
+  public let priority: Int32
+  public let text: String?
   public init(title: String, color: ColorV2 = .red, tag: String? = nil, priority: Int32 = 0, text: String? = nil) {
     self.color = color
     self.title = title
