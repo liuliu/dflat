@@ -28,12 +28,12 @@ def main():
   dflats += args.files
   dflatc = ["bazel", "run", "src/parser:dflatc", "--", "-o", args.output]
   for fn in args.files:
-    dflatc.append(os.path.splitext(fn)[0] + "_generated.json")
+    dflatc.append(args.output + "/" + os.path.basename(os.path.splitext(fn)[0]) + "_generated.json")
   subprocess.call(dflats)
   subprocess.call(dflatc)
   if not args.keep_json:
     for fn in args.files:
-      os.remove(os.path.splitext(fn)[0] + "_generated.json")
+      os.remove(args.output + "/" + os.path.basename(os.path.splitext(fn)[0]) + "_generated.json")
 
 if __name__ == "__main__":
   main()
