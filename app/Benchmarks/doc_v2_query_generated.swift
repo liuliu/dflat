@@ -1,7 +1,7 @@
 import Dflat
 import FlatBuffers
 
-extension BenchDocV2 {
+public extension BenchDocV2 {
 
   private static func _tr__f4(_ table: ByteBuffer) -> ColorV2? {
     let tr0 = zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: table)

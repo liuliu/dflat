@@ -1,7 +1,7 @@
 import Dflat
 import FlatBuffers
 
-extension BenchDoc {
+public extension BenchDoc {
 
   struct pos {
 

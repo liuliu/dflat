@@ -1,7 +1,7 @@
 import Dflat
 import FlatBuffers
 
-extension MyGame.SampleV2.Monster {
+public extension MyGame.SampleV2.Monster {
 
   struct pos {
 

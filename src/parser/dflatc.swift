@@ -1177,7 +1177,7 @@ func GenQueryForField(_ structDef: Struct, keyPaths: [KeyPath], field: Field, pk
 }
 
 func GenQueryRoot(_ structDef: Struct, code: inout String) {
-  code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
+  code += "\npublic extension \(GetFullyQualifiedName(structDef)) {\n"
   var addon = ""
   var pkCount = 0
   for field in structDef.fields {
