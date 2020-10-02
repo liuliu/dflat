@@ -12,12 +12,12 @@ let package = Package(
   ],
   dependencies: [
     .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.7.0"),
-    .package(name: "SwiftAtomics", url: "https://github.com/glessard/swift-atomics.git", from: "6.0.0"),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.1"),
   ],
   targets: [
     .target(
       name: "Dflat",
-      dependencies: ["FlatBuffers", "SwiftAtomics"],
+      dependencies: ["FlatBuffers", .product(name: "Atomics", package: "swift-atomics")],
       path: "src",
       sources: [
         "Atom.swift",

@@ -1,12 +1,12 @@
-import SwiftAtomics
+import Atomics
 import Dispatch
 
 // This is a state shared for a workspace.
 final class SQLiteWorkspaceState {
   private var lock = os_unfair_lock()
   private var tableTimestamps = [ObjectIdentifier: Int64]()
-  var changesTimestamp = AtomicInt64(0)
-  var shutdown = AtomicBool(false)
+  var changesTimestamp = ManagedAtomic<Int64>(0)
+  var shutdown = ManagedAtomic<Bool>(false)
 
   func serial<T>(_ closure: () -> T) -> T {
     os_unfair_lock_lock(&lock)

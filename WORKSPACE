@@ -6,29 +6,29 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 git_repository(
   name = "build_bazel_rules_apple",
   remote = "https://github.com/bazelbuild/rules_apple.git",
-  commit = "12ac0738c56f8a15c714a7e09ec87a1bbdbcada9",
-  shallow_since = "1592940289 -0700"
+  commit = "b5ea324a8aa8d5fd5843a9ad3e663a2d54898fc4",
+  shallow_since = "1601006876 -0700"
 )
 
 git_repository(
   name = "build_bazel_rules_swift",
   remote = "https://github.com/bazelbuild/rules_swift.git",
-  commit = "8ecb09641ee0ba5efd971ffff8dd6cbee6ea7dd3",
-  shallow_since = "1584545517 -0700"
+  commit = "b7a269355fc9852a885c5becbdeb1497cf787164",
+  shallow_since = "1600724082 -0700"
 )
 
 git_repository(
   name = "build_bazel_apple_support",
   remote = "https://github.com/bazelbuild/apple_support.git",
-  commit = "501b4afb27745c4813a88ffa28acd901408014e4",
-  shallow_since = "1577729628 -0800"
+  commit = "2583fa0bfd6909e7936da5b30e3547ba13e198dc",
+  shallow_since = "1600371270 -0700"
 )
 
 git_repository(
   name = "bazel_skylib",
   remote = "https://github.com/bazelbuild/bazel-skylib.git",
-  commit = "d35e8d7bc6ad7a3a53e9a1d2ec8d3a904cc54ff7",
-  shallow_since = "1593183852 +0200"
+  commit = "528e4241345536c487cca8b11db138104bb3bd68",
+  shallow_since = "1601067301 +0200"
 )
 
 new_git_repository(
@@ -41,9 +41,9 @@ new_git_repository(
 
 new_git_repository(
   name = "swift-atomics",
-  remote = "https://github.com/glessard/swift-atomics.git",
-  commit = "5353f78a030ab2b5f0468db78b2887d1eec54fe3",
-  shallow_since = "1591993436 -0600",
+  remote = "https://github.com/apple/swift-atomics.git",
+  commit = "d07c2a5c922307b5a24ee45aab6a922b9ebaee33",
+  shallow_since = "1601602457 -0700",
   build_file = "swift-atomics.BUILD",
 )
 
@@ -71,6 +71,6 @@ protobuf_deps()
 http_file(
   name = "xctestrunner",
   executable = 1,
-  sha256 = "890faff3f6d5321712ffb7a09ba3614eabca93977221e86d058c7842fdbad6b6",
-  urls = ["https://github.com/google/xctestrunner/releases/download/0.2.13/ios_test_runner.par"],
+  sha256 = "298846d5ad7607eba33e786149c2b642ffe39508d4a99468a8280871d902fe5d",
+  urls = ["https://github.com/google/xctestrunner/releases/download/0.2.14/ios_test_runner.par"],
 )
