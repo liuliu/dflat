@@ -17,16 +17,16 @@ def dflat_deps():
     new_git_repository,
     name = "flatbuffers",
     remote = "https://github.com/google/flatbuffers.git",
-    commit = "a0fb30575c2425512ebc2757910d106e15114b58",
-    shallow_since = "1596179265 +0300",
+    commit = "0bdf2fa156f5133b09ddac7beb326b942d524b38",
+    shallow_since = "1601319419 -0700",
     build_file = "@dflat//:external/flatbuffers.BUILD",
   )
 
   _maybe(
     new_git_repository,
     name = "swift-atomics",
-    remote = "https://github.com/glessard/swift-atomics.git",
-    commit = "5353f78a030ab2b5f0468db78b2887d1eec54fe3",
-    shallow_since = "1591993436 -0600",
+    remote = "https://github.com/apple/swift-atomics.git",
+    commit = "d07c2a5c922307b5a24ee45aab6a922b9ebaee33",
+    shallow_since = "1601602457 -0700",
     build_file = "@dflat//:external/swift-atomics.BUILD"
   )
