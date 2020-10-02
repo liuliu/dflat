@@ -12,7 +12,12 @@ extension BenchDocV3 {
     let __title = flatBufferBuilder.create(string: self.title)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen_BenchDocV3.createBenchDocV3(&flatBufferBuilder, offsetOfTitle: __title, offsetOfTag: __tag, priority: self.priority, offsetOfText: __text)
+    let start = zzz_DflatGen_BenchDocV3.startBenchDocV3(&flatBufferBuilder)
+    zzz_DflatGen_BenchDocV3.add(title: __title, &flatBufferBuilder)
+    zzz_DflatGen_BenchDocV3.add(tag: __tag, &flatBufferBuilder)
+    zzz_DflatGen_BenchDocV3.add(priority: self.priority, &flatBufferBuilder)
+    zzz_DflatGen_BenchDocV3.add(text: __text, &flatBufferBuilder)
+    return zzz_DflatGen_BenchDocV3.endBenchDocV3(&flatBufferBuilder, start: start)
   }
 }
 

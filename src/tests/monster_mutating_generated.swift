@@ -36,23 +36,22 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
 }
 
 extension MyGame.Sample.Vec3 {
-  func toRawMemory() -> UnsafeMutableRawPointer {
-    return zzz_DflatGen_MyGame_Sample_Vec3.createVec3(x: self.x, y: self.y, z: self.z)
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    return zzz_DflatGen_MyGame_Sample_Vec3.createVec3(builder: &flatBufferBuilder, x: self.x, y: self.y, z: self.z)
   }
 }
 
 extension Optional where Wrapped == MyGame.Sample.Vec3 {
-  func toRawMemory() -> UnsafeMutableRawPointer? {
-    self.map { $0.toRawMemory() }
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {
+    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }
   }
 }
 
 extension MyGame.Sample.Monster {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __pos = self.pos.toRawMemory()
     let __name = flatBufferBuilder.create(string: self.name)
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .blue
-    let __inventory = flatBufferBuilder.createVector(self.inventory)
+    let __vector_inventory = flatBufferBuilder.createVector(self.inventory)
     var __bagType = [zzz_DflatGen_MyGame_Sample_Equipment]()
     for i in self.bag {
       __bagType.append(i._type)
@@ -75,12 +74,28 @@ extension MyGame.Sample.Monster {
       __colors.append(zzz_DflatGen_MyGame_Sample_Color(rawValue: i.rawValue) ?? .red)
     }
     let __vector_colors = flatBufferBuilder.createVector(__colors)
-    var __path = [UnsafeMutableRawPointer]()
+    zzz_DflatGen_MyGame_Sample_Monster.startVectorOfPath(self.path.count, in: &flatBufferBuilder)
     for i in self.path {
-      __path.append(i.toRawMemory())
+      let _ = i.to(flatBufferBuilder: &flatBufferBuilder)
     }
-    let __vector_path = flatBufferBuilder.createVector(structs: __path, type: zzz_DflatGen_MyGame_Sample_Vec3.self)
-    return zzz_DflatGen_MyGame_Sample_Monster.createMonster(&flatBufferBuilder, structOfPos: __pos, mana: self.mana, hp: self.hp, offsetOfName: __name, color: __color, vectorOfInventory: __inventory, vectorOfBagType: __vector_bagType, vectorOfBag: __vector_bag, vectorOfWeapons: __vector_weapons, equippedType: __equippedType, offsetOfEquipped: __equipped, vectorOfColors: __vector_colors, vectorOfPath: __vector_path)
+    let __vector_path = flatBufferBuilder.endVectorOfStructs(count: self.path.count)
+    let start = zzz_DflatGen_MyGame_Sample_Monster.startMonster(&flatBufferBuilder)
+    if let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder) {
+    zzz_DflatGen_MyGame_Sample_Monster.add(pos: __pos, &flatBufferBuilder)
+    }
+    zzz_DflatGen_MyGame_Sample_Monster.add(mana: self.mana, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(hp: self.hp, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(name: __name, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(color: __color, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(inventory: __vector_inventory, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(bagType: __vector_bagType, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(bag: __vector_bag, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(weapons: __vector_weapons, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(equippedType: __equippedType, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(equipped: __equipped, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(colors: __vector_colors, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(path: __vector_path, &flatBufferBuilder)
+    return zzz_DflatGen_MyGame_Sample_Monster.endMonster(&flatBufferBuilder, start: start)
   }
 }
 

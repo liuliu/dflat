@@ -540,11 +540,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
 
 func GenStructSerializer(_ structDef: Struct, code: inout String) {
   code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
-  if structDef.fixed {
-    code += "  func toRawMemory() -> UnsafeMutableRawPointer {\n"
-  } else {
-    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
-  }
+  code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
   var parameters = [String]()
   for field in structDef.fields {
     guard !field.deprecated else { continue }
@@ -552,8 +548,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     case .struct:
       let subStructDef = structDefs[field.type.struct!]!
       if subStructDef.fixed {
-        code += "    let __\(field.name) = self.\(field.name).toRawMemory()\n"
-        parameters.append("structOf\(field.name.firstUppercased()): __\(field.name)")
+        // We can only do this after main start.
         break
       }
       fallthrough
@@ -562,18 +557,18 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
       parameters.append("offsetOf\(field.name.firstUppercased()): __\(field.name)")
     case .vector:
       if IsScalarElementType(field.type.element!) {
-        code += "    let __\(field.name) = flatBufferBuilder.createVector(self.\(field.name))\n"
-        parameters.append("vectorOf\(field.name.firstUppercased()): __\(field.name)")
+        code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(self.\(field.name))\n"
+        parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
       } else {
         switch field.type.element!.type {
         case .struct:
           let subStructDef = structDefs[field.type.element!.struct!]!
           if subStructDef.fixed {
-            code += "    var __\(field.name) = [UnsafeMutableRawPointer]()\n"
+            code += "    \(GetDflatGenFullyQualifiedName(structDef)).startVectorOf\(field.name.firstUppercased())(self.\(field.name).count, in: &flatBufferBuilder)\n"
             code += "    for i in self.\(field.name) {\n"
-            code += "      __\(field.name).append(i.toRawMemory())\n"
+            code += "      let _ = i.to(flatBufferBuilder: &flatBufferBuilder)\n"
             code += "    }\n"
-            code += "    let __vector_\(field.name) = flatBufferBuilder.createVector(structs: __\(field.name), type: \(GetDflatGenFullyQualifiedName(subStructDef)).self)\n"
+            code += "    let __vector_\(field.name) = flatBufferBuilder.endVectorOfStructs(count: self.\(field.name).count)\n"
             parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
             break
           }
@@ -633,26 +628,56 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     }
   }
   if structDef.fixed {
-    code += "    return \(GetDflatGenFullyQualifiedName(structDef)).create\(structDef.name)(\(parameters.joined(separator: ", ")))\n"
+    code += "    return \(GetDflatGenFullyQualifiedName(structDef)).create\(structDef.name)(builder: &flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
   } else {
     // Account for zero-length table.
+    code += "    let start = \(GetDflatGenFullyQualifiedName(structDef)).start\(structDef.name)(&flatBufferBuilder)\n"
     if structDef.fields.count > 0 {
-      code += "    return \(GetDflatGenFullyQualifiedName(structDef)).create\(structDef.name)(&flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
-    } else {
-      code += "    return \(GetDflatGenFullyQualifiedName(structDef)).end\(structDef.name)(&flatBufferBuilder, start: \(GetDflatGenFullyQualifiedName(structDef)).start\(structDef.name)(&flatBufferBuilder))\n"
+      for field in structDef.fields {
+        guard !field.deprecated else { continue }
+        switch field.type.type {
+        case .vector:
+          switch field.type.element!.type {
+          case .utype:
+            let fieldName = field.name.prefix(field.name.count - 5) + "Type"
+            code += "    \(GetDflatGenFullyQualifiedName(structDef)).addVectorOf(\(fieldName): __vector_\(fieldName), &flatBufferBuilder)\n"
+          default:
+            code += "    \(GetDflatGenFullyQualifiedName(structDef)).addVectorOf(\(field.name): __vector_\(field.name), &flatBufferBuilder)\n"
+          }
+        case .struct:
+          let subStructDef = structDefs[field.type.struct!]!
+          if subStructDef.fixed {
+            // This may be nil, in that case, we don't need to write it out at all.
+            code += "    if let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder) {\n"
+            code += "      \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): __\(field.name), &flatBufferBuilder)\n"
+            code += "    }\n"
+            break
+          }
+          fallthrough
+        case .union, .enum, .string:
+          code += "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): __\(field.name), &flatBufferBuilder)\n"
+        case .utype:
+          let fieldName = field.name.prefix(field.name.count - 5) + "Type"
+          code += "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(fieldName): __\(fieldName), &flatBufferBuilder)\n"
+        default:
+          code += "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): self.\(field.name), &flatBufferBuilder)\n"
+        }
+      }
     }
+    code += "    return \(GetDflatGenFullyQualifiedName(structDef)).end\(structDef.name)(&flatBufferBuilder, start: start)\n"
   }
   code += "  }\n"
   code += "}\n"
   code += "\nextension Optional where Wrapped == \(GetFullyQualifiedName(structDef)) {\n"
   if structDef.fixed {
-    code += "  func toRawMemory() -> UnsafeMutableRawPointer? {\n"
-    code += "    self.map { $0.toRawMemory() }\n"
+    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {\n"
+    code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }\n"
+    code += "  }\n"
   } else {
     code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
     code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()\n"
+    code += "  }\n"
   }
-  code += "  }\n"
   code += "}\n"
 }
 

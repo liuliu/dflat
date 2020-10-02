@@ -42,21 +42,23 @@ extension Optional where Wrapped == Content {
 }
 
 extension Vec3 {
-  func toRawMemory() -> UnsafeMutableRawPointer {
-    return zzz_DflatGen_Vec3.createVec3(x: self.x, y: self.y, z: self.z)
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    return zzz_DflatGen_Vec3.createVec3(builder: &flatBufferBuilder, x: self.x, y: self.y, z: self.z)
   }
 }
 
 extension Optional where Wrapped == Vec3 {
-  func toRawMemory() -> UnsafeMutableRawPointer? {
-    self.map { $0.toRawMemory() }
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {
+    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }
   }
 }
 
 extension TextContent {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen_TextContent.createTextContent(&flatBufferBuilder, offsetOfText: __text)
+    let start = zzz_DflatGen_TextContent.startTextContent(&flatBufferBuilder)
+    zzz_DflatGen_TextContent.add(text: __text, &flatBufferBuilder)
+    return zzz_DflatGen_TextContent.endTextContent(&flatBufferBuilder, start: start)
   }
 }
 
@@ -73,7 +75,9 @@ extension ImageContent {
       __images.append(flatBufferBuilder.create(string: i))
     }
     let __vector_images = flatBufferBuilder.createVector(ofOffsets: __images)
-    return zzz_DflatGen_ImageContent.createImageContent(&flatBufferBuilder, vectorOfImages: __vector_images)
+    let start = zzz_DflatGen_ImageContent.startImageContent(&flatBufferBuilder)
+    zzz_DflatGen_ImageContent.addVectorOf(images: __vector_images, &flatBufferBuilder)
+    return zzz_DflatGen_ImageContent.endImageContent(&flatBufferBuilder, start: start)
   }
 }
 
@@ -85,13 +89,22 @@ extension Optional where Wrapped == ImageContent {
 
 extension BenchDoc {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __pos = self.pos.toRawMemory()
     let __color = zzz_DflatGen_Color(rawValue: self.color.rawValue) ?? .red
     let __title = flatBufferBuilder.create(string: self.title)
     let __contentType = self.content._type
     let __content = self.content.to(flatBufferBuilder: &flatBufferBuilder)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen_BenchDoc.createBenchDoc(&flatBufferBuilder, structOfPos: __pos, color: __color, offsetOfTitle: __title, contentType: __contentType, offsetOfContent: __content, offsetOfTag: __tag, priority: self.priority)
+    let start = zzz_DflatGen_BenchDoc.startBenchDoc(&flatBufferBuilder)
+    if let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder) {
+      zzz_DflatGen_BenchDoc.add(pos: __pos, &flatBufferBuilder)
+    }
+    zzz_DflatGen_BenchDoc.add(color: __color, &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(title: __title, &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(contentType: __contentType, &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(content: __content, &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(tag: __tag, &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(priority: self.priority, &flatBufferBuilder)
+    return zzz_DflatGen_BenchDoc.endBenchDoc(&flatBufferBuilder, start: start)
   }
 }
 

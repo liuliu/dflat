@@ -27,7 +27,7 @@ public struct zzz_DflatGen_BenchDocV2: FlatBufferObject {
     private init(_ t: Table) { _accessor = t }
     public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
-    enum VTOFFSET: VOffset {
+    private enum VTOFFSET: VOffset {
         case color = 4
         case title = 6
         case tag = 8
@@ -47,10 +47,10 @@ public struct zzz_DflatGen_BenchDocV2: FlatBufferObject {
     public var textSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.text.v) }
     public static func startBenchDocV2(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 5) }
     public static func add(color: zzz_DflatGen_ColorV2, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 0, at: VTOFFSET.color.p) }
-    public static func add(title: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: title, at: VTOFFSET.title.p)  }
-    public static func add(tag: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: tag, at: VTOFFSET.tag.p)  }
+    public static func add(title: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: title, at: VTOFFSET.title.p) }
+    public static func add(tag: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: tag, at: VTOFFSET.tag.p) }
     public static func add(priority: Int32, _ fbb: inout FlatBufferBuilder) { fbb.add(element: priority, def: 0, at: VTOFFSET.priority.p) }
-    public static func add(text: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: text, at: VTOFFSET.text.p)  }
+    public static func add(text: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: text, at: VTOFFSET.text.p) }
     public static func endBenchDocV2(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
     public static func createBenchDocV2(
         _ fbb: inout FlatBufferBuilder,

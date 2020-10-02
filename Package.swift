@@ -11,7 +11,7 @@ let package = Package(
     .library(name: "SQLiteDflat", type: .static, targets: ["SQLiteDflat"]),
   ],
   dependencies: [
-    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.7.0"),
+    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.1"),
   ],
   targets: [

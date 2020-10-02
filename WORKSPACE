@@ -34,9 +34,9 @@ git_repository(
 new_git_repository(
   name = "flatbuffers",
   remote = "https://github.com/google/flatbuffers.git",
-  commit = "a0fb30575c2425512ebc2757910d106e15114b58",
-  shallow_since = "1596179265 +0300",
-  build_file = "flatbuffers.BUILD",
+  commit = "0bdf2fa156f5133b09ddac7beb326b942d524b38",
+  shallow_since = "1601319419 -0700",
+  build_file = "flatbuffers.BUILD"
 )
 
 new_git_repository(
@@ -44,26 +44,26 @@ new_git_repository(
   remote = "https://github.com/apple/swift-atomics.git",
   commit = "d07c2a5c922307b5a24ee45aab6a922b9ebaee33",
   shallow_since = "1601602457 -0700",
-  build_file = "swift-atomics.BUILD",
+  build_file = "swift-atomics.BUILD"
 )
 
 load(
   "@build_bazel_rules_swift//swift:repositories.bzl",
-  "swift_rules_dependencies",
+  "swift_rules_dependencies"
 )
 
 swift_rules_dependencies()
 
 load(
   "@build_bazel_apple_support//lib:repositories.bzl",
-  "apple_support_dependencies",
+  "apple_support_dependencies"
 )
 
 apple_support_dependencies()
 
 load(
   "@com_google_protobuf//:protobuf_deps.bzl",
-  "protobuf_deps",
+  "protobuf_deps"
 )
 
 protobuf_deps()
