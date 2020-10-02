@@ -128,9 +128,8 @@ extension MyGame.SampleV2.Monster {
     let __wearType = self.wear._type
     let __wear = self.wear.to(flatBufferBuilder: &flatBufferBuilder)
     let start = zzz_DflatGen_MyGame_SampleV2_Monster.startMonster(&flatBufferBuilder)
-    if let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder) {
+    let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV2_Monster.add(pos: __pos, &flatBufferBuilder)
-    }
     zzz_DflatGen_MyGame_SampleV2_Monster.add(mana: self.mana, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV2_Monster.add(hp: self.hp, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV2_Monster.add(name: __name, &flatBufferBuilder)

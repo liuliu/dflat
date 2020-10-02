@@ -95,9 +95,8 @@ extension BenchDoc {
     let __content = self.content.to(flatBufferBuilder: &flatBufferBuilder)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let start = zzz_DflatGen_BenchDoc.startBenchDoc(&flatBufferBuilder)
-    if let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder) {
-      zzz_DflatGen_BenchDoc.add(pos: __pos, &flatBufferBuilder)
-    }
+    let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder)
+    zzz_DflatGen_BenchDoc.add(pos: __pos, &flatBufferBuilder)
     zzz_DflatGen_BenchDoc.add(color: __color, &flatBufferBuilder)
     zzz_DflatGen_BenchDoc.add(title: __title, &flatBufferBuilder)
     zzz_DflatGen_BenchDoc.add(contentType: __contentType, &flatBufferBuilder)

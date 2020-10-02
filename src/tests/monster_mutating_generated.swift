@@ -80,9 +80,8 @@ extension MyGame.Sample.Monster {
     }
     let __vector_path = flatBufferBuilder.endVectorOfStructs(count: self.path.count)
     let start = zzz_DflatGen_MyGame_Sample_Monster.startMonster(&flatBufferBuilder)
-    if let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder) {
+    let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(pos: __pos, &flatBufferBuilder)
-    }
     zzz_DflatGen_MyGame_Sample_Monster.add(mana: self.mana, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(hp: self.hp, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(name: __name, &flatBufferBuilder)

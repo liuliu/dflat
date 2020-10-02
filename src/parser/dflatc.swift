@@ -647,11 +647,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
         case .struct:
           let subStructDef = structDefs[field.type.struct!]!
           if subStructDef.fixed {
-            // This may be nil, in that case, we don't need to write it out at all.
-            code += "    if let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder) {\n"
-            code += "      \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): __\(field.name), &flatBufferBuilder)\n"
-            code += "    }\n"
-            break
+            code += "    let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder)\n"
           }
           fallthrough
         case .union, .enum, .string:
