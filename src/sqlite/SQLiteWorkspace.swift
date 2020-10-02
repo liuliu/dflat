@@ -1,3 +1,4 @@
+import Atomics
 import Dflat
 import SQLite3
 import Dispatch
@@ -100,11 +101,11 @@ public final class SQLiteWorkspace: Workspace {
   // MARK - Management
 
   public func shutdown(completion: (() -> Void)?) {
-    guard !state.shutdown.load(ordering: .acquiring) else {
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       completion?()
       return
     }
-    state.shutdown.store(true, ordering: .releasing)
+    withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).store(true, ordering: .releasing) }
     var tableSpaces: [SQLiteTableSpace]? = nil
     state.serial {
       tableSpaces = Array(self.tableSpaces.values)
@@ -132,7 +133,7 @@ public final class SQLiteWorkspace: Workspace {
   // MARK - Mutation
 
   public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
-    guard !state.shutdown.load(ordering: .acquiring) else {
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       completionHandler?(false)
       return
     }
@@ -202,7 +203,7 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   public func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element> {
-    guard !state.shutdown.load(ordering: .acquiring) else {
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       return SQLiteQueryBuilder<Element>(reader: SQLiteConnectionPool.Borrowed(pointee: nil, pool: nil), workspace: self, transactionContext: nil, changesTimestamp: 0)
     }
     if let txnContext = SQLiteTransactionContext.current {
@@ -218,7 +219,7 @@ public final class SQLiteWorkspace: Workspace {
     if let snapshot = Self.snapshot {
       return SQLiteQueryBuilder<Element>(reader: snapshot.reader, workspace: self, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
     }
-    let changesTimestamp = state.changesTimestamp.load(ordering: .acquiring)
+    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
     return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), workspace: self, transactionContext: nil, changesTimestamp: changesTimestamp)
   }
   
@@ -229,7 +230,7 @@ public final class SQLiteWorkspace: Workspace {
     }
     // Require a consistent snapshot by starting a transaction.
     let reader = readerPool.borrow()
-    let changesTimestamp = state.changesTimestamp.load(ordering: .acquiring)
+    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
     Self.snapshot = Snapshot(reader: reader, changesTimestamp: changesTimestamp)
     guard let pointee = reader.pointee else {
       let retval = closure()
@@ -251,7 +252,7 @@ public final class SQLiteWorkspace: Workspace {
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let identifier = ObjectIdentifier(fetchedResult.query)
     let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
-    guard !state.shutdown.load(ordering: .acquiring) else {
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       return subscription
     }
     let objectType = ObjectIdentifier(Element.self)
@@ -297,7 +298,7 @@ public final class SQLiteWorkspace: Workspace {
 
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
-    guard !state.shutdown.load(ordering: .acquiring) else {
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       return subscription
     }
     let objectType = ObjectIdentifier(Element.self)
@@ -314,7 +315,9 @@ public final class SQLiteWorkspace: Workspace {
           // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
           let fetchedObject = SQLiteObjectRepository.object(connection, ofType: Element.self, for: .rowid(object._rowid))
           guard let updatedObject = fetchedObject else {
-            subscription.cancelled.store(true, ordering: .releasing)
+            withUnsafeMutablePointer(to: &subscription.cancelled) {
+              UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+            }
             changeHandler(.deleted)
             return
           }
@@ -338,7 +341,7 @@ public final class SQLiteWorkspace: Workspace {
   }
   
   func cancel(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier) {
-    guard !state.shutdown.load(ordering: .acquiring) else { return }
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
     switch ofType {
     case let .fetchedResult(atomType, fetchedResult):
       let objectType = ObjectIdentifier(atomType)
@@ -457,7 +460,8 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
-    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: state.changesTimestamp.load(ordering: .acquiring), connection: connection)
+    let oldChangesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
+    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: oldChangesTimestamp, connection: connection)
     changesHandler(txnContext)
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
@@ -483,7 +487,7 @@ public final class SQLiteWorkspace: Workspace {
       precondition(status == SQLITE_DONE)
     }
     var reader: SQLiteConnectionPool.Borrowed? = nil
-    let newChangesTimestamp = state.changesTimestamp.loadThenWrappingIncrement(by: 1, ordering: .releasing) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
+    let newChangesTimestamp = (withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).loadThenWrappingIncrement(by: 1, ordering: .releasing) }) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
     state.setTableTimestamp(newChangesTimestamp, for: updatedObjects.keys)
     for (identifier, updates) in updatedObjects {
       guard let resultPublisher = resultPublishers[identifier] else { continue }
@@ -530,7 +534,7 @@ extension SQLiteWorkspace {
   }
 
   func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
-    guard !state.shutdown.load(ordering: .acquiring) else { return }
+    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
     // We don't need to bump the priority for this.

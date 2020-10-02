@@ -8,7 +8,7 @@ enum SQLiteSubscriptionType {
 
 final class SQLiteSubscription: Workspace.Subscription {
   private let ofType: SQLiteSubscriptionType
-  var cancelled = ManagedAtomic<Bool>(false)
+  var cancelled = UnsafeAtomic<Bool>.Storage(false)
   let identifier: ObjectIdentifier
   weak var workspace: SQLiteWorkspace?
   init(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier, workspace: SQLiteWorkspace) {
@@ -17,11 +17,15 @@ final class SQLiteSubscription: Workspace.Subscription {
     self.workspace = workspace
   }
   deinit {
-    cancelled.store(true, ordering: .releasing)
+    withUnsafeMutablePointer(to: &cancelled) {
+      UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+    }
     workspace?.cancel(ofType: ofType, identifier: identifier)
   }
   public func cancel() {
-    cancelled.store(true, ordering: .releasing)
+    withUnsafeMutablePointer(to: &cancelled) {
+      UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+    }
     workspace?.cancel(ofType: ofType, identifier: identifier)
   }
 }
@@ -40,7 +44,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
     let rowid = object._rowid
     objectSubscribers[rowid, default: [ObjectIdentifier: (_: UpdatedObject) -> Void]()][subscription.identifier] = { [weak self, weak subscription] updatedObject in
       guard let subscription = subscription else { return }
-      guard !subscription.cancelled.load(ordering: .acquiring) else { return }
+      guard !(withUnsafeMutablePointer(to: &subscription.cancelled) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
       guard let self = self else { return }
       switch updatedObject {
       case .deleted(let rowid):
@@ -161,7 +165,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
     }
     resultPublisher.subscribers[subscription.identifier] = { [weak subscription] fetchedResult in
       guard let subscription = subscription else { return }
-      guard !subscription.cancelled.load(ordering: .acquiring) else { return }
+      guard !(withUnsafeMutablePointer(to: &subscription.cancelled) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
       changeHandler(fetchedResult)
     }
   }

@@ -5,8 +5,8 @@ import Dispatch
 final class SQLiteWorkspaceState {
   private var lock = os_unfair_lock()
   private var tableTimestamps = [ObjectIdentifier: Int64]()
-  var changesTimestamp = ManagedAtomic<Int64>(0)
-  var shutdown = ManagedAtomic<Bool>(false)
+  var changesTimestamp = UnsafeAtomic<Int64>.Storage(0)
+  var shutdown = UnsafeAtomic<Bool>.Storage(false)
 
   func serial<T>(_ closure: () -> T) -> T {
     os_unfair_lock_lock(&lock)
