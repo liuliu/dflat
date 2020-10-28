@@ -18,7 +18,7 @@ let dependencies: [Package.Dependency] = [
 
 let package = Package(
   name: "Dflat",
-  platforms: [.macOS(.v10_14), .iOS(.v11)],
+  platforms: [.macOS(.v10_14), .iOS(.v11), .watchOS(.v3), .tvOS(.v10)],
   products: [
     .library(name: "Dflat", type: .static, targets: ["Dflat"]),
     .library(name: "SQLiteDflat", type: .static, targets: ["SQLiteDflat"]),
