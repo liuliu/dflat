@@ -26,6 +26,7 @@ let package = Package(
         "FetchedResult.swift",
         "Publisher.swift",
         "QueryBuilder.swift",
+        "SQLiteExpr.swift",
         "TransactionContext.swift",
         "Workspace.swift",
         "exprs/Addition.swift",

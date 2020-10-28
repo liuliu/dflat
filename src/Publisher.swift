@@ -45,7 +45,7 @@ open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
    *
    * - Returns: A publisher object that can be interacted with Combine.
    */
-  open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element {
+  open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element {
     fatalError()
   }
   /**

@@ -115,10 +115,10 @@ final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element> where E
     return _initialFetchedResult
   }
   private var _initialFetchedResult: FetchedResult<Element>? = nil
-  init<T: Expr>(workspace: SQLiteWorkspace, query: T, limit: Limit, orderBy: [OrderBy<Element>]) where T.ResultType == Bool, T.Element == Element {
+  init<T: Expr & SQLiteExpr>(workspace: SQLiteWorkspace, query: T, limit: Limit, orderBy: [OrderBy<Element>]) where T.ResultType == Bool, T.Element == Element {
     self.lock = os_unfair_lock()
     self.workspace = workspace
-    self.query = AnySQLiteExpr(query, query as! SQLiteExpr)
+    self.query = AnySQLiteExpr(query)
     self.limit = limit
     self.orderBy = orderBy
   }
@@ -133,7 +133,7 @@ final class SQLiteQueryPublisherBuilder<Element: Atom>: QueryPublisherBuilder<El
   init(workspace: SQLiteWorkspace) {
     self.workspace = workspace
   }
-  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element {
+  override func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element {
     return SQLiteQueryPublisher<Element>(workspace: workspace, query: query, limit: limit, orderBy: orderBy)
   }
   override func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> {
