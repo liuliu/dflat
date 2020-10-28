@@ -188,17 +188,21 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Fetching
 
-  private struct Snapshot {
-    var reader: SQLiteConnectionPool.Borrowed
-    var changesTimestamp: Int64
+  class Snapshot {
+    let reader: SQLiteConnectionPool.Borrowed
+    let changesTimestamp: Int64
+    init(reader: SQLiteConnectionPool.Borrowed, changesTimestamp: Int64) {
+      self.reader = reader
+      self.changesTimestamp = changesTimestamp
+    }
   }
 
   static private var snapshot: Snapshot? {
     get {
-      Thread.current.threadDictionary["SQLiteSnapshot"] as? Snapshot
+      ThreadLocalStorage.snapshot
     }
     set(newSnapshot) {
-      Thread.current.threadDictionary["SQLiteSnapshot"] = newSnapshot
+      ThreadLocalStorage.snapshot = newSnapshot
     }
   }
 

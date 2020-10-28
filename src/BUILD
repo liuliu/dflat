@@ -40,7 +40,7 @@ filegroup(
     "sqlite/SQLiteTransactionContext.swift",
     "sqlite/SQLiteWorkspace.swift",
     "sqlite/SQLiteWorkspaceState.swift",
-    "sqlite/LinuxShim.swift",
+    "sqlite/OSShim.swift",
   ] + glob(["sqlite/exprs/*.swift"]),
   visibility = ["//:__pkg__"],
 )

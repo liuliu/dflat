@@ -72,6 +72,7 @@ let package = Package(
         "SQLiteTransactionContext.swift",
         "SQLiteWorkspace.swift",
         "SQLiteWorkspaceState.swift",
+        "OSShim.swift",
         "exprs/SQLiteAddition.swift",
         "exprs/SQLiteField.swift",
         "exprs/SQLiteIn.swift",

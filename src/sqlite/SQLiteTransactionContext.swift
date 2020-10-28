@@ -22,10 +22,10 @@ public final class SQLiteTransactionContext: TransactionContext {
   
   static private(set) public var current: SQLiteTransactionContext? {
     get {
-      Thread.current.threadDictionary["SQLiteTxnCurrent"] as? SQLiteTransactionContext
+      ThreadLocalStorage.transactionContext
     }
     set (newCurrent) {
-      Thread.current.threadDictionary["SQLiteTxnCurrent"] = newCurrent
+      ThreadLocalStorage.transactionContext = newCurrent
     }
   }
 
