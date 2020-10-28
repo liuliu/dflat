@@ -1,5 +1,7 @@
 import Dflat
 import Dispatch
+
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 import Combine
 
 @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -138,3 +140,5 @@ final class SQLiteQueryPublisherBuilder<Element: Atom>: QueryPublisherBuilder<El
     return SQLiteQueryPublisher<Element>(workspace: workspace, query: AllExpr<Element>(), limit: limit, orderBy: orderBy)
   }
 }
+
+#endif

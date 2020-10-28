@@ -74,3 +74,10 @@ http_file(
   sha256 = "298846d5ad7607eba33e786149c2b642ffe39508d4a99468a8280871d902fe5d",
   urls = ["https://github.com/google/xctestrunner/releases/download/0.2.14/ios_test_runner.par"],
 )
+
+http_archive(
+  name = "sqlite3",
+  sha256 = "b34f4c0c0eefad9a7e515c030c18702e477f4ef7d8ade6142bdab8011b487ac6",
+  urls = ["https://www.sqlite.org/2020/sqlite-amalgamation-3330000.zip"],
+  build_file = "sqlite3.BUILD"
+)

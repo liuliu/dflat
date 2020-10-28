@@ -369,6 +369,8 @@ public final class SQLiteWorkspace: Workspace {
   
   // MARK - Combine-compliant
 
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element> where Element: Equatable {
     return SQLiteAtomPublisher<Element>(workspace: self, object: object)
@@ -384,15 +386,17 @@ public final class SQLiteWorkspace: Workspace {
     return SQLiteQueryPublisherBuilder<Element>(workspace: self)
   }
 
+#endif
+
   // MARK - Internal
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
-    #if !targetEnvironment(simulator)
-    let fd = open_dprotected_np_sb(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+    #if !targetEnvironment(simulator) && (os(iOS) || os(watchOS) || os(tvOS))
+    let fd = open_dprotected_np(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
     close(fd)
-    let wal = open_dprotected_np_sb(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+    let wal = open_dprotected_np(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
     close(wal)
-    let shm = open_dprotected_np_sb(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+    let shm = open_dprotected_np(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
     close(shm)
     #endif
   }

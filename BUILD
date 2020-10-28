@@ -20,6 +20,13 @@ swift_library(
   ]
 )
 
+config_setting(
+  name = "linux_build",
+  constraint_values = [
+    "@platforms//os:linux",
+  ]
+)
+
 swift_library(
   name = "SQLiteDflat",
   module_name = "SQLiteDflat",
@@ -27,5 +34,8 @@ swift_library(
   deps = [
     ":Dflat",
     "//src:SQLiteDflatObjC"
-  ]
+  ] + select({
+    ":linux_build": ["@sqlite3//:SQLite3"],
+    "//conditions:default": []
+  })
 )
