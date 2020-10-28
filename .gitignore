@@ -100,3 +100,5 @@ bazel-*
 Package.resolved
 # sourcedocs
 Documentation
+
+clang.bazelrc
