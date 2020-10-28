@@ -439,6 +439,13 @@ class SchemaUpgradeTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testQueryIndexWithoutIndexRows", testQueryIndexWithoutIndexRows),
+    ("testQueryIndexWithPartialIndexRows", testQueryIndexWithPartialIndexRows),
+    ("testQueryIndexWithoutIndexTable", testQueryIndexWithoutIndexTable),
+    ("testBuildIndexWhenTableDropped", testBuildIndexWhenTableDropped),
+    ("testBuildIndexWhenIndexMissing", testBuildIndexWhenIndexMissing),
+    ("testBuildIndexWithPartialIndex", testBuildIndexWithPartialIndex),
+    ("testUpgradeFromV1ToV2", testUpgradeFromV1ToV2),
     ("testUpgradeFromV1ToV2NoMissingIndexForUpgrade", testUpgradeFromV1ToV2NoMissingIndexForUpgrade)
   ]
 }

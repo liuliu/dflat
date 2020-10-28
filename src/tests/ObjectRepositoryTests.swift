@@ -67,6 +67,7 @@ class ObjectRepositoryTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testSetUpdatedObjects", testSetUpdatedObjects),
     ("testSetFetchedObjects", testSetFetchedObjects)
   ]
 }

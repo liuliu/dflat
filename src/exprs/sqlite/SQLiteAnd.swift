@@ -1,5 +1,3 @@
-import Dflat
-
 extension AndExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExpr {
   public func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {
     let lval = left.canUsePartialIndex(indexSurvey)

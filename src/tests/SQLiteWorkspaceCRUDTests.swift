@@ -544,6 +544,19 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testObjectCreationAndSimpleQuery", testObjectCreationAndSimpleQuery),
+    ("testObjectCreationAndQueryByNoneIndexedProperty", testObjectCreationAndQueryByNoneIndexedProperty),
+    ("testQueryByIndexedProperty", testQueryByIndexedProperty),
+    ("testSortByIndexedProperty", testSortByIndexedProperty),
+    ("testQueryAndSortByAnotherPrimaryKey", testQueryAndSortByAnotherPrimaryKey),
+    ("testQueryAndSortByPrimaryKey", testQueryAndSortByPrimaryKey),
+    ("testQueryAndSortByPrimaryKeyDesc", testQueryAndSortByPrimaryKeyDesc),
+    ("testQueryByUnionType", testQueryByUnionType),
+    ("testChangeRequestCaptureLatestUpdate", testChangeRequestCaptureLatestUpdate),
+    ("testFetchWithinATransactionToSpeedupChangeRequest", testFetchWithinATransactionToSpeedupChangeRequest),
+    ("testInsertSameObjectError", testInsertSameObjectError),
+    ("testInsertObjectWithTheSameOrbError", testInsertObjectWithTheSameOrbError),
+    ("testAbortTransaction", testAbortTransaction),
     ("testShutdownMultipleTimes", testShutdownMultipleTimes)
   ]
 

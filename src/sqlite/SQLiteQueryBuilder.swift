@@ -28,8 +28,8 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
     self.changesTimestamp = changesTimestamp
     super.init()
   }
-  override func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
-    let sqlQuery = AnySQLiteExpr(query, query as! SQLiteExpr)
+  override func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
+    let sqlQuery = AnySQLiteExpr(query)
     var result = [Element]()
     SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
     return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)

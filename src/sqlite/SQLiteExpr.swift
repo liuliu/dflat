@@ -1,11 +1,6 @@
 import Dflat
 import FlatBuffers
 
-public protocol SQLiteExpr {
-  func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32)
-  func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32)
-}
-
 private class _AnyExprBase<ResultType, Element: Atom>: Expr {
   func evaluate(object: Evaluable<Element>) -> ResultType? {
     fatalError()
@@ -37,14 +32,8 @@ private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element> wh
 public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
   private let sqlBase: SQLiteExpr
   private let base: _AnyExprBase<ResultType, Element>
-  public init<T: Expr>(_ base: T) where T.ResultType == ResultType, T: SQLiteExpr, T.Element == Element {
+  public init<T: Expr & SQLiteExpr>(_ base: T) where T.ResultType == ResultType, T.Element == Element {
     self.sqlBase = base
-    self.base = _AnyExpr(base)
-  }
-  // This is the weird bit, since we have to force cast to SQLiteExpr, hence, we cannot really
-  // Put them into one parameter. This has to be two.
-  public init<T: Expr>(_ base: T, _ sqlBase: SQLiteExpr) where T.ResultType == ResultType, T.Element == Element {
-    self.sqlBase = sqlBase
     self.base = _AnyExpr(base)
   }
   public func evaluate(object: Evaluable<Element>) -> ResultType? {

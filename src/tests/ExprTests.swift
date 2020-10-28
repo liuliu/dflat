@@ -151,6 +151,11 @@ class ExprTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testEvaluateField", testEvaluateField),
+    ("testEvaluateEqualTo", testEvaluateEqualTo),
+    ("testBuildComplexExpression", testBuildComplexExpression),
+    ("testArithmetic", testArithmetic),
+    ("testNull", testNull),
     ("testInSet", testInSet)
   ]
 }

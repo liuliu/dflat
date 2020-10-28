@@ -317,6 +317,9 @@ class SubscribeTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testSubscribeObject", testSubscribeObject),
+    ("testSubscribeOutdatedObjectAndCacnelBeforeNextUpdate", testSubscribeOutdatedObjectAndCacnelBeforeNextUpdate),
+    ("testSubscribeFetchedResult", testSubscribeFetchedResult),
     ("testSubscribeOutdatedFetchedResultAndCancelSecondary", testSubscribeOutdatedFetchedResultAndCancelSecondary)
   ]
 

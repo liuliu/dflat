@@ -39,7 +39,7 @@ open class QueryBuilder<Element: Atom> {
    *
    * - Returns: Return a fetched result which interacts just like normal array.
    */
-  open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
+  open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
     fatalError()
   }
   /**

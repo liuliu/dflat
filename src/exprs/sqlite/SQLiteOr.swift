@@ -1,5 +1,3 @@
-import Dflat
-
 extension OrExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExpr {
   public func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {
     guard self.canUsePartialIndex(indexSurvey) == .full else { return }

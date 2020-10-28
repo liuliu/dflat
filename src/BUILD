@@ -16,9 +16,10 @@ filegroup(
     "FetchedResult.swift",
     "Publisher.swift",
     "QueryBuilder.swift",
+    "SQLiteExpr.swift",
     "TransactionContext.swift",
     "Workspace.swift",
-  ] + glob(["exprs/*.swift"]),
+  ] + glob(["exprs/**/*.swift"]),
   visibility = ["//:__pkg__"],
 )
 
@@ -38,9 +39,10 @@ filegroup(
     "sqlite/SQLiteTableSpace.swift",
     "sqlite/SQLiteTableState.swift",
     "sqlite/SQLiteTransactionContext.swift",
+    "sqlite/SQLiteValue.swift",
     "sqlite/SQLiteWorkspace.swift",
     "sqlite/SQLiteWorkspaceState.swift",
     "sqlite/OSShim.swift",
-  ] + glob(["sqlite/exprs/*.swift"]),
+  ],
   visibility = ["//:__pkg__"],
 )
