@@ -3,11 +3,11 @@ licenses(["notice"])
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 package(
-    default_visibility = ["//visibility:public"],
+  default_visibility = ["//visibility:public"],
 )
 
 exports_files([
-    "LICENSE",
+  "LICENSE",
 ])
 
 swift_library(

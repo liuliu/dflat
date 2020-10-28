@@ -90,6 +90,7 @@ public protocol Workspace: Queryable {
    *            automatically.
    */
   func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription where Element: Equatable
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
   // MARK - Combine-compliant
   /**
    * Return a publisher for object subscription in Combine.
@@ -106,6 +107,7 @@ public protocol Workspace: Queryable {
    */
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable
+#endif
 }
 
 public extension Workspace {

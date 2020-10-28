@@ -1,8 +1,7 @@
-objc_library(
+cc_library(
   name = "SQLiteDflatObjC",
   hdrs = ["sqlite/include/Bridge.h"],
-  enable_modules = True,
-  module_name = "SQLiteDflatObjC",
+  tags = ["swift_module=SQLiteDflatObjC"],
   visibility = ["//:__pkg__"]
 )
 

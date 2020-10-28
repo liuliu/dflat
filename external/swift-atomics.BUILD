@@ -4,12 +4,11 @@ package(
   default_visibility = ["//visibility:public"],
 )
 
-objc_library(
+cc_library(
   name = "_AtomicsShims",
   hdrs = ["Sources/_AtomicsShims/include/_AtomicsShims.h"],
   srcs = ["Sources/_AtomicsShims/src/_AtomicsShims.c"],
-  enable_modules = 1,
-  module_name = "_AtomicsShims",
+  tags = ["swift_module=_AtomicsShims"],
   includes = [
     "Sources/_AtomicsShims/include/"
   ]
