@@ -3,6 +3,19 @@
 
 import PackageDescription
 
+#if os(Linux)
+let dependencies: [Package.Dependency] = [
+    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
+    .package(url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "5.3.0")
+  ]
+#else
+let dependencies: [Package.Dependency] = [
+    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2")
+  ]
+#endif
+
 let package = Package(
   name: "Dflat",
   platforms: [.macOS(.v10_14), .iOS(.v11)],
@@ -10,10 +23,7 @@ let package = Package(
     .library(name: "Dflat", type: .static, targets: ["Dflat"]),
     .library(name: "SQLiteDflat", type: .static, targets: ["SQLiteDflat"]),
   ],
-  dependencies: [
-    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
-    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
-  ],
+  dependencies: dependencies,
   targets: [
     .target(
       name: "Dflat",
@@ -115,7 +125,7 @@ let package = Package(
         "ObjectRepositoryTests.swift",
         "SchemaUpgradeTests.swift",
         "SQLiteWorkspaceCRUDTests.swift",
-        "SubscribeTests.swift",
+        "SubscribeTests.swift"
       ])
   ]
 )
