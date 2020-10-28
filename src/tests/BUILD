@@ -23,6 +23,7 @@ swift_library(
     "SchemaUpgradeTests.swift",
     "SQLiteWorkspaceCRUDTests.swift",
     "SubscribeTests.swift",
+    "LinuxMain.swift"
   ],
   deps = [
     "//:SQLiteDflat",

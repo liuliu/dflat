@@ -54,7 +54,7 @@ let package = Package(
       publicHeadersPath: "include"),
     .target(
       name: "SQLiteDflat",
-      dependencies: ["Dflat", "SQLiteDflatObjC"],
+      dependencies: ["Dflat", "_SQLiteDflatOSShim"],
       path: "src/sqlite",
       sources: [
         "SQLiteAtom.swift",
