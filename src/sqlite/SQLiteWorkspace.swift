@@ -392,11 +392,11 @@ public final class SQLiteWorkspace: Workspace {
 
   static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
     #if !targetEnvironment(simulator) && (os(iOS) || os(watchOS) || os(tvOS))
-    let fd = open_dprotected_np(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
+    let fd = open_dprotected_np_sb(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(fd)
-    let wal = open_dprotected_np(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
+    let wal = open_dprotected_np_sb(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(wal)
-    let shm = open_dprotected_np(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0, 438)
+    let shm = open_dprotected_np_sb(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
     close(shm)
     #endif
   }
