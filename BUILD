@@ -33,7 +33,7 @@ swift_library(
   srcs = ["//src:SQLiteDflatFiles"],
   deps = [
     ":Dflat",
-    "//src:SQLiteDflatObjC"
+    "//src:_SQLiteDflatOSShim"
   ] + select({
     ":linux_build": ["@sqlite3//:SQLite3"],
     "//conditions:default": []

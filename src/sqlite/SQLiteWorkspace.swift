@@ -4,7 +4,7 @@ import SQLite3
 import Dispatch
 import Foundation
 import FlatBuffers
-import SQLiteDflatObjC
+import _SQLiteDflatOSShim
 
 public final class SQLiteWorkspace: Workspace {
 

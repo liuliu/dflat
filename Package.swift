@@ -46,10 +46,10 @@ let package = Package(
         "exprs/Value.swift"
       ]),
     .target(
-      name: "SQLiteDflatObjC",
+      name: "_SQLiteDflatOSShim",
       path: "src/sqlite",
       sources: [
-        "Bridge.m",
+        "os.c",
       ],
       publicHeadersPath: "include"),
     .target(

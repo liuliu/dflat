@@ -1,7 +1,9 @@
 cc_library(
-  name = "SQLiteDflatObjC",
-  hdrs = ["sqlite/include/Bridge.h"],
-  tags = ["swift_module=SQLiteDflatObjC"],
+  name = "_SQLiteDflatOSShim",
+  hdrs = ["sqlite/include/os.h"],
+  srcs = ["sqlite/os.c"],
+  tags = ["swift_module=_SQLiteDflatOSShim"],
+  includes = ["sqlite/include"],
   visibility = ["//:__pkg__"]
 )
 
@@ -38,6 +40,7 @@ filegroup(
     "sqlite/SQLiteTransactionContext.swift",
     "sqlite/SQLiteWorkspace.swift",
     "sqlite/SQLiteWorkspaceState.swift",
+    "sqlite/LinuxShim.swift",
   ] + glob(["sqlite/exprs/*.swift"]),
   visibility = ["//:__pkg__"],
 )

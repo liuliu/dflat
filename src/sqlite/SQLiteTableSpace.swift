@@ -16,7 +16,7 @@ final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
   var resultPublisher: ResultPublisher? = nil
   private var connection: SQLiteConnection? = nil
   private var _shutdown: Bool = false
-  private var _lock: os_unfair_lock = os_unfair_lock()
+  private var _lock: os_unfair_lock_s = os_unfair_lock()
   init(queue: DispatchQueue) {
     self.queue = queue
   }
