@@ -12,7 +12,7 @@ let package = Package(
   ],
   dependencies: [
     .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
-    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.1"),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
   ],
   targets: [
     .target(

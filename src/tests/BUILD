@@ -23,17 +23,24 @@ swift_library(
     "SchemaUpgradeTests.swift",
     "SQLiteWorkspaceCRUDTests.swift",
     "SubscribeTests.swift",
-    "LinuxMain.swift"
+    "main.swift"
   ],
   deps = [
     "//:SQLiteDflat",
   ],
 )
 
-ios_unit_test(
+swift_test(
   name = "Tests",
   deps = [
-    ":Tests_lib",
+    ":Tests_lib"
+  ]
+)
+
+ios_unit_test(
+  name = "iOSTests",
+  deps = [
+    ":Tests_lib"
   ],
   minimum_os_version = "10.0",
 )

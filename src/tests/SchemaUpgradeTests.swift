@@ -437,4 +437,8 @@ class SchemaUpgradeTests: XCTestCase {
     XCTAssertNil(query2)
     connection?.close()
   }
+
+  static let allTests = [
+    ("testUpgradeFromV1ToV2NoMissingIndexForUpgrade", testUpgradeFromV1ToV2NoMissingIndexForUpgrade)
+  ]
 }

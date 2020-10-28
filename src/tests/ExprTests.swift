@@ -150,4 +150,7 @@ class ExprTests: XCTestCase {
     XCTAssertFalse(retval3!)
   }
 
+  static let allTests = [
+    ("testInSet", testInSet)
+  ]
 }

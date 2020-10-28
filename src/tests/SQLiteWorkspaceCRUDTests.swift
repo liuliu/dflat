@@ -543,4 +543,8 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     group.wait()
   }
 
+  static let allTests = [
+    ("testShutdownMultipleTimes", testShutdownMultipleTimes)
+  ]
+
 }

@@ -213,4 +213,9 @@ class ConcurrencyTests: XCTestCase {
     XCTAssertEqual(fetchedResult2[2].name, "name3")
     XCTAssertEqual(fetchedResult2[3].name, "name4")
   }
+
+  static let allTests = [
+    ("testConcurrentUpdates", testConcurrentUpdates),
+    ("testSQLiteWriteLock", testSQLiteWriteLock)
+  ]
 }

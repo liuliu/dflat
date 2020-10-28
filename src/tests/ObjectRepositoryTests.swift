@@ -65,4 +65,8 @@ class ObjectRepositoryTests: XCTestCase {
     let retMonster3 = objectRepository.object(reader, ofType: MyGame.Sample.Monster.self, for: .rowid(3))
     XCTAssertNil(retMonster3)
   }
+
+  static let allTests = [
+    ("testSetFetchedObjects", testSetFetchedObjects)
+  ]
 }

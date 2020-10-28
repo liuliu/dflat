@@ -316,6 +316,11 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(secondaryFetchedResult[6].name, "name 5")
   }
 
+  static let allTests = [
+    ("testSubscribeOutdatedFetchedResultAndCancelSecondary", testSubscribeOutdatedFetchedResultAndCancelSecondary)
+  ]
+
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
   @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   func testObjectPublisher() {
     guard let dflat = dflat else { return }
@@ -535,4 +540,5 @@ class SubscribeTests: XCTestCase {
     XCTAssertEqual(updatedFetchedResult!, finalFetchedResult)
     cancellable.cancel()
   }
+#endif
 }

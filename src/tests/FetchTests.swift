@@ -76,4 +76,8 @@ class FetchTests: XCTestCase {
     XCTAssert(finalFetchedResult.count == 1)
     XCTAssertEqual(finalFetchedResult[0].name, "name3")
   }
+
+  static let allTests = [
+    ("testFetchWithinASnapshot", testFetchWithinASnapshot)
+  ]
 }
