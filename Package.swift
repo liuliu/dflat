@@ -7,13 +7,15 @@ import PackageDescription
 let dependencies: [Package.Dependency] = [
     .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
-    .package(url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "5.3.0")
+    .package(name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0")
   ]
+let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
 #else
 let dependencies: [Package.Dependency] = [
     .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2")
   ]
+let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]
 #endif
 
 let package = Package(
@@ -81,7 +83,7 @@ let package = Package(
       publicHeadersPath: "include"),
     .target(
       name: "SQLiteDflat",
-      dependencies: ["Dflat", "_SQLiteDflatOSShim"],
+      dependencies: sqliteDflatDependencies,
       path: "src/sqlite",
       sources: [
         "SQLiteAtom.swift",
