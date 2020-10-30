@@ -8,6 +8,7 @@ cc_library(
   srcs = ["sqlite-amalgamation-3330000/sqlite3.c"],
   tags = ["swift_module=SQLite3"],
   includes = ["sqlite-amalgamation-3330000"],
+  copts = ["-fPIC"],
   defines = [
     "DEFAULT_CACHE_SIZE=128",
     "DEFAULT_CKPTFULLFSYNC",

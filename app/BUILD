@@ -1,5 +1,5 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application")
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_binary")
 
 swift_library(
   name = "Benchmarks",
@@ -23,11 +23,38 @@ swift_library(
     "Benchmarks/doc_v4_mutating_generated.swift",
     "Benchmarks/doc_v4_query_generated.swift",
   ],
-	data = glob(["Benchmarks/DataModel.xcdatamodeld/**"]),
+  data = glob(["Benchmarks/DataModel.xcdatamodeld/**"]),
   deps = [
     "//:Dflat",
     "//:SQLiteDflat",
   ],
+)
+
+swift_binary(
+  name = "BenchmarksBin",
+  srcs = [
+    "Benchmarks/main.swift",
+    "Benchmarks/doc_generated.swift",
+    "Benchmarks/doc_data_model_generated.swift",
+    "Benchmarks/doc_mutating_generated.swift",
+    "Benchmarks/doc_query_generated.swift",
+    "Benchmarks/doc_v2_generated.swift",
+    "Benchmarks/doc_v2_data_model_generated.swift",
+    "Benchmarks/doc_v2_mutating_generated.swift",
+    "Benchmarks/doc_v2_query_generated.swift",
+    "Benchmarks/doc_v3_generated.swift",
+    "Benchmarks/doc_v3_data_model_generated.swift",
+    "Benchmarks/doc_v3_mutating_generated.swift",
+    "Benchmarks/doc_v3_query_generated.swift",
+    "Benchmarks/doc_v4_generated.swift",
+    "Benchmarks/doc_v4_data_model_generated.swift",
+    "Benchmarks/doc_v4_mutating_generated.swift",
+    "Benchmarks/doc_v4_query_generated.swift",
+  ],
+  deps = [
+    "//:Dflat",
+    "//:SQLiteDflat",
+  ]
 )
 
 ios_application(
