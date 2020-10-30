@@ -1,4 +1,5 @@
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def _maybe(repo_rule, name, **kwargs):
   """Executes the given repository rule if it hasn't been executed already.
@@ -26,7 +27,15 @@ def dflat_deps():
     new_git_repository,
     name = "swift-atomics",
     remote = "https://github.com/apple/swift-atomics.git",
-    commit = "d07c2a5c922307b5a24ee45aab6a922b9ebaee33",
-    shallow_since = "1601602457 -0700",
+    commit = "ccce007d5d5462860cf0cb7839a233307424c61c",
+    shallow_since = "1603395818 -0700",
     build_file = "@dflat//:external/swift-atomics.BUILD"
+  )
+
+  _maybe(
+    http_archive,
+    name = "sqlite3",
+    sha256 = "b34f4c0c0eefad9a7e515c030c18702e477f4ef7d8ade6142bdab8011b487ac6",
+    urls = ["https://www.sqlite.org/2020/sqlite-amalgamation-3330000.zip"],
+    build_file = "@dflat//:external/sqlite3.BUILD"
   )
