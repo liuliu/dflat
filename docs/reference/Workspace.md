@@ -167,7 +167,7 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element
+open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Make query against the Workspace. This is coupled with `fetch(for:)` method and shouldn't be used independently.
@@ -271,7 +271,7 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element
+open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
