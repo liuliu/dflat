@@ -1238,9 +1238,7 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   let filebase = filename.prefix(filename.count - "_generated.json".count)
   GenDataModel(schema: schema, outputPath: outputPath + "/" + filebase + "_data_model_generated.swift")
   GenMutating(schema: schema, outputPath: outputPath + "/" + filebase + "_mutating_generated.swift")
-  if schema.root != nil { // Only gen query if we have root.
-    GenQuery(schema: schema, outputPath: outputPath + "/" + filebase + "_query_generated.swift")
-  }
+  GenQuery(schema: schema, outputPath: outputPath + "/" + filebase + "_query_generated.swift")
 }
 
 var outputPath: String? = nil

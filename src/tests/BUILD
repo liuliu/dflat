@@ -1,5 +1,22 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_unit_test")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
+load("@dflat//:dflat.bzl", "dflatc")
+
+dflatc(
+  name = "monster_schema",
+  src = "monster.fbs",
+  includes = ["orb_weapon.fbs"]
+)
+
+dflatc(
+  name = "orb_weapon_schema",
+  src = "orb_weapon.fbs"
+)
+
+dflatc(
+  name = "monster_v2_schema",
+  src = "monster_v2.fbs"
+)
 
 swift_library(
   name = "Tests_lib",
@@ -8,17 +25,9 @@ swift_library(
     "ExprTests.swift",
     "FetchTests.swift",
     "namespace.swift",
-    "monster_generated.swift",
-    "monster_data_model_generated.swift",
-    "monster_mutating_generated.swift",
-    "monster_query_generated.swift",
-    "orb_weapon_generated.swift",
-    "orb_weapon_data_model_generated.swift",
-    "orb_weapon_mutating_generated.swift",
-    "monster_v2_generated.swift",
-    "monster_v2_data_model_generated.swift",
-    "monster_v2_mutating_generated.swift",
-    "monster_v2_query_generated.swift",
+    ":monster_schema",
+    ":orb_weapon_schema",
+    ":monster_v2_schema",
     "ObjectRepositoryTests.swift",
     "SchemaUpgradeTests.swift",
     "SQLiteWorkspaceCRUDTests.swift",
