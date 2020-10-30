@@ -2,5 +2,10 @@ build --strategy=ObjcLink=standalone
 build --disk_cache=/tmp/bazel
 build --swiftcopt=-whole-module-optimization
 
+build:clang --action_env=CC=clang
+build:clang --action_env=CXX=clang++
+
+build --config=clang
+
 try-import clang.bazelrc
 
