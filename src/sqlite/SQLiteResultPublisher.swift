@@ -9,11 +9,10 @@ enum SQLiteSubscriptionType {
 final class SQLiteSubscription: Workspace.Subscription {
   private let ofType: SQLiteSubscriptionType
   var cancelled = UnsafeAtomic<Bool>.Storage(false)
-  let identifier: ObjectIdentifier
+  var identifier: ObjectIdentifier { ObjectIdentifier(self) }
   weak var workspace: SQLiteWorkspace?
-  init(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier, workspace: SQLiteWorkspace) {
+  init(ofType: SQLiteSubscriptionType, workspace: SQLiteWorkspace) {
     self.ofType = ofType
-    self.identifier = identifier
     self.workspace = workspace
   }
   deinit {

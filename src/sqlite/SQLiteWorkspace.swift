@@ -259,7 +259,7 @@ public final class SQLiteWorkspace: Workspace {
   public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let identifier = ObjectIdentifier(fetchedResult.query)
-    let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), workspace: self)
     guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       return subscription
     }
@@ -305,7 +305,7 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
-    let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), identifier: ObjectIdentifier(changeHandler as AnyObject), workspace: self)
+    let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), workspace: self)
     guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
       return subscription
     }
