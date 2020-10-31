@@ -123,10 +123,14 @@ public final class SQLiteWorkspace: Workspace {
         }
       }
     }
+    guard let completion = completion else {
+      group.wait()
+      return
+    }
     group.notify(queue: targetQueue) { [self] in
       // After shutdown all writers, now to drain the reader pool.
       self.readerPool.drain()
-      completion?()
+      completion()
     }
   }
 
