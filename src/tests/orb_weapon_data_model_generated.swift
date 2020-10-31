@@ -1,5 +1,7 @@
 import Dflat
 import FlatBuffers
+import SQLiteDflat
+import SQLite3
 
 extension MyGame.Sample {
 
@@ -13,8 +15,8 @@ public enum Color: Int8, DflatFriendlyValue {
 }
 
 public struct Weapon: Equatable {
-  var name: String?
-  var damage: Int16
+  public var name: String?
+  public var damage: Int16
   public init(name: String? = nil, damage: Int16 = 0) {
     self.name = name
     self.damage = damage
@@ -26,8 +28,8 @@ public struct Weapon: Equatable {
 }
 
 public struct Orb: Equatable {
-  var name: String?
-  var color: Color
+  public var name: String?
+  public var color: Color
   public init(name: String? = nil, color: Color = .red) {
     self.name = name
     self.color = color

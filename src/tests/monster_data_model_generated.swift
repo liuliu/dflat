@@ -1,5 +1,7 @@
 import Dflat
 import FlatBuffers
+import SQLiteDflat
+import SQLite3
 
 extension MyGame.Sample {
 
@@ -24,7 +26,7 @@ public struct Vec3: Equatable {
   }
 }
 
-public final class Monster: Dflat.Atom, Equatable {
+public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public static func == (lhs: Monster, rhs: Monster) -> Bool {
     guard lhs.pos == rhs.pos else { return false }
     guard lhs.mana == rhs.mana else { return false }
@@ -114,6 +116,54 @@ public final class Monster: Dflat.Atom, Equatable {
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))
+  }
+  public static var table: String { "mygame__sample__monster" }
+  public static var indexFields: [String] { ["f6", "f26__type", "f26__u2__f4"] }
+  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__f6 (rowid INTEGER PRIMARY KEY, f6 INTEGER)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__f6 ON mygame__sample__monster__f6 (f6)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__f26__type (rowid INTEGER PRIMARY KEY, f26__type INTEGER)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE INDEX IF NOT EXISTS index__mygame__sample__monster__f26__type ON mygame__sample__monster__f26__type (f26__type)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS mygame__sample__monster__f26__u2__f4 (rowid INTEGER PRIMARY KEY, f26__u2__f4 TEXT)", nil, nil, nil)
+    sqlite3_exec(sqlite.sqlite, "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__sample__monster__f26__u2__f4 ON mygame__sample__monster__f26__u2__f4 (f26__u2__f4)", nil, nil, nil)
+    sqlite.clearIndexStatus(for: Self.table)
+  }
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return false }
+    switch field {
+    case "f6":
+      guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)") else { return false }
+      rowid.bindSQLite(insert, parameterId: 1)
+      if let retval = MyGame.Sample.Monster.mana.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
+      } else {
+        sqlite3_bind_null(insert, 2)
+      }
+      guard SQLITE_DONE == sqlite3_step(insert) else { return false }
+    case "f26__type":
+      guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return false }
+      rowid.bindSQLite(insert, parameterId: 1)
+      if let retval = MyGame.Sample.Monster.equipped._type.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
+      } else {
+        sqlite3_bind_null(insert, 2)
+      }
+      guard SQLITE_DONE == sqlite3_step(insert) else { return false }
+    case "f26__u2__f4":
+      guard let insert = sqlite.prepareStaticStatement("INSERT INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return false }
+      rowid.bindSQLite(insert, parameterId: 1)
+      if let retval = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .table(table)) {
+        retval.bindSQLite(insert, parameterId: 2)
+      } else {
+        sqlite3_bind_null(insert, 2)
+      }
+      guard SQLITE_DONE == sqlite3_step(insert) else { return false }
+    default:
+      break
+    }
+    return true
   }
 }
 

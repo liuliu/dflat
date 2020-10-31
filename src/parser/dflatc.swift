@@ -441,7 +441,7 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
 }
 
 func GenRootDataModel(_ structDef: Struct, code: inout String) {
-  code += "\npublic final class \(structDef.name): Dflat.Atom, Equatable {\n"
+  code += "\npublic final class \(structDef.name): Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {\n"
   code += "  public static func == (lhs: \(structDef.name), rhs: \(structDef.name)) -> Bool {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
@@ -465,11 +465,50 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
   code += "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
   code += "  }\n"
+  let indexedFields = GetIndexedFields(structDef)
+  let tableName = GetTableName(structDef)
+  let primaryKeys = GetPrimaryKeys(structDef)
+  code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
+  code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\($0.keyName)\"" }.joined(separator: ", "))] }\n"
+  code += "  public static func setUpSchema(_ toolbox: PersistenceToolbox) {\n"
+  code += "    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }\n"
+  code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName) (rowid INTEGER PRIMARY KEY AUTOINCREMENT, "
+  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset) \(SQLiteType[$0.element.type.type.rawValue]!)" }.joined(separator: ", ")), p BLOB, UNIQUE("
+  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", "))))\", nil, nil, nil)\n"
+  for indexedField in indexedFields {
+    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName)__\(indexedField.keyName) (rowid INTEGER PRIMARY KEY, \(indexedField.keyName) \(SQLiteType[indexedField.field.type.type.rawValue]!))\", nil, nil, nil)\n"
+    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE\(indexedField.field.isUnique ? " UNIQUE" : "") INDEX IF NOT EXISTS index__\(tableName)__\(indexedField.keyName) ON \(tableName)__\(indexedField.keyName) (\(indexedField.keyName))\", nil, nil, nil)\n"
+  }
+  if indexedFields.count > 0 {
+    code += "    sqlite.clearIndexStatus(for: Self.table)\n"
+  }
+  code += "  }\n"
+  code += "  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {\n"
+  if indexedFields.count > 0 {
+    code += "    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return false }\n"
+    code += "    switch field {\n"
+    for indexedField in indexedFields {
+      code += "    case \"\(indexedField.keyName)\":\n"
+      code += "      guard let insert = sqlite.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return false }\n"
+      code += "      rowid.bindSQLite(insert, parameterId: 1)\n"
+      code += "      if let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .table(table)) {\n"
+      code += "        retval.bindSQLite(insert, parameterId: 2)\n"
+      code += "      } else {\n"
+      code += "        sqlite3_bind_null(insert, 2)\n"
+      code += "      }\n"
+      code += "      guard SQLITE_DONE == sqlite3_step(insert) else { return false }\n"
+    }
+    code += "    default:\n"
+    code += "      break\n"
+    code += "    }\n"
+  }
+  code += "    return true\n"
+  code += "  }\n"
   code += "}\n"
 }
 
 func GenDataModel(schema: Schema, outputPath: String) {
-  var code = "import Dflat\nimport FlatBuffers\n"
+  var code = "import Dflat\nimport FlatBuffers\nimport SQLiteDflat\nimport SQLite3\n"
   var namespace: [String] = []
   for enumDef in schema.enums {
     guard !enumDef.generated else { continue }
@@ -826,45 +865,6 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   let indexedFields = GetIndexedFields(structDef)
   let tableName = GetTableName(structDef)
   let primaryKeys = GetPrimaryKeys(structDef)
-  code += "\nextension \(GetFullyQualifiedName(structDef)): SQLiteDflat.SQLiteAtom {\n"
-  code += "  public static var table: String { \"\(GetTableName(structDef))\" }\n"
-  code += "  public static var indexFields: [String] { [\(indexedFields.map { "\"\($0.keyName)\"" }.joined(separator: ", "))] }\n"
-  code += "  public static func setUpSchema(_ toolbox: PersistenceToolbox) {\n"
-  code += "    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }\n"
-  code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName) (rowid INTEGER PRIMARY KEY AUTOINCREMENT, "
-  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset) \(SQLiteType[$0.element.type.type.rawValue]!)" }.joined(separator: ", ")), p BLOB, UNIQUE("
-  code += "\(primaryKeys.enumerated().map { "__pk\($0.offset)" }.joined(separator: ", "))))\", nil, nil, nil)\n"
-  // TODO: Create table for indexes.
-  for indexedField in indexedFields {
-    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE TABLE IF NOT EXISTS \(tableName)__\(indexedField.keyName) (rowid INTEGER PRIMARY KEY, \(indexedField.keyName) \(SQLiteType[indexedField.field.type.type.rawValue]!))\", nil, nil, nil)\n"
-    code += "    sqlite3_exec(sqlite.sqlite, \"CREATE\(indexedField.field.isUnique ? " UNIQUE" : "") INDEX IF NOT EXISTS index__\(tableName)__\(indexedField.keyName) ON \(tableName)__\(indexedField.keyName) (\(indexedField.keyName))\", nil, nil, nil)\n"
-  }
-  if indexedFields.count > 0 {
-    code += "    sqlite.clearIndexStatus(for: Self.table)\n"
-  }
-  code += "  }\n"
-  code += "  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {\n"
-  if indexedFields.count > 0 {
-    code += "    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return false }\n"
-    code += "    switch field {\n"
-    for indexedField in indexedFields {
-      code += "    case \"\(indexedField.keyName)\":\n"
-      code += "      guard let insert = sqlite.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return false }\n"
-      code += "      rowid.bindSQLite(insert, parameterId: 1)\n"
-      code += "      if let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .table(table)) {\n"
-      code += "        retval.bindSQLite(insert, parameterId: 2)\n"
-      code += "      } else {\n"
-      code += "        sqlite3_bind_null(insert, 2)\n"
-      code += "      }\n"
-      code += "      guard SQLITE_DONE == sqlite3_step(insert) else { return false }\n"
-    }
-    code += "    default:\n"
-    code += "      break\n"
-    code += "    }\n"
-  }
-  code += "    return true\n"
-  code += "  }\n"
-  code += "}\n"
   if structDef.namespace.count > 0 {
     code += "\nextension \(structDef.namespace.joined(separator: ".")) {\n"
   }

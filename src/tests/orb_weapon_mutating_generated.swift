@@ -16,7 +16,10 @@ extension MyGame.Sample.Color: SQLiteValue {
 extension MyGame.Sample.Weapon {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
-    return zzz_DflatGen_MyGame_Sample_Weapon.createWeapon(&flatBufferBuilder, offsetOfName: __name, damage: self.damage)
+    let start = zzz_DflatGen_MyGame_Sample_Weapon.startWeapon(&flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Weapon.add(name: __name, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Weapon.add(damage: self.damage, &flatBufferBuilder)
+    return zzz_DflatGen_MyGame_Sample_Weapon.endWeapon(&flatBufferBuilder, start: start)
   }
 }
 
@@ -30,7 +33,10 @@ extension MyGame.Sample.Orb {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .red
-    return zzz_DflatGen_MyGame_Sample_Orb.createOrb(&flatBufferBuilder, offsetOfName: __name, color: __color)
+    let start = zzz_DflatGen_MyGame_Sample_Orb.startOrb(&flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Orb.add(name: __name, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Orb.add(color: __color, &flatBufferBuilder)
+    return zzz_DflatGen_MyGame_Sample_Orb.endOrb(&flatBufferBuilder, start: start)
   }
 }
 

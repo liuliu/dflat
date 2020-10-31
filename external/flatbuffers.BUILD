@@ -55,6 +55,7 @@ cc_library(
     deps = [
         "//src:flatc",
     ],
+    linkopts = ["-lm"]
 )
 
 filegroup(

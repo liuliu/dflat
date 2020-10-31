@@ -1,5 +1,7 @@
 import Dflat
 import FlatBuffers
+import SQLiteDflat
+import SQLite3
 
 public enum ColorV2: Int8, DflatFriendlyValue {
   case red = 0
@@ -10,7 +12,7 @@ public enum ColorV2: Int8, DflatFriendlyValue {
   }
 }
 
-public final class BenchDocV2: Dflat.Atom, Equatable {
+public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public static func == (lhs: BenchDocV2, rhs: BenchDocV2) -> Bool {
     guard lhs.color == rhs.color else { return false }
     guard lhs.title == rhs.title else { return false }
@@ -40,5 +42,14 @@ public final class BenchDocV2: Dflat.Atom, Equatable {
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
+  }
+  public static var table: String { "benchdocv2" }
+  public static var indexFields: [String] { [] }
+  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdocv2 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
+  }
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
+    return true
   }
 }

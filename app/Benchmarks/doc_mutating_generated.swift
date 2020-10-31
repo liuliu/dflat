@@ -115,18 +115,6 @@ extension Optional where Wrapped == BenchDoc {
 
 // MARK - ChangeRequest
 
-extension BenchDoc: SQLiteDflat.SQLiteAtom {
-  public static var table: String { "benchdoc" }
-  public static var indexFields: [String] { [] }
-  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdoc (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
-  }
-  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
-    return true
-  }
-}
-
 public final class BenchDocChangeRequest: Dflat.ChangeRequest {
   private var _o: BenchDoc?
   public static var atomType: Any.Type { BenchDoc.self }

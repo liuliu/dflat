@@ -1,7 +1,9 @@
 import Dflat
 import FlatBuffers
+import SQLiteDflat
+import SQLite3
 
-public final class BenchDocV3: Dflat.Atom, Equatable {
+public final class BenchDocV3: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public static func == (lhs: BenchDocV3, rhs: BenchDocV3) -> Bool {
     guard lhs.title == rhs.title else { return false }
     guard lhs.tag == rhs.tag else { return false }
@@ -27,5 +29,14 @@ public final class BenchDocV3: Dflat.Atom, Equatable {
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV3.getRootAsBenchDocV3(bb: bb))
+  }
+  public static var table: String { "benchdocv3" }
+  public static var indexFields: [String] { [] }
+  public static func setUpSchema(_ toolbox: PersistenceToolbox) {
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdocv3 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
+  }
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
+    return true
   }
 }
