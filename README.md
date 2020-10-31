@@ -48,16 +48,59 @@ To use **Dflat**, you should first use `dflatc` compiler to generate data model 
 
 You can install Bazel on macOS following [this guide](https://docs.bazel.build/versions/3.3.0/install-os-x.html).
 
-After that, you can use `dflatc` compiler with
+### Install with Bazel
+
+If your project is already managed by Bazel, **Dflat** provides fully-integrated tools from code generation to library dependency management. Simply add **Dflat** to your `WORKSPACE`:
+
+```python
+git_repository(
+  name = "dflat",
+  remote = "https://github.com/liuliu/dflat.git",
+  commit = "88aec220642bb5e416074bc8b8a4e5c8b86a61c2",
+  shallow_since = "1604112303 -0400"
+)
+
+load("@dflat//:deps.bzl", "dflat_deps")
+
+dflat_deps()
+```
+
+For your `swift_library`, you can now add a new schema like this:
+
+```python
+
+load("@dflat//:dflat.bzl", "dflatc")
+
+dflatc(
+  name = "post_schema",
+  src = "post.fbs"
+)
+
+swift_library(
+  ...
+  srcs = [
+    ...
+    ":post_schema"
+  ],
+  deps = [
+    ...
+    "@dflat//:SQLiteDflat"
+  ]
+)
+```
+
+### Install with Swift Package Manager
+
+You can use `dflatc` compiler to manually generate code from flatbuffers schema.
 
 ```
 ./dflatc.py --help
 ```
 
-You can then proceed to add **Dflat** runtime either with Swift Package Manager or Bazel. With Swift Package Manager:
+You can now add the generated source code to your project and then proceed to add **Dflat** runtime with Swift Package Manager:
 
 ```swift
-.package(name: "Dflat", url: "https://github.com/liuliu/dflat.git", from: "0.2.0")
+.package(name: "Dflat", url: "https://github.com/liuliu/dflat.git", from: "0.3.0")
 ```
 
 ## Example
@@ -95,10 +138,19 @@ table Post {
 root_type Post; // This is important, it says the Post object will be the one Dflat manages.
 ```
 
-You can then use `dflatc` compiler to generate code from the schema:
+You can then ether use `dflatc` compiler to manually generate code from the schema:
 
 ```
 ./dflatc.py -o ../PostExample ../PostExample/post.fbs
+```
+
+Or use `dflatc` rule from Bazel:
+
+```python
+dflatc(
+  name = "post_schema",
+  src = "post.fbs"
+)
 ```
 
 If everything checks out, you should see 4 files generated in `../PostExample` directory: `post_generated.swift`, `post_data_model_generated.swift`, `post_mutating_generated.swift`, `post_query_generated.swift`. Adding them to your project.
