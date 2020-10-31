@@ -63,7 +63,7 @@ const std::string GenJSONType(const flatbuffers::Type &type) {
 		} else if (type.enum_def) {
 			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"enum\", \"enum\": \"") + type.enum_def->name + "\"}}";
 		} else if (type.element == flatbuffers::BASE_TYPE_VECTOR || type.element == flatbuffers::BASE_TYPE_ARRAY) {
-			assert(0);
+			exit(-1);
 		} else {
 			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"") + idl_types[type.element] + "\"}}";
 		}
@@ -73,7 +73,7 @@ const std::string GenJSONType(const flatbuffers::Type &type) {
 		} else if (type.base_type == flatbuffers::BASE_TYPE_UNION) {
 			return std::string("{\"type\": \"union\", \"union\": \"") + type.enum_def->name + "\"}";
 		} else {
-			assert(0);
+			exit(-1);
 		}
 	} else if (flatbuffers::IsEnum(type)) {
 		return std::string("{\"type\": \"enum\", \"enum\": \"") + type.enum_def->name + "\"}";
@@ -251,8 +251,7 @@ int main(int argc, const char **argv) {
       Error("unable to load file: " + filename);
     }
     auto ext = flatbuffers::GetExtension(filename);
-    auto is_schema = ext == "fbs";
-    assert(is_schema);
+    assert(ext == "fbs");
     // Check if file contains 0 bytes.
     if (contents.length() != strlen(contents.c_str())) {
       Error("input file appears to be binary: " + filename, true);
