@@ -44,6 +44,8 @@ Transactions initiated before this will finish normally. Data fetching after thi
 will return empty results. Any data fetching triggered before this call will finish
 normally, hence the `completion` part. The `completion` closure, if supplied, will
 be called once all transactions and data fetching initiated before shutdown finish.
+If `completion` closure not provided, this call will wait until all finished before
+return.
 
 ### `performChanges(_:changesHandler:completionHandler:)`
 
