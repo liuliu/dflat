@@ -15,7 +15,8 @@ final class SQLiteWorkspaceState {
     return retval
   }
 
-  func setTableTimestamp<S: Sequence>(_ timestamp: Int64, for identifiers: S) where S.Element == ObjectIdentifier {
+  func setTableTimestamp<S: Sequence>(_ timestamp: Int64, for identifiers: S)
+  where S.Element == ObjectIdentifier {
     os_unfair_lock_lock(&lock)
     for identifier in identifiers {
       tableTimestamps[identifier] = timestamp

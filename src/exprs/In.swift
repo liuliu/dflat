@@ -1,6 +1,7 @@
 import FlatBuffers
 
-public struct InExpr<T: Expr, Element>: Expr where T.ResultType: Hashable, T.ResultType: DflatFriendlyValue, T.Element == Element {
+public struct InExpr<T: Expr, Element>: Expr
+where T.ResultType: Hashable, T.ResultType: DflatFriendlyValue, T.Element == Element {
   public typealias ResultType = Bool
   public typealias Element = Element
   public let unary: T
@@ -17,8 +18,9 @@ public struct InExpr<T: Expr, Element>: Expr where T.ResultType: Hashable, T.Res
   }
 }
 
-public extension Expr {
-  func `in`<S>(_ sequence: S) -> InExpr<Self, Self.Element> where S: Sequence, S.Element == Self.ResultType {
+extension Expr {
+  public func `in`<S>(_ sequence: S) -> InExpr<Self, Self.Element>
+  where S: Sequence, S.Element == Self.ResultType {
     InExpr(unary: self, set: Set(sequence))
   }
 }

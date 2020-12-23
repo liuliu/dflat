@@ -1,4 +1,3 @@
-
 public enum MyGame {
   public enum Sample {
   }

@@ -6,7 +6,7 @@ open class FetchedResult<Element: Atom>: RandomAccessCollection {
   public typealias Index = Int
   public typealias Indices = Range<Index>
   public typealias SubSequence = Array<Element>.SubSequence
-  public var endIndex: Index{ underlyingArray.endIndex }
+  public var endIndex: Index { underlyingArray.endIndex }
   public var indices: Indices { underlyingArray.indices }
   public var startIndex: Index { underlyingArray.startIndex }
   public func formIndex(after i: inout Index) { underlyingArray.formIndex(after: &i) }

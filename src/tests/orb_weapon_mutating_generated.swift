@@ -1,7 +1,7 @@
 import Dflat
-import SQLiteDflat
-import SQLite3
 import FlatBuffers
+import SQLite3
+import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 

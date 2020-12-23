@@ -1,7 +1,7 @@
-import UIKit
+import CoreData
 import Dflat
 import SQLiteDflat
-import CoreData
+import UIKit
 
 final class BenchmarksViewController: UIViewController {
   static let NumberOfEntities = 10_000
@@ -31,7 +31,8 @@ final class BenchmarksViewController: UIViewController {
     fatalError()
   }
   private lazy var runDflatButton: UIButton = {
-    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 12, width: 200, height: 36))
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 12, width: 200, height: 36))
     button.setTitle("Run Dflat CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -40,7 +41,8 @@ final class BenchmarksViewController: UIViewController {
     return button
   }()
   private lazy var runCoreDataButton: UIButton = {
-    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 54, width: 200, height: 36))
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 54, width: 200, height: 36))
     button.setTitle("Run Core Data CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -49,7 +51,8 @@ final class BenchmarksViewController: UIViewController {
     return button
   }()
   private lazy var runDflatSubButton: UIButton = {
-    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 96, width: 200, height: 36))
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 96, width: 200, height: 36))
     button.setTitle("Run Dflat Subscription", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -58,7 +61,8 @@ final class BenchmarksViewController: UIViewController {
     return button
   }()
   private lazy var runCoreDataSubButton: UIButton = {
-    let button = UIButton(frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 138, width: 200, height: 36))
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 138, width: 200, height: 36))
     button.setTitle("Run Core Data Subscription", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -67,7 +71,8 @@ final class BenchmarksViewController: UIViewController {
     return button
   }()
   private lazy var text: UILabel = {
-    let text = UILabel(frame: CGRect(x: 20, y: 180, width: UIScreen.main.bounds.width - 40, height: 320))
+    let text = UILabel(
+      frame: CGRect(x: 20, y: 180, width: UIScreen.main.bounds.width - 40, height: 320))
     text.textColor = .black
     text.numberOfLines = 0
     text.textAlignment = .center
@@ -160,10 +165,12 @@ final class BenchmarksViewController: UIViewController {
     let objectContext = persistentContainer.viewContext
     let fetchIndexStartTime = CACurrentMediaTime()
     let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-    fetchRequest.predicate = NSPredicate(format: "priority > %@", argumentArray: [Self.NumberOfEntities / 4])
+    fetchRequest.predicate = NSPredicate(
+      format: "priority > %@", argumentArray: [Self.NumberOfEntities / 4])
     let fetchHighPri = try! objectContext.fetch(fetchRequest)
     let fetchIndexEndTime = CACurrentMediaTime()
-    stats += "Fetched \(fetchHighPri.count) objects with no index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
+    stats +=
+      "Fetched \(fetchHighPri.count) objects with no index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
     let updateGroup = DispatchGroup()
     updateGroup.enter()
     let updateStartTime = CACurrentMediaTime()
@@ -209,12 +216,12 @@ final class BenchmarksViewController: UIViewController {
       let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
       var allDocs = try! objectContext.fetch(fetchRequest)
       for i in (0..<Self.NumberOfEntities).reversed() {
-      // for (i, objectID) in allDocObjectIDs.enumerated() {
+        // for (i, objectID) in allDocObjectIDs.enumerated() {
         autoreleasepool {
           let doc = allDocs.removeLast()
-      // for (i, objectID) in allDocObjectIDs.enumerated() {
-      //  autoreleasepool {
-      //    let doc = objectContext.object(with: objectID)
+          // for (i, objectID) in allDocObjectIDs.enumerated() {
+          //  autoreleasepool {
+          //    let doc = objectContext.object(with: objectID)
           doc.setValue("tag\(i + 2)", forKeyPath: "tag")
           doc.setValue(12, forKeyPath: "priority")
           doc.setValue(3, forKeyPath: "pos_x")
@@ -239,17 +246,20 @@ final class BenchmarksViewController: UIViewController {
       individualUpdateGroup.leave()
     }
     individualUpdateGroup.wait()
-    stats += "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
+    stats +=
+      "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
     let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
     let individualFetchStartTime = CACurrentMediaTime()
     var newAllDocs = [NSManagedObject]()
     for i in 0..<Self.NumberOfEntities {
-      individualFetchRequest.predicate = NSPredicate(format: "title = %@", argumentArray: ["title\(i)"])
+      individualFetchRequest.predicate = NSPredicate(
+        format: "title = %@", argumentArray: ["title\(i)"])
       let docs = try! persistentContainer.viewContext.fetch(individualFetchRequest)
       newAllDocs.append(docs[0])
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats +=
+      "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
@@ -282,7 +292,8 @@ final class BenchmarksViewController: UIViewController {
       controller.delegate = self
     }
     @objc
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>)
+    {
       fetchedObjects = self.controller.fetchedObjects
       callback?()
     }
@@ -337,15 +348,19 @@ final class BenchmarksViewController: UIViewController {
     var newAllDocs = [CoreDataSubController]()
     for i in 0..<Self.NumberOfSubscriptions {
       let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-      individualFetchRequest.predicate = NSPredicate(format: "title = %@", argumentArray: ["title\(i)"])
+      individualFetchRequest.predicate = NSPredicate(
+        format: "title = %@", argumentArray: ["title\(i)"])
       individualFetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-      let controller = NSFetchedResultsController(fetchRequest: individualFetchRequest, managedObjectContext: persistentContainer.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+      let controller = NSFetchedResultsController(
+        fetchRequest: individualFetchRequest, managedObjectContext: persistentContainer.viewContext,
+        sectionNameKeyPath: nil, cacheName: nil)
       try! controller.performFetch()
       let subController = CoreDataSubController(controller: controller)
       newAllDocs.append(subController)
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats +=
+      "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     var subEndTime = CACurrentMediaTime()
     for docSub in newAllDocs {
       docSub.callback = {
@@ -383,7 +398,7 @@ final class BenchmarksViewController: UIViewController {
           break
         }
       }
-      subStartTime = CACurrentMediaTime() // This is not exactly accurate.
+      subStartTime = CACurrentMediaTime()  // This is not exactly accurate.
       try! backgroundContext.save()
       viewContext.performAndWait {
         try! viewContext.save()
@@ -395,9 +410,12 @@ final class BenchmarksViewController: UIViewController {
       guard let self = self else { return }
       self.coreDataSubs = nil
       stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
-      stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
+      stats +=
+        "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
       let notificationCenter = NotificationCenter.default
-      notificationCenter.addObserver(self, selector: #selector(self.managedObjectContextObjectsDidChange), name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: viewContext)
+      notificationCenter.addObserver(
+        self, selector: #selector(self.managedObjectContextObjectsDidChange),
+        name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: viewContext)
       let objUpdateGroup = DispatchGroup()
       objUpdateGroup.enter()
       let objUpdateStartTime = CACurrentMediaTime()
@@ -409,7 +427,7 @@ final class BenchmarksViewController: UIViewController {
         for (i, doc) in allDocs.enumerated() {
           doc.setValue(-i, forKeyPath: "priority")
         }
-        objSubStartTime = CACurrentMediaTime() // This is not exactly accurate.
+        objSubStartTime = CACurrentMediaTime()  // This is not exactly accurate.
         try! backgroundContext.save()
         viewContext.performAndWait {
           try! viewContext.save()
@@ -420,16 +438,24 @@ final class BenchmarksViewController: UIViewController {
       objUpdateGroup.notify(queue: DispatchQueue.main) { [weak self] in
         guard let self = self else { return }
         stats += "Update \(Self.NumberOfEntities): \(objUpdateEndTime - objUpdateStartTime) sec\n"
-        stats += "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(self.objSubEndTime - objSubStartTime) sec\n"
-        notificationCenter.removeObserver(self, name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: viewContext)
+        stats +=
+          "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(self.objSubEndTime - objSubStartTime) sec\n"
+        notificationCenter.removeObserver(
+          self, name: NSNotification.Name.NSManagedObjectContextObjectsDidChange,
+          object: viewContext)
         let individualFetchStartTime = CACurrentMediaTime()
         var newAllDocs = [CoreDataSubController]()
         var count = 0
         for i in 0..<Self.NumberOfSubscriptions {
           let individualFetchRequest = NSFetchRequest<NSManagedObject>(entityName: "BenchDoc")
-          individualFetchRequest.predicate = NSPredicate(format: "priority < %@ && priority >= %@", argumentArray: [-i, -i - 1000])
-          individualFetchRequest.sortDescriptors = [NSSortDescriptor(key: "priority", ascending: true)]
-          let controller = NSFetchedResultsController(fetchRequest: individualFetchRequest, managedObjectContext: viewContext, sectionNameKeyPath: nil, cacheName: nil)
+          individualFetchRequest.predicate = NSPredicate(
+            format: "priority < %@ && priority >= %@", argumentArray: [-i, -i - 1000])
+          individualFetchRequest.sortDescriptors = [
+            NSSortDescriptor(key: "priority", ascending: true)
+          ]
+          let controller = NSFetchedResultsController(
+            fetchRequest: individualFetchRequest, managedObjectContext: viewContext,
+            sectionNameKeyPath: nil, cacheName: nil)
           try! controller.performFetch()
           let subController = CoreDataSubController(controller: controller)
           count += subController.fetchedObjects?.count ?? 0
@@ -437,7 +463,8 @@ final class BenchmarksViewController: UIViewController {
         }
         count = count / Self.NumberOfSubscriptions
         let individualFetchEndTime = CACurrentMediaTime()
-        stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+        stats +=
+          "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
         var bigSubEndTime = CACurrentMediaTime()
         for docSub in newAllDocs {
           docSub.callback = {
@@ -456,7 +483,7 @@ final class BenchmarksViewController: UIViewController {
           for (i, doc) in allDocs.enumerated() {
             doc.setValue(-Self.NumberOfEntities + i, forKeyPath: "priority")
           }
-          bigSubStartTime = CACurrentMediaTime() // This is not exactly accurate.
+          bigSubStartTime = CACurrentMediaTime()  // This is not exactly accurate.
           try! backgroundContext.save()
           viewContext.performAndWait {
             try! viewContext.save()
@@ -468,7 +495,8 @@ final class BenchmarksViewController: UIViewController {
           guard let self = self else { return }
           self.coreDataSubs = nil
           stats += "Update \(Self.NumberOfEntities): \(bigUpdateEndTime - bigUpdateStartTime) sec\n"
-          stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
+          stats +=
+            "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
           let deleteGroup = DispatchGroup()
           deleteGroup.enter()
           let deleteStartTime = CACurrentMediaTime()
@@ -520,14 +548,17 @@ final class BenchmarksViewController: UIViewController {
         try! txnContext.submit(creationRequest)
       }
     }
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      for i in allDocs {
-        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        for i in allDocs {
+          guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       warmupGroup.leave()
     }
     warmupGroup.wait()
@@ -535,70 +566,80 @@ final class BenchmarksViewController: UIViewController {
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
     var insertEndTime = insertStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        creationRequest.pos = Vec3()
-        switch i % 3 {
-        case 0:
-          creationRequest.color = .blue
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 1:
-          creationRequest.color = .red
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-        case 2:
-          creationRequest.color = .green
-          creationRequest.priority = 0
-          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          creationRequest.pos = Vec3()
+          switch i % 3 {
+          case 0:
+            creationRequest.color = .blue
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+            creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 1:
+            creationRequest.color = .red
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          case 2:
+            creationRequest.color = .green
+            creationRequest.priority = 0
+            creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertEndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
     insertGroup.wait()
     var stats = "Insert \(Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
     let fetchIndexStartTime = CACurrentMediaTime()
-    let fetchHighPri = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority > Int32(Self.NumberOfEntities / 4))
+    let fetchHighPri = dflat.fetch(for: BenchDoc.self).where(
+      BenchDoc.priority > Int32(Self.NumberOfEntities / 4))
     let fetchIndexEndTime = CACurrentMediaTime()
-    stats += "Fetched \(fetchHighPri.count) objects with no index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
+    stats +=
+      "Fetched \(fetchHighPri.count) objects with no index with \(fetchIndexEndTime - fetchIndexStartTime) sec\n"
     let fetchNoIndexStartTime = CACurrentMediaTime()
-    let fetchImageContent = dflat.fetch(for: BenchDoc.self).where(BenchDoc.content.match(ImageContent.self))
+    let fetchImageContent = dflat.fetch(for: BenchDoc.self).where(
+      BenchDoc.content.match(ImageContent.self))
     let fetchNoIndexEndTime = CACurrentMediaTime()
-    stats += "Fetched \(fetchImageContent.count) objects with no index with \(fetchNoIndexEndTime - fetchNoIndexStartTime) sec\n"
+    stats +=
+      "Fetched \(fetchImageContent.count) objects with no index with \(fetchNoIndexEndTime - fetchNoIndexStartTime) sec\n"
     let updateGroup = DispatchGroup()
     updateGroup.enter()
     let updateStartTime = CACurrentMediaTime()
     var updateEndTime = updateStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      for (i, doc) in allDocs.enumerated() {
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
-        changeRequest.tag = "tag\(i + 1)"
-        changeRequest.priority = 11
-        changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
-        switch i % 3 {
-        case 1:
-          changeRequest.color = .blue
-          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 2:
-          changeRequest.color = .red
-        case 0:
-          changeRequest.color = .green
-          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        for (i, doc) in allDocs.enumerated() {
+          guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+          changeRequest.tag = "tag\(i + 1)"
+          changeRequest.priority = 11
+          changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
+          switch i % 3 {
+          case 1:
+            changeRequest.color = .blue
+            changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 2:
+            changeRequest.color = .red
+          case 0:
+            changeRequest.color = .green
+            changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(changeRequest)
         }
-        try! txnContext.submit(changeRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       updateEndTime = CACurrentMediaTime()
       updateGroup.leave()
     }
@@ -610,25 +651,28 @@ final class BenchmarksViewController: UIViewController {
     let individualUpdateStartTime = CACurrentMediaTime()
     var individualUpdateEndTime = individualUpdateStartTime
     for (i, doc) in allDocs.enumerated() {
-      dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { return }
-        changeRequest.tag = "tag\(i + 2)"
-        changeRequest.priority = 12
-        changeRequest.pos = Vec3(x: 3, y: 2, z: 1)
-        switch i % 3 {
-        case 2:
-          changeRequest.color = .blue
-          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 0:
-          changeRequest.color = .red
-        case 1:
-          changeRequest.color = .green
-          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+      dflat.performChanges(
+        [BenchDoc.self],
+        changesHandler: { (txnContext) in
+          guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { return }
+          changeRequest.tag = "tag\(i + 2)"
+          changeRequest.priority = 12
+          changeRequest.pos = Vec3(x: 3, y: 2, z: 1)
+          switch i % 3 {
+          case 2:
+            changeRequest.color = .blue
+            changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 0:
+            changeRequest.color = .red
+          case 1:
+            changeRequest.color = .green
+            changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(changeRequest)
         }
-        try! txnContext.submit(changeRequest)
-      }) { (succeed) in
+      ) { (succeed) in
         if i == allDocs.count - 1 {
           individualUpdateEndTime = CACurrentMediaTime()
           individualUpdateGroup.leave()
@@ -636,7 +680,8 @@ final class BenchmarksViewController: UIViewController {
       }
     }
     individualUpdateGroup.wait()
-    stats += "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
+    stats +=
+      "Update \(Self.NumberOfEntities) Individually: \(individualUpdateEndTime - individualUpdateStartTime) sec\n"
     let individualFetchStartTime = CACurrentMediaTime()
     var newAllDocs = [BenchDoc]()
     for i in 0..<Self.NumberOfEntities {
@@ -644,21 +689,25 @@ final class BenchmarksViewController: UIViewController {
       newAllDocs.append(docs[0])
     }
     let individualFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
+    stats +=
+      "Fetched \(newAllDocs.count) objects Individually with \(individualFetchEndTime - individualFetchStartTime) sec\n"
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
     var deleteEndTime = deleteStartTime
     var deletedCount = 0
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      deletedCount = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        deletedCount = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteEndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }
@@ -672,176 +721,204 @@ final class BenchmarksViewController: UIViewController {
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
     var insertDocV1EndTime = insertStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        creationRequest.pos = Vec3()
-        switch i % 3 {
-        case 0:
-          creationRequest.color = .blue
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 1:
-          creationRequest.color = .red
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-        case 2:
-          creationRequest.color = .green
-          creationRequest.priority = 0
-          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          creationRequest.pos = Vec3()
+          switch i % 3 {
+          case 0:
+            creationRequest.color = .blue
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+            creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 1:
+            creationRequest.color = .red
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          case 2:
+            creationRequest.color = .green
+            creationRequest.priority = 0
+            creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertDocV1EndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
     insertGroup.enter()
     var insertDocV2EndTime = insertStartTime
-    dflat.performChanges([BenchDocV2.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocV2ChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        switch i % 3 {
-        case 0:
-          creationRequest.color = .blue
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-        case 1:
-          creationRequest.color = .red
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-        case 2:
-          creationRequest.color = .green
-          creationRequest.priority = 0
-          creationRequest.text = "text\(i)"
-        default:
-          break
+    dflat.performChanges(
+      [BenchDocV2.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocV2ChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          switch i % 3 {
+          case 0:
+            creationRequest.color = .blue
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          case 1:
+            creationRequest.color = .red
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          case 2:
+            creationRequest.color = .green
+            creationRequest.priority = 0
+            creationRequest.text = "text\(i)"
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertDocV2EndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
     insertGroup.enter()
     var insertDocV3EndTime = insertStartTime
-    dflat.performChanges([BenchDocV3.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocV3ChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        switch i % 3 {
-        case 0:
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-          creationRequest.text = "text\(i)"
-        case 1:
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-        case 2:
-          creationRequest.priority = 0
-        default:
-          break
+    dflat.performChanges(
+      [BenchDocV3.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocV3ChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          switch i % 3 {
+          case 0:
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+            creationRequest.text = "text\(i)"
+          case 1:
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          case 2:
+            creationRequest.priority = 0
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertDocV3EndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
     insertGroup.enter()
     var insertDocV4EndTime = insertStartTime
-    dflat.performChanges([BenchDocV4.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocV4ChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        switch i % 3 {
-        case 0:
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-        case 1:
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-          creationRequest.text = "text\(i)"
-        case 2:
-          creationRequest.priority = 0
-        default:
-          break
+    dflat.performChanges(
+      [BenchDocV4.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocV4ChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          switch i % 3 {
+          case 0:
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+          case 1:
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+            creationRequest.text = "text\(i)"
+          case 2:
+            creationRequest.priority = 0
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertDocV4EndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
     insertGroup.wait()
-    let insertEndTime = max(max(insertDocV1EndTime, insertDocV2EndTime), max(insertDocV3EndTime, insertDocV4EndTime))
-    var stats = "Multithread Insert \(4 * Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
+    let insertEndTime = max(
+      max(insertDocV1EndTime, insertDocV2EndTime), max(insertDocV3EndTime, insertDocV4EndTime))
+    var stats =
+      "Multithread Insert \(4 * Self.NumberOfEntities): \(insertEndTime - insertStartTime) sec\n"
     var deletedCount = 0
     let deleteGroup = DispatchGroup()
     deleteGroup.enter()
     let deleteStartTime = CACurrentMediaTime()
     var deleteDocV1EndTime = deleteStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      deletedCount = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        deletedCount = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteDocV1EndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }
     deleteGroup.enter()
     var deletedV2Count = 0
     var deleteDocV2EndTime = deleteStartTime
-    dflat.performChanges([BenchDocV2.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDocV2.self).all()
-      deletedV2Count = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocV2ChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDocV2.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDocV2.self).all()
+        deletedV2Count = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocV2ChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteDocV2EndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }
     deleteGroup.enter()
     var deletedV3Count = 0
     var deleteDocV3EndTime = deleteStartTime
-    dflat.performChanges([BenchDocV3.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDocV3.self).all()
-      deletedV3Count = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocV3ChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDocV3.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDocV3.self).all()
+        deletedV3Count = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocV3ChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteDocV3EndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }
     deleteGroup.enter()
     var deletedV4Count = 0
     var deleteDocV4EndTime = deleteStartTime
-    dflat.performChanges([BenchDocV4.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDocV4.self).all()
-      deletedV4Count = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocV4ChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDocV4.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDocV4.self).all()
+        deletedV4Count = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocV4ChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteDocV4EndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }
     deleteGroup.wait()
-    let deleteEndTime = max(max(deleteDocV1EndTime, deleteDocV2EndTime), max(deleteDocV3EndTime, deleteDocV4EndTime))
-    stats += "Multithread Delete \(deletedCount + deletedV2Count + deletedV3Count + deletedV4Count): \(deleteEndTime - deleteStartTime) sec\n"
+    let deleteEndTime = max(
+      max(deleteDocV1EndTime, deleteDocV2EndTime), max(deleteDocV3EndTime, deleteDocV4EndTime))
+    stats +=
+      "Multithread Delete \(deletedCount + deletedV2Count + deletedV3Count + deletedV4Count): \(deleteEndTime - deleteStartTime) sec\n"
     return stats
   }
 
@@ -859,30 +936,33 @@ final class BenchmarksViewController: UIViewController {
     insertGroup.enter()
     let insertStartTime = CACurrentMediaTime()
     var insertEndTime = insertStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { (txnContext) in
-      for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
-        let creationRequest = BenchDocChangeRequest.creationRequest()
-        creationRequest.title = "title\(i)"
-        creationRequest.tag = "tag\(i)"
-        creationRequest.pos = Vec3()
-        switch i % 3 {
-        case 0:
-          creationRequest.color = .blue
-          creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
-          creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 1:
-          creationRequest.color = .red
-          creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
-        case 2:
-          creationRequest.color = .green
-          creationRequest.priority = 0
-          creationRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { (txnContext) in
+        for i: Int32 in 0..<Int32(Self.NumberOfEntities) {
+          let creationRequest = BenchDocChangeRequest.creationRequest()
+          creationRequest.title = "title\(i)"
+          creationRequest.tag = "tag\(i)"
+          creationRequest.pos = Vec3()
+          switch i % 3 {
+          case 0:
+            creationRequest.color = .blue
+            creationRequest.priority = Int32(Self.NumberOfEntities / 2) - i
+            creationRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 1:
+            creationRequest.color = .red
+            creationRequest.priority = i - Int32(Self.NumberOfEntities / 2)
+          case 2:
+            creationRequest.color = .green
+            creationRequest.priority = 0
+            creationRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(creationRequest)
         }
-        try! txnContext.submit(creationRequest)
       }
-    }) { (succeed) in
+    ) { (succeed) in
       insertEndTime = CACurrentMediaTime()
       insertGroup.leave()
     }
@@ -912,30 +992,33 @@ final class BenchmarksViewController: UIViewController {
     let updateStartTime = CACurrentMediaTime()
     var updateEndTime = updateStartTime
     var subStartTime = updateStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      for (i, doc) in allDocs.enumerated() {
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
-        changeRequest.tag = "tag\(i + 1)"
-        changeRequest.priority = 11
-        changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
-        switch i % 3 {
-        case 1:
-          changeRequest.color = .blue
-          changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
-        case 2:
-          changeRequest.color = .red
-        case 0:
-          changeRequest.color = .green
-          changeRequest.content = .textContent(TextContent(text: "text\(i)"))
-        default:
-          break
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        for (i, doc) in allDocs.enumerated() {
+          guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+          changeRequest.tag = "tag\(i + 1)"
+          changeRequest.priority = 11
+          changeRequest.pos = Vec3(x: 1, y: 2, z: 3)
+          switch i % 3 {
+          case 1:
+            changeRequest.color = .blue
+            changeRequest.content = .imageContent(ImageContent(images: ["image\(i)"]))
+          case 2:
+            changeRequest.color = .red
+          case 0:
+            changeRequest.color = .green
+            changeRequest.content = .textContent(TextContent(text: "text\(i)"))
+          default:
+            break
+          }
+          try! txnContext.submit(changeRequest)
         }
-        try! txnContext.submit(changeRequest)
+        subStartTime = CACurrentMediaTime()
       }
-      subStartTime = CACurrentMediaTime()
-    }) { (succeed) in
+    ) { (succeed) in
       updateEndTime = CACurrentMediaTime()
       updateGroup.leave()
     }
@@ -943,7 +1026,8 @@ final class BenchmarksViewController: UIViewController {
     let subEndTime = CACurrentMediaTime()
     updateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(updateEndTime - updateStartTime) sec\n"
-    stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
+    stats +=
+      "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (1 Object) Delivered: \(subEndTime - subStartTime) sec\n"
     for sub in subs {
       sub.cancel()
     }
@@ -965,16 +1049,19 @@ final class BenchmarksViewController: UIViewController {
     let objUpdateStartTime = CACurrentMediaTime()
     var objUpdateEndTime = objUpdateStartTime
     var objSubStartTime = objUpdateStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      for (i, doc) in allDocs.enumerated() {
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
-        changeRequest.priority = Int32(-i)
-        try! txnContext.submit(changeRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        for (i, doc) in allDocs.enumerated() {
+          guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+          changeRequest.priority = Int32(-i)
+          try! txnContext.submit(changeRequest)
+        }
+        objSubStartTime = CACurrentMediaTime()
       }
-      objSubStartTime = CACurrentMediaTime()
-    }) { (succeed) in
+    ) { (succeed) in
       objUpdateEndTime = CACurrentMediaTime()
       objUpdateGroup.leave()
     }
@@ -982,7 +1069,8 @@ final class BenchmarksViewController: UIViewController {
     let objSubEndTime = CACurrentMediaTime()
     objUpdateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(objUpdateEndTime - objUpdateStartTime) sec\n"
-    stats += "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(objSubEndTime - objSubStartTime) sec\n"
+    stats +=
+      "Subscription for \(Self.NumberOfSubscriptions) Objects Delivered: \(objSubEndTime - objSubStartTime) sec\n"
     for sub in objSubs {
       sub.cancel()
     }
@@ -991,11 +1079,14 @@ final class BenchmarksViewController: UIViewController {
     var bigFetchedResults = [FetchedResult<BenchDoc>]()
     let bigFetchStartTime = CACurrentMediaTime()
     for i in 0..<Self.NumberOfSubscriptions {
-      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
+      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(
+        BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000),
+        orderBy: [BenchDoc.priority.ascending])
       bigFetchedResults.append(fetchedResult)
     }
     let bigFetchEndTime = CACurrentMediaTime()
-    stats += "Fetched \(Self.NumberOfSubscriptions) Individually: \(bigFetchEndTime - bigFetchStartTime) sec\n"
+    stats +=
+      "Fetched \(Self.NumberOfSubscriptions) Individually: \(bigFetchEndTime - bigFetchStartTime) sec\n"
     let bigSubGroup = DispatchGroup()
     var bigSubs = [Workspace.Subscription]()
     var count = 0
@@ -1015,16 +1106,19 @@ final class BenchmarksViewController: UIViewController {
     let bigUpdateStartTime = CACurrentMediaTime()
     var bigUpdateEndTime = bigUpdateStartTime
     var bigSubStartTime = bigUpdateStartTime
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      for (i, doc) in allDocs.enumerated() {
-        guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
-        changeRequest.priority = Int32(-Self.NumberOfEntities + i)
-        try! txnContext.submit(changeRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        for (i, doc) in allDocs.enumerated() {
+          guard let changeRequest = BenchDocChangeRequest.changeRequest(doc) else { continue }
+          changeRequest.priority = Int32(-Self.NumberOfEntities + i)
+          try! txnContext.submit(changeRequest)
+        }
+        bigSubStartTime = CACurrentMediaTime()
       }
-      bigSubStartTime = CACurrentMediaTime()
-    }) { (succeed) in
+    ) { (succeed) in
       bigUpdateEndTime = CACurrentMediaTime()
       bigUpdateGroup.leave()
     }
@@ -1032,9 +1126,12 @@ final class BenchmarksViewController: UIViewController {
     let bigSubEndTime = CACurrentMediaTime()
     bigUpdateGroup.wait()
     stats += "Update \(Self.NumberOfEntities): \(bigUpdateEndTime - bigUpdateStartTime) sec\n"
-    stats += "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
+    stats +=
+      "Subscription for \(Self.NumberOfSubscriptions) Fetched Results (~\(count) Objects) Delivered: \(bigSubEndTime - bigSubStartTime) sec\n"
     for i in 0..<Self.NumberOfSubscriptions {
-      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000), orderBy: [BenchDoc.priority.ascending])
+      let fetchedResult = dflat.fetch(for: BenchDoc.self).where(
+        BenchDoc.priority < Int32(-i) && BenchDoc.priority >= Int32(-i - 1000),
+        orderBy: [BenchDoc.priority.ascending])
       assert(bigFetchedResults[i] == fetchedResult)
     }
     for sub in bigSubs {
@@ -1046,15 +1143,18 @@ final class BenchmarksViewController: UIViewController {
     let deleteStartTime = CACurrentMediaTime()
     var deleteEndTime = deleteStartTime
     var deletedCount = 0
-    dflat.performChanges([BenchDoc.self], changesHandler: { [weak self] (txnContext) in
-      guard let self = self else { return }
-      let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
-      deletedCount = allDocs.count
-      for i in allDocs {
-        guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
-        try! txnContext.submit(deletionRequest)
+    dflat.performChanges(
+      [BenchDoc.self],
+      changesHandler: { [weak self] (txnContext) in
+        guard let self = self else { return }
+        let allDocs = self.dflat.fetch(for: BenchDoc.self).all()
+        deletedCount = allDocs.count
+        for i in allDocs {
+          guard let deletionRequest = BenchDocChangeRequest.deletionRequest(i) else { continue }
+          try! txnContext.submit(deletionRequest)
+        }
       }
-    }) { (succeed) in
+    ) { (succeed) in
       deleteEndTime = CACurrentMediaTime()
       deleteGroup.leave()
     }

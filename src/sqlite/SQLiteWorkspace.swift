@@ -1,9 +1,9 @@
 import Atomics
 import Dflat
-import SQLite3
 import Dispatch
-import Foundation
 import FlatBuffers
+import Foundation
+import SQLite3
 import _SQLiteDflatOSShim
 
 public final class SQLiteWorkspace: Workspace {
@@ -13,23 +13,23 @@ public final class SQLiteWorkspace: Workspace {
      * Class D: No protection. If the device is booted, in theory, you can access the content.
      * When it is not booted, the content is protected by the Secure Enclave's hardware key.
      */
-    case noProtection = 4 // Class D
+    case noProtection = 4  // Class D
     /**
      * Class A: The file is accessible if the phone is unlocked and the app is in foreground.
      * You will lose the file access if the app is backgrounded or the phone is locked.
      */
-    case completeFileProtection = 1 // Class A
+    case completeFileProtection = 1  // Class A
     /**
      * Class B: The file is accessible if the phone is unlocked. You will lose the file access
      * if the phone is locked.
      */
-    case completeFileProtectionUnlessOpen = 2 // Class B
+    case completeFileProtectionUnlessOpen = 2  // Class B
     /**
      * Class C: The file is accessible once user unlocked the phone once. The file cannot be
      * accessed prior to that. For example, if you received a notification before first device
      * unlock, the underlying database cannot be open successfully.
      */
-    case completeFileProtectionUntilFirstUserAuthentication = 3 // Class C
+    case completeFileProtectionUntilFirstUserAuthentication = 3  // Class C
   }
   public enum WriteConcurrency {
     /**
@@ -50,15 +50,15 @@ public final class SQLiteWorkspace: Workspace {
      */
     case serial
   }
-    /**
+  /**
      * The synchronous mode of SQLite. We defaults to `.normal`. Read more on: [https://www.sqlite.org/wal.html#performance_considerations](https://www.sqlite.org/wal.html#performance_considerations)
      */
   public enum Synchronous {
     case normal
     case full
   }
-  private static let RebuildIndexDelayOnDiskFull = 5.0 // In seconds..
-  private static let RebuildIndexBatchLimit = 500 // We can jam the write queue by just having index rebuild (upon upgrade). This limits that each rebuild batches at this limit, if the limit exceed, we will dispatch back to the queue again to finish up.
+  private static let RebuildIndexDelayOnDiskFull = 5.0  // In seconds..
+  private static let RebuildIndexBatchLimit = 500  // We can jam the write queue by just having index rebuild (upon upgrade). This limits that each rebuild batches at this limit, if the limit exceed, we will dispatch back to the queue again to finish up.
   private let filePath: String
   private let fileProtectionLevel: FileProtectionLevel
   private let targetQueue: DispatchQueue
@@ -80,7 +80,10 @@ public final class SQLiteWorkspace: Workspace {
    *    - targetQueue: If nil, we will create a queue based on writeConcurrency settings. If you supply your own queue, please read
    *                   about WriteConcurrency before proceed.
    */
-  public required init(filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal, writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue? = nil) {
+  public required init(
+    filePath: String, fileProtectionLevel: FileProtectionLevel, synchronous: Synchronous = .normal,
+    writeConcurrency: WriteConcurrency = .concurrent, targetQueue: DispatchQueue? = nil
+  ) {
     self.filePath = filePath
     self.fileProtectionLevel = fileProtectionLevel
     self.synchronous = synchronous
@@ -90,7 +93,8 @@ public final class SQLiteWorkspace: Workspace {
     } else {
       switch writeConcurrency {
       case .concurrent:
-        self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default, attributes: .concurrent)
+        self.targetQueue = DispatchQueue(
+          label: "dflat.workq", qos: .default, attributes: .concurrent)
       case .serial:
         self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default)
       }
@@ -101,11 +105,17 @@ public final class SQLiteWorkspace: Workspace {
   // MARK - Management
 
   public func shutdown(completion: (() -> Void)?) {
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else {
       completion?()
       return
     }
-    withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).store(true, ordering: .releasing) }
+    withUnsafeMutablePointer(to: &state.shutdown) {
+      UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+    }
     var tableSpaces: [SQLiteTableSpace]? = nil
     state.serial {
       tableSpaces = Array(self.tableSpaces.values)
@@ -136,8 +146,15 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Mutation
 
-  public func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler, completionHandler: Workspace.CompletionHandler? = nil) {
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
+  public func performChanges(
+    _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping Workspace.ChangesHandler,
+    completionHandler: Workspace.CompletionHandler? = nil
+  ) {
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else {
       completionHandler?(false)
       return
     }
@@ -156,37 +173,41 @@ public final class SQLiteWorkspace: Workspace {
         }
       }
     }
-    tableSpaces[0].queue.async(execute:
-      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
-        guard let self = self else {
-          completionHandler?(false)
-          return
-        }
-        guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
-          completionHandler?(false)
-          return
-        }
-        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
-        tableSpaces[0].lock()
-        if tableSpaces.count > 1 {
-          for tableSpace in tableSpaces.suffix(from: 1) {
-            // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
-            tableSpace.queue.sync {
-              tableSpace.lock()
+    tableSpaces[0].queue.async(
+      execute:
+        DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+          guard let self = self else {
+            completionHandler?(false)
+            return
+          }
+          guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
+            completionHandler?(false)
+            return
+          }
+          // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+          tableSpaces[0].lock()
+          if tableSpaces.count > 1 {
+            for tableSpace in tableSpaces.suffix(from: 1) {
+              // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
+              tableSpace.queue.sync {
+                tableSpace.lock()
+              }
             }
           }
+          // We need to fetch the resultPublisher only after acquired the lock.
+          var resultPublishers = [ObjectIdentifier: ResultPublisher]()
+          for (i, tableSpace) in tableSpaces.enumerated() {
+            resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
+          }
+          let succeed = self.invokeChangesHandler(
+            transactionalObjectIdentifiers, connection: connection,
+            resultPublishers: resultPublishers, tableState: tableSpaces[0].state,
+            changesHandler: changesHandler)
+          for tableSpace in tableSpaces.reversed() {
+            tableSpace.unlock()
+          }
+          completionHandler?(succeed)
         }
-        // We need to fetch the resultPublisher only after acquired the lock.
-        var resultPublishers = [ObjectIdentifier: ResultPublisher]()
-        for (i, tableSpace) in tableSpaces.enumerated() {
-          resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
-        }
-        let succeed = self.invokeChangesHandler(transactionalObjectIdentifiers, connection: connection, resultPublishers: resultPublishers, tableState: tableSpaces[0].state, changesHandler: changesHandler)
-        for tableSpace in tableSpaces.reversed() {
-          tableSpace.unlock()
-        }
-        completionHandler?(succeed)
-      }
     )
   }
 
@@ -211,26 +232,41 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   public func fetch<Element: Atom>(for ofType: Element.Type) -> QueryBuilder<Element> {
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
-      return SQLiteQueryBuilder<Element>(reader: SQLiteConnectionPool.Borrowed(pointee: nil, pool: nil), workspace: self, transactionContext: nil, changesTimestamp: 0)
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else {
+      return SQLiteQueryBuilder<Element>(
+        reader: SQLiteConnectionPool.Borrowed(pointee: nil, pool: nil), workspace: self,
+        transactionContext: nil, changesTimestamp: 0)
     }
     if let txnContext = SQLiteTransactionContext.current {
       precondition(txnContext.contains(ofType: ofType))
       // If we are in a transaction, we cannot have changesTimestamp for fetching. The reason is because this transaction may
       // later abort, causing all changes in this transaction to rollback. We need to refetch all objects fetched in this transaction
       // if we are going to use the changesTimestamp.
-      let updatedObjectCount = txnContext.objectRepository.updatedObjects[ObjectIdentifier(Element.self)]?.count ?? 0
+      let updatedObjectCount =
+        txnContext.objectRepository.updatedObjects[ObjectIdentifier(Element.self)]?.count ?? 0
       // If there is no changes to this particular Element, we are safe to use existing changesTimestamp. Otherwise, we need to use 0.
       let changesTimestamp = updatedObjectCount > 0 ? 0 : txnContext.changesTimestamp
-      return SQLiteQueryBuilder<Element>(reader: txnContext.borrowed, workspace: self, transactionContext: txnContext, changesTimestamp: changesTimestamp)
+      return SQLiteQueryBuilder<Element>(
+        reader: txnContext.borrowed, workspace: self, transactionContext: txnContext,
+        changesTimestamp: changesTimestamp)
     }
     if let snapshot = Self.snapshot {
-      return SQLiteQueryBuilder<Element>(reader: snapshot.reader, workspace: self, transactionContext: nil, changesTimestamp: snapshot.changesTimestamp)
+      return SQLiteQueryBuilder<Element>(
+        reader: snapshot.reader, workspace: self, transactionContext: nil,
+        changesTimestamp: snapshot.changesTimestamp)
     }
-    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
-    return SQLiteQueryBuilder<Element>(reader: readerPool.borrow(), workspace: self, transactionContext: nil, changesTimestamp: changesTimestamp)
+    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) {
+      UnsafeAtomic(at: $0).load(ordering: .acquiring)
+    }
+    return SQLiteQueryBuilder<Element>(
+      reader: readerPool.borrow(), workspace: self, transactionContext: nil,
+      changesTimestamp: changesTimestamp)
   }
-  
+
   public func fetchWithinASnapshot<T>(_ closure: () -> T) -> T {
     // If I am in a write transaction, it is a consistent view already.
     if SQLiteTransactionContext.current != nil {
@@ -238,7 +274,9 @@ public final class SQLiteWorkspace: Workspace {
     }
     // Require a consistent snapshot by starting a transaction.
     let reader = readerPool.borrow()
-    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
+    let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) {
+      UnsafeAtomic(at: $0).load(ordering: .acquiring)
+    }
     Self.snapshot = Snapshot(reader: reader, changesTimestamp: changesTimestamp)
     guard let pointee = reader.pointee else {
       let retval = closure()
@@ -256,100 +294,130 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Observation
 
-  public func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
+  public func subscribe<Element: Atom>(
+    fetchedResult: FetchedResult<Element>,
+    changeHandler: @escaping (_: FetchedResult<Element>) -> Void
+  ) -> Workspace.Subscription where Element: Equatable {
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let identifier = ObjectIdentifier(fetchedResult.query)
-    let subscription = SQLiteSubscription(ofType: .fetchedResult(Element.self, identifier), workspace: self)
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
+    let subscription = SQLiteSubscription(
+      ofType: .fetchedResult(Element.self, identifier), workspace: self)
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else {
       return subscription
     }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
-    tableSpace.queue.async(execute:
-      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
-        guard let self = self else { return }
-        guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
-        let objectType = ObjectIdentifier(Element.self)
-        let changesTimestamp = self.state.tableTimestamp(for: objectType)
-        var fetchedResult = fetchedResult
-        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
-        tableSpace.lock()
-        defer { tableSpace.unlock() }
-        if fetchedResult.changesTimestamp < changesTimestamp {
-          let reader = SQLiteConnectionPool.Borrowed(pointee: connection)
-          let query = fetchedResult.query
-          let limit = fetchedResult.limit
-          let orderBy = fetchedResult.orderBy
-          var result = [Element]()
-          SQLiteQueryWhere(reader: reader, workspace: nil, transactionContext: nil, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy, offset: 0, result: &result)
-          let newFetchedResult = SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy)
-          if newFetchedResult != fetchedResult {
-            // If not equal, call changeHandler.
-            changeHandler(newFetchedResult)
-            // Update this, note that from this point on, ObjectIdentifier(fetchedResult) != resultIdentifier.
-            fetchedResult = newFetchedResult
+    tableSpace.queue.async(
+      execute:
+        DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+          guard let self = self else { return }
+          guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+          let objectType = ObjectIdentifier(Element.self)
+          let changesTimestamp = self.state.tableTimestamp(for: objectType)
+          var fetchedResult = fetchedResult
+          // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+          tableSpace.lock()
+          defer { tableSpace.unlock() }
+          if fetchedResult.changesTimestamp < changesTimestamp {
+            let reader = SQLiteConnectionPool.Borrowed(pointee: connection)
+            let query = fetchedResult.query
+            let limit = fetchedResult.limit
+            let orderBy = fetchedResult.orderBy
+            var result = [Element]()
+            SQLiteQueryWhere(
+              reader: reader, workspace: nil, transactionContext: nil,
+              changesTimestamp: changesTimestamp, query: query, limit: limit, orderBy: orderBy,
+              offset: 0, result: &result)
+            let newFetchedResult = SQLiteFetchedResult(
+              result, changesTimestamp: changesTimestamp, query: query, limit: limit,
+              orderBy: orderBy)
+            if newFetchedResult != fetchedResult {
+              // If not equal, call changeHandler.
+              changeHandler(newFetchedResult)
+              // Update this, note that from this point on, ObjectIdentifier(fetchedResult) != resultIdentifier.
+              fetchedResult = newFetchedResult
+            }
           }
+          // The publisher is manipulated after acquiring the lock.
+          let resultPublisher: SQLiteResultPublisher<Element>
+          if let pub = tableSpace.resultPublisher {
+            resultPublisher = pub as! SQLiteResultPublisher<Element>
+          } else {
+            resultPublisher = SQLiteResultPublisher()
+            tableSpace.resultPublisher = resultPublisher
+          }
+          resultPublisher.subscribe(
+            fetchedResult: fetchedResult, resultIdentifier: identifier,
+            changeHandler: changeHandler, subscription: subscription)
         }
-        // The publisher is manipulated after acquiring the lock.
-        let resultPublisher: SQLiteResultPublisher<Element>
-        if let pub = tableSpace.resultPublisher {
-          resultPublisher = pub as! SQLiteResultPublisher<Element>
-        } else {
-          resultPublisher = SQLiteResultPublisher()
-          tableSpace.resultPublisher = resultPublisher
-        }
-        resultPublisher.subscribe(fetchedResult: fetchedResult, resultIdentifier: identifier, changeHandler: changeHandler, subscription: subscription)
-      }
     )
     return subscription
   }
 
-  public func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Workspace.Subscription where Element: Equatable {
-    let subscription = SQLiteSubscription(ofType: .object(Element.self, object._rowid), workspace: self)
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else {
+  public func subscribe<Element: Atom>(
+    object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
+  ) -> Workspace.Subscription where Element: Equatable {
+    let subscription = SQLiteSubscription(
+      ofType: .object(Element.self, object._rowid), workspace: self)
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else {
       return subscription
     }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
-    tableSpace.queue.async(execute:
-      DispatchWorkItem(flags: .enforceQoS) { [weak self] in
-        guard let self = self else { return }
-        guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
-        let changesTimestamp = self.state.tableTimestamp(for: objectType)
-        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
-        tableSpace.lock()
-        defer { tableSpace.unlock() }
-        if object._changesTimestamp < changesTimestamp {
-          // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
-          let fetchedObject = SQLiteObjectRepository.object(connection, ofType: Element.self, for: .rowid(object._rowid))
-          guard let updatedObject = fetchedObject else {
-            withUnsafeMutablePointer(to: &subscription.cancelled) {
-              UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+    tableSpace.queue.async(
+      execute:
+        DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+          guard let self = self else { return }
+          guard let connection = tableSpace.connect({ self.newConnection() }) else { return }
+          let changesTimestamp = self.state.tableTimestamp(for: objectType)
+          // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+          tableSpace.lock()
+          defer { tableSpace.unlock() }
+          if object._changesTimestamp < changesTimestamp {
+            // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
+            let fetchedObject = SQLiteObjectRepository.object(
+              connection, ofType: Element.self, for: .rowid(object._rowid))
+            guard let updatedObject = fetchedObject else {
+              withUnsafeMutablePointer(to: &subscription.cancelled) {
+                UnsafeAtomic(at: $0).store(true, ordering: .releasing)
+              }
+              changeHandler(.deleted)
+              return
             }
-            changeHandler(.deleted)
-            return
+            if object != updatedObject {  // If object changed, call update.
+              updatedObject._changesTimestamp = changesTimestamp
+              changeHandler(.updated(updatedObject))
+            }
           }
-          if object != updatedObject { // If object changed, call update.
-            updatedObject._changesTimestamp = changesTimestamp
-            changeHandler(.updated(updatedObject))
+          // The publisher is manipulated after acquiring the lock.
+          let resultPublisher: SQLiteResultPublisher<Element>
+          if let pub = tableSpace.resultPublisher {
+            resultPublisher = pub as! SQLiteResultPublisher<Element>
+          } else {
+            resultPublisher = SQLiteResultPublisher()
+            tableSpace.resultPublisher = resultPublisher
           }
+          resultPublisher.subscribe(
+            object: object, changeHandler: changeHandler, subscription: subscription)
         }
-        // The publisher is manipulated after acquiring the lock.
-        let resultPublisher: SQLiteResultPublisher<Element>
-        if let pub = tableSpace.resultPublisher {
-          resultPublisher = pub as! SQLiteResultPublisher<Element>
-        } else {
-          resultPublisher = SQLiteResultPublisher()
-          tableSpace.resultPublisher = resultPublisher
-        }
-        resultPublisher.subscribe(object: object, changeHandler: changeHandler, subscription: subscription)
-      }
     )
     return subscription
   }
-  
+
   func cancel(ofType: SQLiteSubscriptionType, identifier: ObjectIdentifier) {
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else { return }
     switch ofType {
     case let .fetchedResult(atomType, fetchedResult):
       let objectType = ObjectIdentifier(atomType)
@@ -374,38 +442,46 @@ public final class SQLiteWorkspace: Workspace {
       }
     }
   }
-  
+
   // MARK - Combine-compliant
 
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element> where Element: Equatable {
-    return SQLiteAtomPublisher<Element>(workspace: self, object: object)
-  }
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element>
+    where Element: Equatable {
+      return SQLiteAtomPublisher<Element>(workspace: self, object: object)
+    }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  public func publisher<Element: Atom>(for fetchedResult: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable {
-    return SQLiteFetchedResultPublisher<Element>(workspace: self, fetchedResult: fetchedResult)
-  }
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    public func publisher<Element: Atom>(for fetchedResult: FetchedResult<Element>)
+      -> FetchedResultPublisher<Element> where Element: Equatable
+    {
+      return SQLiteFetchedResultPublisher<Element>(workspace: self, fetchedResult: fetchedResult)
+    }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable {
-    return SQLiteQueryPublisherBuilder<Element>(workspace: self)
-  }
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
+    where Element: Equatable {
+      return SQLiteQueryPublisherBuilder<Element>(workspace: self)
+    }
 
-#endif
+  #endif
 
   // MARK - Internal
 
-  static func setUpFilePathWithProtectionLevel(filePath: String, fileProtectionLevel: FileProtectionLevel) {
+  static func setUpFilePathWithProtectionLevel(
+    filePath: String, fileProtectionLevel: FileProtectionLevel
+  ) {
     #if !targetEnvironment(simulator) && (os(iOS) || os(watchOS) || os(tvOS))
-    let fd = open_dprotected_np_sb(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
-    close(fd)
-    let wal = open_dprotected_np_sb(filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
-    close(wal)
-    let shm = open_dprotected_np_sb(filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
-    close(shm)
+      let fd = open_dprotected_np_sb(filePath, O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+      close(fd)
+      let wal = open_dprotected_np_sb(
+        filePath + "-wal", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+      close(wal)
+      let shm = open_dprotected_np_sb(
+        filePath + "-shm", O_CREAT | O_WRONLY, fileProtectionLevel.rawValue, 0)
+      close(shm)
     #endif
   }
 
@@ -427,19 +503,23 @@ public final class SQLiteWorkspace: Workspace {
   private func newTableSpace() -> SQLiteTableSpace {
     switch writeConcurrency {
     case .concurrent:
-      return ConcurrentSQLiteTableSpace(queue: DispatchQueue(label: "dflat.subq", qos: .utility, target: targetQueue))
+      return ConcurrentSQLiteTableSpace(
+        queue: DispatchQueue(label: "dflat.subq", qos: .utility, target: targetQueue))
     case .serial:
       return SerialSQLiteTableSpace(queue: targetQueue)
     }
   }
-  
+
   private func newConnection() -> SQLiteConnection? {
     dispatchPrecondition(condition: .onQueue(targetQueue))
     switch writeConcurrency {
     case .concurrent:
       // Set the flag before creating the s
-      Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
+      Self.setUpFilePathWithProtectionLevel(
+        filePath: filePath, fileProtectionLevel: fileProtectionLevel)
+      guard
+        let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false)
+      else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 30_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
@@ -454,8 +534,11 @@ public final class SQLiteWorkspace: Workspace {
     case .serial:
       guard self.writer == nil else { return self.writer }
       // Set the flag before creating the s
-      Self.setUpFilePathWithProtectionLevel(filePath: filePath, fileProtectionLevel: fileProtectionLevel)
-      guard let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false) else { return nil }
+      Self.setUpFilePathWithProtectionLevel(
+        filePath: filePath, fileProtectionLevel: fileProtectionLevel)
+      guard
+        let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false)
+      else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 30_000)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
@@ -471,15 +554,23 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  private func invokeChangesHandler(_ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection, resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState, changesHandler: Workspace.ChangesHandler) -> Bool {
-    let oldChangesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }
-    let txnContext = SQLiteTransactionContext(state: tableState, objectTypes: transactionalObjectTypes, changesTimestamp: oldChangesTimestamp, connection: connection)
+  private func invokeChangesHandler(
+    _ transactionalObjectTypes: [ObjectIdentifier], connection: SQLiteConnection,
+    resultPublishers: [ObjectIdentifier: ResultPublisher], tableState: SQLiteTableState,
+    changesHandler: Workspace.ChangesHandler
+  ) -> Bool {
+    let oldChangesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) {
+      UnsafeAtomic(at: $0).load(ordering: .acquiring)
+    }
+    let txnContext = SQLiteTransactionContext(
+      state: tableState, objectTypes: transactionalObjectTypes,
+      changesTimestamp: oldChangesTimestamp, connection: connection)
     changesHandler(txnContext)
     let updatedObjects = txnContext.objectRepository.updatedObjects
     txnContext.destroy()
     // This transaction is aborted by user. rollback.
     if txnContext.aborted {
-      if txnContext.began { // If it doesn't even begin a transaction, no need to rollback.
+      if txnContext.began {  // If it doesn't even begin a transaction, no need to rollback.
         let rollback = connection.prepareStaticStatement("ROLLBACK")
         let status = sqlite3_step(rollback)
         precondition(status == SQLITE_DONE)
@@ -499,7 +590,10 @@ public final class SQLiteWorkspace: Workspace {
       precondition(status == SQLITE_DONE)
     }
     var reader: SQLiteConnectionPool.Borrowed? = nil
-    let newChangesTimestamp = (withUnsafeMutablePointer(to: &state.changesTimestamp) { UnsafeAtomic(at: $0).loadThenWrappingIncrement(by: 1, ordering: .releasing) }) + 1 // Return the previously hold timestamp, thus, the new timestamp need + 1
+    let newChangesTimestamp =
+      (withUnsafeMutablePointer(to: &state.changesTimestamp) {
+        UnsafeAtomic(at: $0).loadThenWrappingIncrement(by: 1, ordering: .releasing)
+      }) + 1  // Return the previously hold timestamp, thus, the new timestamp need + 1
     state.setTableTimestamp(newChangesTimestamp, for: updatedObjects.keys)
     for (identifier, updates) in updatedObjects {
       guard let resultPublisher = resultPublishers[identifier] else { continue }
@@ -517,12 +611,20 @@ public final class SQLiteWorkspace: Workspace {
 
 extension SQLiteWorkspace {
 
-  func buildIndex<Element: Atom>(_ ofType: Element.Type, field: String, toolbox: SQLitePersistenceToolbox, limit: Int) -> (insertedRows: Int, done: Bool) {
+  func buildIndex<Element: Atom>(
+    _ ofType: Element.Type, field: String, toolbox: SQLitePersistenceToolbox, limit: Int
+  ) -> (insertedRows: Int, done: Bool) {
     dispatchPrecondition(condition: .onQueue(targetQueue))
     guard let sqlite = toolbox.connection.sqlite else { return (0, false) }
     let SQLiteElement = Element.self as! SQLiteAtom.Type
     var _query: OpaquePointer? = nil
-    guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid > IFNULL((SELECT MAX(rowid) FROM \(SQLiteElement.table)__\(field)),0)", -1, &_query, nil) else { return (0, false) }
+    guard
+      SQLITE_OK
+        == sqlite3_prepare_v2(
+          sqlite,
+          "SELECT rowid,p FROM \(SQLiteElement.table) WHERE rowid > IFNULL((SELECT MAX(rowid) FROM \(SQLiteElement.table)__\(field)),0)",
+          -1, &_query, nil)
+    else { return (0, false) }
     guard let query = _query else { return (0, false) }
     var insertedRows = 0
     var done = true
@@ -530,7 +632,8 @@ extension SQLiteWorkspace {
       let blob = sqlite3_column_blob(query, 1)
       let blobSize = sqlite3_column_bytes(query, 1)
       let rowid = sqlite3_column_int64(query, 0)
-      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
+      let bb = ByteBuffer(
+        assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       if SQLiteElement.insertIndex(toolbox, field: field, rowid: rowid, table: bb) {
         insertedRows += 1
         if insertedRows >= limit {
@@ -545,8 +648,13 @@ extension SQLiteWorkspace {
     return (insertedRows, done)
   }
 
-  func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S) where S.Element == String {
-    guard !(withUnsafeMutablePointer(to: &state.shutdown) { UnsafeAtomic(at: $0).load(ordering: .acquiring) }) else { return }
+  func beginRebuildIndex<Element: Atom, S: Sequence>(_ ofType: Element.Type, fields: S)
+  where S.Element == String {
+    guard
+      !(withUnsafeMutablePointer(to: &state.shutdown) {
+        UnsafeAtomic(at: $0).load(ordering: .acquiring)
+      })
+    else { return }
     let objectType = ObjectIdentifier(Element.self)
     let tableSpace = self.tableSpace(for: objectType)
     // We don't need to bump the priority for this.
@@ -591,7 +699,8 @@ extension SQLiteWorkspace {
         let status = sqlite3_step(rollback)
         precondition(status == SQLITE_DONE)
         // In case we failed, trigger a redo a few seconds later.
-        tableSpace.queue.asyncAfter(deadline: .now() + Self.RebuildIndexDelayOnDiskFull) { [weak self] in
+        tableSpace.queue.asyncAfter(deadline: .now() + Self.RebuildIndexDelayOnDiskFull) {
+          [weak self] in
           self?.beginRebuildIndex(Element.self, fields: fields)
         }
         return

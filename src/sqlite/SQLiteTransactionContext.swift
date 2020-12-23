@@ -1,6 +1,6 @@
 import Dflat
-import SQLite3
 import Foundation
+import SQLite3
 
 // This is the object per transaction. Even if we support multi-connection later, we will simply
 // have one TransactionContext per connection. No thread-safety concerns.
@@ -13,23 +13,26 @@ public final class SQLiteTransactionContext: TransactionContext {
   private let state: SQLiteTableState
   private let toolbox: SQLitePersistenceToolbox
   private var tableCreated = Set<ObjectIdentifier>()
-  private (set) internal var began = false
+  private(set) internal var began = false
   let changesTimestamp: Int64
   var borrowed: SQLiteConnectionPool.Borrowed {
     SQLiteConnectionPool.Borrowed(pointee: toolbox.connection)
   }
   var aborted = false
-  
+
   static private(set) public var current: SQLiteTransactionContext? {
     get {
       ThreadLocalStorage.transactionContext
     }
-    set (newCurrent) {
+    set(newCurrent) {
       ThreadLocalStorage.transactionContext = newCurrent
     }
   }
 
-  init(state: SQLiteTableState, objectTypes: [ObjectIdentifier], changesTimestamp: Int64, connection: SQLiteConnection) {
+  init(
+    state: SQLiteTableState, objectTypes: [ObjectIdentifier], changesTimestamp: Int64,
+    connection: SQLiteConnection
+  ) {
     var objectTypesSet = Set<ObjectIdentifier>()
     for type in objectTypes {
       objectTypesSet.update(with: type)
@@ -48,8 +51,10 @@ public final class SQLiteTransactionContext: TransactionContext {
   func contains(ofType: Any.Type) -> Bool {
     return objectTypes.contains(ObjectIdentifier(ofType))
   }
-  
-  static func transactionalUpdate(toolbox: SQLitePersistenceToolbox, updater: (_: SQLitePersistenceToolbox) -> UpdatedObject?) throws -> UpdatedObject {
+
+  static func transactionalUpdate(
+    toolbox: SQLitePersistenceToolbox, updater: (_: SQLitePersistenceToolbox) -> UpdatedObject?
+  ) throws -> UpdatedObject {
     let savepoint = toolbox.connection.prepareStaticStatement("SAVEPOINT dflat_txn")
     guard SQLITE_DONE == sqlite3_step(savepoint) else { throw TransactionError.others }
     let retval = updater(toolbox)
@@ -60,7 +65,7 @@ public final class SQLiteTransactionContext: TransactionContext {
       let status = sqlite3_step(rollback)
       assert(status == SQLITE_DONE)
       switch errcode {
-      case 2067: // SQLITE_CONSTRAINT_UNIQUE:
+      case 2067:  // SQLITE_CONSTRAINT_UNIQUE:
         throw TransactionError.objectAlreadyExists
       case SQLITE_FULL:
         throw TransactionError.diskFull
@@ -114,12 +119,10 @@ public final class SQLiteTransactionContext: TransactionContext {
       return updatedObject
     } catch let error as TransactionError {
       switch error {
-        case .diskFull:
-          fallthrough
-        case .others:
-          self.abort()
-        default:
-          break
+      case .diskFull, .others:
+        self.abort()
+      default:
+        break
       }
       throw error
     }

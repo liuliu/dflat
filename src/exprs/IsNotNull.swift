@@ -15,8 +15,8 @@ public struct IsNotNullExpr<T: Expr, Element>: Expr where T.Element == Element {
   }
 }
 
-public extension Expr {
-  var  isNotNull: IsNotNullExpr<Self, Self.Element> {
+extension Expr {
+  public var isNotNull: IsNotNullExpr<Self, Self.Element> {
     IsNotNullExpr(unary: self)
   }
 }

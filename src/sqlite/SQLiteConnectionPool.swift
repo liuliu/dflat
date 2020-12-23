@@ -55,7 +55,7 @@ final class SQLiteConnectionPool {
     }
     os_unfair_lock_unlock(&lock)
     let pointee = SQLiteConnection(filePath: filePath, createIfMissing: false, readOnly: true)
-    if pointee == nil { // This is unusual, but we give out a nil.
+    if pointee == nil {  // This is unusual, but we give out a nil.
       os_unfair_lock_lock(&lock)
       os_unfair_lock_unlock(&lock)
       flowControl.signal()

@@ -1,6 +1,6 @@
 import Dflat
-import SQLite3
 import FlatBuffers
+import SQLite3
 
 struct AllExpr<Element: Atom>: Expr, SQLiteExpr {
   typealias ResultType = Bool
@@ -12,8 +12,10 @@ struct AllExpr<Element: Atom>: Expr, SQLiteExpr {
     return .full
   }
   func existingIndex(_ existingIndexes: inout Set<String>) {}
-  func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {}
-  func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {}
+  func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {
+  }
+  func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {
+  }
 }
 
 final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
@@ -21,27 +23,40 @@ final class SQLiteQueryBuilder<Element: Atom>: QueryBuilder<Element> {
   private let transactionContext: SQLiteTransactionContext?
   private let workspace: SQLiteWorkspace
   private let changesTimestamp: Int64
-  public init(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64) {
+  public init(
+    reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace,
+    transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64
+  ) {
     self.reader = reader
     self.workspace = workspace
     self.transactionContext = transactionContext
     self.changesTimestamp = changesTimestamp
     super.init()
   }
-  override func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
+  override func `where`<T: Expr & SQLiteExpr>(
+    _ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []
+  ) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
     let sqlQuery = AnySQLiteExpr(query)
     var result = [Element]()
-    SQLiteQueryWhere(reader: reader, workspace: workspace, transactionContext: transactionContext, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy, offset: 0, result: &result)
-    return SQLiteFetchedResult(result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
+    SQLiteQueryWhere(
+      reader: reader, workspace: workspace, transactionContext: transactionContext,
+      changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy,
+      offset: 0, result: &result)
+    return SQLiteFetchedResult(
+      result, changesTimestamp: changesTimestamp, query: sqlQuery, limit: limit, orderBy: orderBy)
   }
-  override func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> {
+  override func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<
+    Element
+  > {
     return self.where(AllExpr<Element>(), limit: limit, orderBy: orderBy)
   }
 }
 
 // MARK - Query
 
-private func areInIncreasingOrder<Element>(_ lhs: Element, _ rhs: Element, orderBy: [OrderBy<Element>]) -> Bool {
+private func areInIncreasingOrder<Element>(
+  _ lhs: Element, _ rhs: Element, orderBy: [OrderBy<Element>]
+) -> Bool {
   for i in orderBy {
     let sortingOrder = i.areInSortingOrder(.object(lhs), .object(rhs))
     guard sortingOrder != .same else { continue }
@@ -78,7 +93,12 @@ extension Array where Element: Atom {
   }
 }
 
-func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?, transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [OrderBy<Element>], offset: Int, result: inout [Element]) {
+func SQLiteQueryWhere<Element: Atom>(
+  reader: SQLiteConnectionPool.Borrowed, workspace: SQLiteWorkspace?,
+  transactionContext: SQLiteTransactionContext?, changesTimestamp: Int64,
+  query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [OrderBy<Element>], offset: Int,
+  result: inout [Element]
+) {
   defer { reader.return() }
   guard let sqlite = reader.pointee else { return }
   let SQLiteElement = Element.self as! SQLiteAtom.Type
@@ -101,7 +121,7 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
         orderByQuery.append("\(i.name) DESC, ")
       }
     } else {
-      insertSorted = true // We cannot use the order from SQLite query, therefore, we have to order ourselves.
+      insertSorted = true  // We cannot use the order from SQLite query, therefore, we have to order ourselves.
     }
   }
   let canUsePartialIndex = query.canUsePartialIndex(indexSurvey)
@@ -114,7 +134,8 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
   if canUsePartialIndex != .none {
     var statement = ""
     var parameterCount: Int32 = 0
-    query.buildWhereQuery(indexSurvey: indexSurvey, query: &statement, parameterCount: &parameterCount)
+    query.buildWhereQuery(
+      indexSurvey: indexSurvey, query: &statement, parameterCount: &parameterCount)
     if statement.count > 0 {
       if indexSurvey.partial.count > 0 {
         statement = "(\(statement))"
@@ -148,7 +169,8 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
   }
   if canUsePartialIndex != .none {
     var parameterCount: Int32 = 0
-    query.bindWhereQuery(indexSurvey: indexSurvey, query: preparedQuery, parameterCount: &parameterCount)
+    query.bindWhereQuery(
+      indexSurvey: indexSurvey, query: preparedQuery, parameterCount: &parameterCount)
   }
   switch canUsePartialIndex {
   case .full:
@@ -156,13 +178,16 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
       let blob = sqlite3_column_blob(preparedQuery, 1)
       let blobSize = sqlite3_column_bytes(preparedQuery, 1)
       let rowid = sqlite3_column_int64(preparedQuery, 0)
-      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
+      let bb = ByteBuffer(
+        assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let element = Element.fromFlatBuffers(bb)
       element._rowid = rowid
       element._changesTimestamp = changesTimestamp
       if let transactionContext = transactionContext {
         // If there is an object repository, update them so changeRequest doesn't need to make another round-trip to the database.
-        transactionContext.objectRepository.set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
+        transactionContext.objectRepository.set(
+          fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self),
+          for: rowid)
       }
       if insertSorted {
         result.insertSorted(element, orderBy: orderBy)
@@ -183,7 +208,8 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
       let blob = sqlite3_column_blob(preparedQuery, 1)
       let blobSize = sqlite3_column_bytes(preparedQuery, 1)
       let rowid = sqlite3_column_int64(preparedQuery, 0)
-      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
+      let bb = ByteBuffer(
+        assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let retval = query.evaluate(object: .table(bb))
       if retval == true {
         let element = Element.fromFlatBuffers(bb)
@@ -191,7 +217,9 @@ func SQLiteQueryWhere<Element: Atom>(reader: SQLiteConnectionPool.Borrowed, work
         element._changesTimestamp = changesTimestamp
         if let transactionContext = transactionContext {
           // If there is an object repository, update them so changeRequest doesn't need to make another round-trip to the database.
-          transactionContext.objectRepository.set(fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self), for: rowid)
+          transactionContext.objectRepository.set(
+            fetchedObject: .fetched(element), ofTypeIdentifier: ObjectIdentifier(Element.self),
+            for: rowid)
         }
         if insertSorted {
           actualResult.insertSorted(element, orderBy: orderBy)

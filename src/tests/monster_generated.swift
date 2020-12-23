@@ -3,113 +3,228 @@
 
 import FlatBuffers
 
-public enum zzz_DflatGen_MyGame_Sample_Equipment: UInt8, Enum { 
-    public typealias T = UInt8
-    public static var byteSize: Int { return MemoryLayout<UInt8>.size }
-    public var value: UInt8 { return self.rawValue }
-    case none_ = 0
-    case weapon = 1
-    case orb = 2
-    
+public enum zzz_DflatGen_MyGame_Sample_Equipment: UInt8, Enum {
+  public typealias T = UInt8
+  public static var byteSize: Int { return MemoryLayout<UInt8>.size }
+  public var value: UInt8 { return self.rawValue }
+  case none_ = 0
+  case weapon = 1
+  case orb = 2
 
-    public static var max: zzz_DflatGen_MyGame_Sample_Equipment { return .orb }
-    public static var min: zzz_DflatGen_MyGame_Sample_Equipment { return .none_ }
+  public static var max: zzz_DflatGen_MyGame_Sample_Equipment { return .orb }
+  public static var min: zzz_DflatGen_MyGame_Sample_Equipment { return .none_ }
 }
 
 public struct zzz_DflatGen_MyGame_Sample_Vec3: Readable {
 
-    static func validateVersion() { FlatBuffersVersion_1_12_0() }
-    public var __buffer: ByteBuffer! { return _accessor.bb }
-    private var _accessor: Struct
+  static func validateVersion() { FlatBuffersVersion_1_12_0() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Struct
 
-    public static var size = 12
-    public static var alignment = 4
-    public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
+  public static var size = 12
+  public static var alignment = 4
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
 
-    public var x: Float32 { return _accessor.readBuffer(of: Float32.self, at: 0) }
-    public var y: Float32 { return _accessor.readBuffer(of: Float32.self, at: 4) }
-    public var z: Float32 { return _accessor.readBuffer(of: Float32.self, at: 8) }
+  public var x: Float32 { return _accessor.readBuffer(of: Float32.self, at: 0) }
+  public var y: Float32 { return _accessor.readBuffer(of: Float32.self, at: 4) }
+  public var z: Float32 { return _accessor.readBuffer(of: Float32.self, at: 8) }
 }
 
 extension zzz_DflatGen_MyGame_Sample_Vec3 {
-    @discardableResult
-    public static func createVec3(builder: inout FlatBufferBuilder, x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) -> Offset<UOffset> {
-        builder.createStructOf(size: zzz_DflatGen_MyGame_Sample_Vec3.size, alignment: zzz_DflatGen_MyGame_Sample_Vec3.alignment)
-        builder.reverseAdd(v: x, postion: 0)
-        builder.reverseAdd(v: y, postion: 4)
-        builder.reverseAdd(v: z, postion: 8)
-        return builder.endStruct()
-    }
+  @discardableResult
+  public static func createVec3(
+    builder: inout FlatBufferBuilder, x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0
+  ) -> Offset<UOffset> {
+    builder.createStructOf(
+      size: zzz_DflatGen_MyGame_Sample_Vec3.size,
+      alignment: zzz_DflatGen_MyGame_Sample_Vec3.alignment)
+    builder.reverseAdd(v: x, postion: 0)
+    builder.reverseAdd(v: y, postion: 4)
+    builder.reverseAdd(v: z, postion: 8)
+    return builder.endStruct()
+  }
 
 }
 
 public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
 
-    static func validateVersion() { FlatBuffersVersion_1_12_0() }
-    public var __buffer: ByteBuffer! { return _accessor.bb }
-    private var _accessor: Table
+  static func validateVersion() { FlatBuffersVersion_1_12_0() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Table
 
-    public static func getRootAsMonster(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Monster { return zzz_DflatGen_MyGame_Sample_Monster(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsMonster(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Monster {
+    return zzz_DflatGen_MyGame_Sample_Monster(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
-    private init(_ t: Table) { _accessor = t }
-    public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+  private init(_ t: Table) { _accessor = t }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
-    private enum VTOFFSET: VOffset {
-        case pos = 4
-        case mana = 6
-        case hp = 8
-        case name = 10
-        case color = 12
-        case inventory = 16
-        case bagType = 18
-        case bag = 20
-        case weapons = 22
-        case equippedType = 24
-        case equipped = 26
-        case colors = 28
-        case path = 30
-        var v: Int32 { Int32(self.rawValue) }
-        var p: VOffset { self.rawValue }
-    }
+  private enum VTOFFSET: VOffset {
+    case pos = 4
+    case mana = 6
+    case hp = 8
+    case name = 10
+    case color = 12
+    case inventory = 16
+    case bagType = 18
+    case bag = 20
+    case weapons = 22
+    case equippedType = 24
+    case equipped = 26
+    case colors = 28
+    case path = 30
+    var v: Int32 { Int32(self.rawValue) }
+    var p: VOffset { self.rawValue }
+  }
 
-    public var pos: zzz_DflatGen_MyGame_Sample_Vec3? { let o = _accessor.offset(VTOFFSET.pos.v); return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Vec3(_accessor.bb, o: o + _accessor.postion) }
-    public var mana: Int16 { let o = _accessor.offset(VTOFFSET.mana.v); return o == 0 ? 150 : _accessor.readBuffer(of: Int16.self, at: o) }
-    public var hp: Int16 { let o = _accessor.offset(VTOFFSET.hp.v); return o == 0 ? 100 : _accessor.readBuffer(of: Int16.self, at: o) }
-    public var name: String? { let o = _accessor.offset(VTOFFSET.name.v); return o == 0 ? nil : _accessor.string(at: o) }
-    public var nameSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.name.v) }
-    public var color: zzz_DflatGen_MyGame_Sample_Color { let o = _accessor.offset(VTOFFSET.color.v); return o == 0 ? .blue : zzz_DflatGen_MyGame_Sample_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .blue }
-    public var inventoryCount: Int32 { let o = _accessor.offset(VTOFFSET.inventory.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func inventory(at index: Int32) -> UInt8 { let o = _accessor.offset(VTOFFSET.inventory.v); return o == 0 ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1) }
-    public var inventory: [UInt8] { return _accessor.getVector(at: VTOFFSET.inventory.v) ?? [] }
-    public var bagTypeCount: Int32 { let o = _accessor.offset(VTOFFSET.bagType.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func bagType(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Equipment? { let o = _accessor.offset(VTOFFSET.bagType.v); return o == 0 ? zzz_DflatGen_MyGame_Sample_Equipment.none_ : zzz_DflatGen_MyGame_Sample_Equipment(rawValue: _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)) }
-    public var bagCount: Int32 { let o = _accessor.offset(VTOFFSET.bag.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func bag<T: FlatBufferObject>(at index: Int32, type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.bag.v); return o == 0 ? nil : _accessor.directUnion(_accessor.vector(at: o) + index * 4) }
-    public var weaponsCount: Int32 { let o = _accessor.offset(VTOFFSET.weapons.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func weapons(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Weapon? { let o = _accessor.offset(VTOFFSET.weapons.v); return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Weapon(_accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4)) }
-    public var equippedType: zzz_DflatGen_MyGame_Sample_Equipment { let o = _accessor.offset(VTOFFSET.equippedType.v); return o == 0 ? .none_ : zzz_DflatGen_MyGame_Sample_Equipment(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
-    public func equipped<T: FlatBufferObject>(type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.equipped.v); return o == 0 ? nil : _accessor.union(o) }
-    public var colorsCount: Int32 { let o = _accessor.offset(VTOFFSET.colors.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func colors(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Color? { let o = _accessor.offset(VTOFFSET.colors.v); return o == 0 ? zzz_DflatGen_MyGame_Sample_Color.red : zzz_DflatGen_MyGame_Sample_Color(rawValue: _accessor.directRead(of: Int8.self, offset: _accessor.vector(at: o) + index * 1)) }
-    public var pathCount: Int32 { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-    public func path(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Vec3? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Vec3(_accessor.bb, o: _accessor.vector(at: o) + index * 12) }
-    public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 14) }
-    public static func add(pos: Offset<UOffset>?, _ fbb: inout FlatBufferBuilder) { guard pos != nil else { return }; fbb.add(structOffset: VTOFFSET.pos.p) }
-    public static func add(mana: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: mana, def: 150, at: VTOFFSET.mana.p) }
-    public static func add(hp: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: hp, def: 100, at: VTOFFSET.hp.p) }
-    public static func add(name: Offset<String>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: name, at: VTOFFSET.name.p) }
-    public static func add(color: zzz_DflatGen_MyGame_Sample_Color, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 2, at: VTOFFSET.color.p) }
-    public static func addVectorOf(inventory: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: inventory, at: VTOFFSET.inventory.p) }
-    public static func addVectorOf(bagType: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: bagType, at: VTOFFSET.bagType.p) }
-    public static func addVectorOf(bag: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: bag, at: VTOFFSET.bag.p) }
-    public static func addVectorOf(weapons: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: weapons, at: VTOFFSET.weapons.p) }
-    public static func add(equippedType: zzz_DflatGen_MyGame_Sample_Equipment, _ fbb: inout FlatBufferBuilder) { fbb.add(element: equippedType.rawValue, def: 0, at: VTOFFSET.equippedType.p) }
-    public static func add(equipped: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: equipped, at: VTOFFSET.equipped.p) }
-    public static func addVectorOf(colors: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: colors, at: VTOFFSET.colors.p) }
-    public static func addVectorOf(path: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: path, at: VTOFFSET.path.p) }
-    public static func startVectorOfPath(_ size: Int, in builder: inout FlatBufferBuilder) {
-        builder.startVectorOfStructs(count: size, size: zzz_DflatGen_MyGame_Sample_Vec3.size, alignment: zzz_DflatGen_MyGame_Sample_Vec3.alignment)
-    }
-    public static func endMonster(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
+  public var pos: zzz_DflatGen_MyGame_Sample_Vec3? {
+    let o = _accessor.offset(VTOFFSET.pos.v)
+    return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Vec3(_accessor.bb, o: o + _accessor.postion)
+  }
+  public var mana: Int16 {
+    let o = _accessor.offset(VTOFFSET.mana.v)
+    return o == 0 ? 150 : _accessor.readBuffer(of: Int16.self, at: o)
+  }
+  public var hp: Int16 {
+    let o = _accessor.offset(VTOFFSET.hp.v)
+    return o == 0 ? 100 : _accessor.readBuffer(of: Int16.self, at: o)
+  }
+  public var name: String? {
+    let o = _accessor.offset(VTOFFSET.name.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
+  public var nameSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.name.v) }
+  public var color: zzz_DflatGen_MyGame_Sample_Color {
+    let o = _accessor.offset(VTOFFSET.color.v)
+    return o == 0
+      ? .blue
+      : zzz_DflatGen_MyGame_Sample_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o))
+        ?? .blue
+  }
+  public var inventoryCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.inventory.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func inventory(at index: Int32) -> UInt8 {
+    let o = _accessor.offset(VTOFFSET.inventory.v)
+    return o == 0
+      ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)
+  }
+  public var inventory: [UInt8] { return _accessor.getVector(at: VTOFFSET.inventory.v) ?? [] }
+  public var bagTypeCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.bagType.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func bagType(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Equipment? {
+    let o = _accessor.offset(VTOFFSET.bagType.v)
+    return o == 0
+      ? zzz_DflatGen_MyGame_Sample_Equipment.none_
+      : zzz_DflatGen_MyGame_Sample_Equipment(
+        rawValue: _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1))
+  }
+  public var bagCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.bag.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func bag<T: FlatBufferObject>(at index: Int32, type: T.Type) -> T? {
+    let o = _accessor.offset(VTOFFSET.bag.v)
+    return o == 0 ? nil : _accessor.directUnion(_accessor.vector(at: o) + index * 4)
+  }
+  public var weaponsCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.weapons.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func weapons(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Weapon? {
+    let o = _accessor.offset(VTOFFSET.weapons.v)
+    return o == 0
+      ? nil
+      : zzz_DflatGen_MyGame_Sample_Weapon(
+        _accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4))
+  }
+  public var equippedType: zzz_DflatGen_MyGame_Sample_Equipment {
+    let o = _accessor.offset(VTOFFSET.equippedType.v)
+    return o == 0
+      ? .none_
+      : zzz_DflatGen_MyGame_Sample_Equipment(rawValue: _accessor.readBuffer(of: UInt8.self, at: o))
+        ?? .none_
+  }
+  public func equipped<T: FlatBufferObject>(type: T.Type) -> T? {
+    let o = _accessor.offset(VTOFFSET.equipped.v)
+    return o == 0 ? nil : _accessor.union(o)
+  }
+  public var colorsCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.colors.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func colors(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Color? {
+    let o = _accessor.offset(VTOFFSET.colors.v)
+    return o == 0
+      ? zzz_DflatGen_MyGame_Sample_Color.red
+      : zzz_DflatGen_MyGame_Sample_Color(
+        rawValue: _accessor.directRead(of: Int8.self, offset: _accessor.vector(at: o) + index * 1))
+  }
+  public var pathCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.path.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func path(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Vec3? {
+    let o = _accessor.offset(VTOFFSET.path.v)
+    return o == 0
+      ? nil : zzz_DflatGen_MyGame_Sample_Vec3(_accessor.bb, o: _accessor.vector(at: o) + index * 12)
+  }
+  public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 14)
+  }
+  public static func add(pos: Offset<UOffset>?, _ fbb: inout FlatBufferBuilder) {
+    guard pos != nil else { return }
+    fbb.add(structOffset: VTOFFSET.pos.p)
+  }
+  public static func add(mana: Int16, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: mana, def: 150, at: VTOFFSET.mana.p)
+  }
+  public static func add(hp: Int16, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: hp, def: 100, at: VTOFFSET.hp.p)
+  }
+  public static func add(name: Offset<String>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: name, at: VTOFFSET.name.p)
+  }
+  public static func add(color: zzz_DflatGen_MyGame_Sample_Color, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: color.rawValue, def: 2, at: VTOFFSET.color.p)
+  }
+  public static func addVectorOf(inventory: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: inventory, at: VTOFFSET.inventory.p)
+  }
+  public static func addVectorOf(bagType: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: bagType, at: VTOFFSET.bagType.p)
+  }
+  public static func addVectorOf(bag: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: bag, at: VTOFFSET.bag.p)
+  }
+  public static func addVectorOf(weapons: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: weapons, at: VTOFFSET.weapons.p)
+  }
+  public static func add(
+    equippedType: zzz_DflatGen_MyGame_Sample_Equipment, _ fbb: inout FlatBufferBuilder
+  ) { fbb.add(element: equippedType.rawValue, def: 0, at: VTOFFSET.equippedType.p) }
+  public static func add(equipped: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: equipped, at: VTOFFSET.equipped.p)
+  }
+  public static func addVectorOf(colors: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: colors, at: VTOFFSET.colors.p)
+  }
+  public static func addVectorOf(path: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: path, at: VTOFFSET.path.p)
+  }
+  public static func startVectorOfPath(_ size: Int, in builder: inout FlatBufferBuilder) {
+    builder.startVectorOfStructs(
+      count: size, size: zzz_DflatGen_MyGame_Sample_Vec3.size,
+      alignment: zzz_DflatGen_MyGame_Sample_Vec3.alignment)
+  }
+  public static func endMonster(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> {
+    let end = Offset<UOffset>(offset: fbb.endTable(at: start))
+    return end
+  }
 }
-

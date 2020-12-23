@@ -13,7 +13,8 @@ private class _AnyExprBase<ResultType, Element: Atom>: Expr {
   }
 }
 
-private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element> where T.Element == Element {
+private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element>
+where T.Element == Element {
   private let base: T
   init(_ base: T) {
     self.base = base
@@ -32,7 +33,8 @@ private class _AnyExpr<T: Expr, Element>: _AnyExprBase<T.ResultType, Element> wh
 public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
   private let sqlBase: SQLiteExpr
   private let base: _AnyExprBase<ResultType, Element>
-  public init<T: Expr & SQLiteExpr>(_ base: T) where T.ResultType == ResultType, T.Element == Element {
+  public init<T: Expr & SQLiteExpr>(_ base: T)
+  where T.ResultType == ResultType, T.Element == Element {
     self.sqlBase = base
     self.base = _AnyExpr(base)
   }
@@ -45,10 +47,15 @@ public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
   public func existingIndex(_ existingIndexes: inout Set<String>) {
     base.existingIndex(&existingIndexes)
   }
-  public func buildWhereQuery(indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32) {
-    sqlBase.buildWhereQuery(indexSurvey: indexSurvey, query: &query, parameterCount: &parameterCount)
+  public func buildWhereQuery(
+    indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32
+  ) {
+    sqlBase.buildWhereQuery(
+      indexSurvey: indexSurvey, query: &query, parameterCount: &parameterCount)
   }
-  public func bindWhereQuery(indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32) {
+  public func bindWhereQuery(
+    indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32
+  ) {
     sqlBase.bindWhereQuery(indexSurvey: indexSurvey, query: query, parameterCount: &parameterCount)
   }
 }

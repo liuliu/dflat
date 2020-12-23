@@ -1,0 +1,11 @@
+#!/bin/sh
+FILES=$(git diff --cached --name-only --diff-filter=ACMR "*BUILD*" | sed 's| |\\ |g')
+[ -z "$FILES" ] && exit 0
+
+# Prettify all selected files
+echo "$FILES" | xargs -I {} bazel run --compilation_mode=opt @com_github_bazelbuild_buildtools//buildifier:buildifier -- -r `realpath {}`
+
+# Add back the modified/prettified files to staging
+echo "$FILES" | xargs git add
+
+exit 0

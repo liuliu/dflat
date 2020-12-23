@@ -61,7 +61,8 @@ extension Double: SQLiteValue {
 extension String: SQLiteValue {
   public func bindSQLite(_ query: OpaquePointer, parameterId: Int32) {
     // This is not ideal, but there isn't a good way to guarentee life-cycle of the String from Swift.
-    let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+    let SQLITE_TRANSIENT = unsafeBitCast(
+      OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
     sqlite3_bind_text(query, parameterId, self, -1, SQLITE_TRANSIENT)
   }
 }

@@ -1,13 +1,13 @@
 import Dflat
-import XCTest
 import FlatBuffers
+import XCTest
 
 final class TestObj: Dflat.Atom {
   var x: Int32 = 0
   var y: Float = 0
 }
 
-func testObjXTable(_ table: ByteBuffer) ->  Int32? {
+func testObjXTable(_ table: ByteBuffer) -> Int32? {
   return nil
 }
 
@@ -36,8 +36,12 @@ func testObjY(_ object: Dflat.Atom) -> Float? {
 class ExprTests: XCTestCase {
 
   func testEvaluateField() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX)
-    let columnY = FieldExpr(name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable, objectReader: testObjY)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX)
+    let columnY = FieldExpr(
+      name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable,
+      objectReader: testObjY)
     let testObj = TestObj()
     testObj.x = 10
     let retval0 = columnX.evaluate(object: .object(testObj))
@@ -54,7 +58,9 @@ class ExprTests: XCTestCase {
   }
 
   func testEvaluateEqualTo() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX)
     let testObj = TestObj()
     testObj.x = 10
     let retval0 = (columnX == 10).evaluate(object: .object(testObj))
@@ -68,7 +74,9 @@ class ExprTests: XCTestCase {
   }
 
   func testBuildComplexExpression() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX)
     let testObj = TestObj()
     testObj.x = 10
     let retval0 = (columnX == 10).evaluate(object: .object(testObj))
@@ -91,8 +99,12 @@ class ExprTests: XCTestCase {
   }
 
   func testArithmetic() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX)
-    let columnY = FieldExpr(name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable, objectReader: testObjY)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX)
+    let columnY = FieldExpr(
+      name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable,
+      objectReader: testObjY)
     let testObj = TestObj()
     testObj.x = 10
     testObj.y = 1.0
@@ -107,8 +119,12 @@ class ExprTests: XCTestCase {
   }
 
   func testNull() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX10AsNull)
-    let columnY = FieldExpr(name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable, objectReader: testObjY)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX10AsNull)
+    let columnY = FieldExpr(
+      name: "y", primaryKey: false, hasIndex: false, tableReader: testObjYTable,
+      objectReader: testObjY)
     let testObj = TestObj()
     testObj.x = 10
     testObj.y = 1.0
@@ -137,7 +153,9 @@ class ExprTests: XCTestCase {
   }
 
   func testInSet() {
-    let columnX = FieldExpr(name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable, objectReader: testObjX)
+    let columnX = FieldExpr(
+      name: "x", primaryKey: false, hasIndex: false, tableReader: testObjXTable,
+      objectReader: testObjX)
     let testObj = TestObj()
     testObj.x = 10
     let retval0 = columnX.in([10, 11, 12]).evaluate(object: .object(testObj))
@@ -156,6 +174,6 @@ class ExprTests: XCTestCase {
     ("testBuildComplexExpression", testBuildComplexExpression),
     ("testArithmetic", testArithmetic),
     ("testNull", testNull),
-    ("testInSet", testInSet)
+    ("testInSet", testInSet),
   ]
 }

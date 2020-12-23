@@ -4,18 +4,21 @@
 import PackageDescription
 
 #if os(Linux)
-let dependencies: [Package.Dependency] = [
-    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+  let dependencies: [Package.Dependency] = [
+    .package(
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
-    .package(name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0")
+    .package(
+      name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0"),
   ]
-let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
+  let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
 #else
-let dependencies: [Package.Dependency] = [
-    .package(name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
-    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2")
+  let dependencies: [Package.Dependency] = [
+    .package(
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
   ]
-let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]
+  let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]
 #endif
 
 let package = Package(
@@ -72,13 +75,13 @@ let package = Package(
         "exprs/sqlite/SQLiteIsNull.swift",
         "exprs/sqlite/SQLiteMod.swift",
         "exprs/sqlite/SQLiteNotIn.swift",
-        "exprs/sqlite/SQLiteValue.swift"
+        "exprs/sqlite/SQLiteValue.swift",
       ]),
     .target(
       name: "_SQLiteDflatOSShim",
       path: "src/sqlite",
       sources: [
-        "os.c",
+        "os.c"
       ],
       publicHeadersPath: "include"),
     .target(
@@ -102,7 +105,7 @@ let package = Package(
         "SQLiteValue.swift",
         "SQLiteWorkspace.swift",
         "SQLiteWorkspaceState.swift",
-        "OSShim.swift"
+        "OSShim.swift",
       ]),
     .testTarget(
       name: "Tests",
@@ -127,7 +130,7 @@ let package = Package(
         "ObjectRepositoryTests.swift",
         "SchemaUpgradeTests.swift",
         "SQLiteWorkspaceCRUDTests.swift",
-        "SubscribeTests.swift"
-      ])
+        "SubscribeTests.swift",
+      ]),
   ]
 )

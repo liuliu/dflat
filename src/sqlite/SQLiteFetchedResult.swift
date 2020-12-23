@@ -6,7 +6,10 @@ final class SQLiteFetchedResult<Element: Atom>: FetchedResult<Element> {
   let limit: Limit
   let orderBy: [OrderBy<Element>]
 
-  init(_ array: [Element], changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit, orderBy: [OrderBy<Element>]) {
+  init(
+    _ array: [Element], changesTimestamp: Int64, query: AnySQLiteExpr<Bool, Element>, limit: Limit,
+    orderBy: [OrderBy<Element>]
+  ) {
     self.changesTimestamp = changesTimestamp
     self.query = query
     self.limit = limit
@@ -14,4 +17,3 @@ final class SQLiteFetchedResult<Element: Atom>: FetchedResult<Element> {
     super.init(array)
   }
 }
-

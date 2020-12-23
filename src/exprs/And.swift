@@ -1,6 +1,9 @@
 import FlatBuffers
 
-public struct AndExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element {
+public struct AndExpr<L: Expr, R: Expr, Element>: Expr
+where
+  L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element
+{
   public typealias ResultType = Bool
   public typealias Element = Element
   public let left: L
@@ -59,14 +62,21 @@ public struct AndExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.R
   }
 }
 
-public func && <L, R, Element: Atom>(left: L, right: R) -> AndExpr<L, R, Element> where L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element {
+public func && <L, R, Element: Atom>(left: L, right: R) -> AndExpr<L, R, Element>
+where
+  L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element
+{
   return AndExpr(left: left, right: right)
 }
 
-public func && <L, Element: Atom>(left: L, right: Bool) -> AndExpr<L, ValueExpr<Bool, Element>, Element> where L.ResultType == Bool, L.Element == Element {
+public func && <L, Element: Atom>(left: L, right: Bool) -> AndExpr<
+  L, ValueExpr<Bool, Element>, Element
+> where L.ResultType == Bool, L.Element == Element {
   return AndExpr(left: left, right: ValueExpr(right))
 }
 
-public func && <R, Element: Atom>(left: Bool, right: R) -> AndExpr<ValueExpr<Bool, Element>, R, Element> where R.ResultType == Bool, Element == R.Element {
+public func && <R, Element: Atom>(left: Bool, right: R) -> AndExpr<
+  ValueExpr<Bool, Element>, R, Element
+> where R.ResultType == Bool, Element == R.Element {
   return AndExpr(left: ValueExpr(left), right: right)
 }

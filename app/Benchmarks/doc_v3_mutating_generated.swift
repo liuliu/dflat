@@ -1,7 +1,7 @@
 import Dflat
-import SQLiteDflat
-import SQLite3
 import FlatBuffers
+import SQLite3
+import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
@@ -59,7 +59,8 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
   public static func changeRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
-    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: BenchDocV3.self, for: key)
+    let u = transactionContext.objectRepository.object(
+      transactionContext.connection, ofType: BenchDocV3.self, for: key)
     return u.map { BenchDocV3ChangeRequest(type: .update, $0) }
   }
   public static func creationRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest {
@@ -79,7 +80,8 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
   public static func deletionRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
-    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: BenchDocV3.self, for: key)
+    let u = transactionContext.objectRepository.object(
+      transactionContext.connection, ofType: BenchDocV3.self, for: key)
     return u.map { BenchDocV3ChangeRequest(type: .deletion, $0) }
   }
   var _atom: BenchDocV3 {
@@ -91,7 +93,10 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
     switch _type {
     case .creation:
-      guard let insert = toolbox.connection.prepareStaticStatement("INSERT INTO benchdocv3 (__pk0, p) VALUES (?1, ?2)") else { return nil }
+      guard
+        let insert = toolbox.connection.prepareStaticStatement(
+          "INSERT INTO benchdocv3 (__pk0, p) VALUES (?1, ?2)")
+      else { return nil }
       title.bindSQLite(insert, parameterId: 1)
       let atom = self._atom
       toolbox.flatBufferBuilder.clear()
@@ -99,7 +104,8 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
       toolbox.flatBufferBuilder.finish(offset: offset)
       let byteBuffer = toolbox.flatBufferBuilder.buffer
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      let SQLITE_STATIC = unsafeBitCast(
+        OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
       sqlite3_bind_blob(insert, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
       _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
@@ -113,21 +119,28 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
         _type = .none
         return .identity(atom)
       }
-      guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO benchdocv3 (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
+      guard
+        let update = toolbox.connection.prepareStaticStatement(
+          "REPLACE INTO benchdocv3 (__pk0, p, rowid) VALUES (?1, ?2, ?3)")
+      else { return nil }
       title.bindSQLite(update, parameterId: 1)
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
       toolbox.flatBufferBuilder.finish(offset: offset)
       let byteBuffer = toolbox.flatBufferBuilder.buffer
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      let SQLITE_STATIC = unsafeBitCast(
+        OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
       sqlite3_bind_blob(update, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       _rowid.bindSQLite(update, parameterId: 3)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       _type = .none
       return .updated(atom)
     case .deletion:
-      guard let deletion = toolbox.connection.prepareStaticStatement("DELETE FROM benchdocv3 WHERE rowid=?1") else { return nil }
+      guard
+        let deletion = toolbox.connection.prepareStaticStatement(
+          "DELETE FROM benchdocv3 WHERE rowid=?1")
+      else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
       _type = .none

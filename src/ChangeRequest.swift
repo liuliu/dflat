@@ -26,7 +26,7 @@ public protocol ChangeRequest {
 }
 
 public enum ChangeRequestType {
-  case none // This is useful so that once it is submitted, follow-up submissions can be preconditioned on not being none.
+  case none  // This is useful so that once it is submitted, follow-up submissions can be preconditioned on not being none.
   case creation
   case update
   case deletion

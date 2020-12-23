@@ -35,18 +35,20 @@ public protocol TransactionContext {
   func abort() -> Bool
 }
 
-public extension TransactionContext {
+extension TransactionContext {
   /**
    * Convenient method for submit change request. `submit()` may throw exceptions, but `try(submit:)` will
    * not. Rather, it will fatal in case of `TransactionError.objectAlreadyExists`. For any other types of
    * `TransactionError`, it will simply return nil.
    */
   @discardableResult
-  func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject? {
+  public func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject? {
     do {
       return try self.submit(changeRequest)
     } catch TransactionError.objectAlreadyExists {
-      fatalError("Object you try to insert already exists. Potentially a conflict unique index or primary key?")
+      fatalError(
+        "Object you try to insert already exists. Potentially a conflict unique index or primary key?"
+      )
     } catch {
       return nil
     }

@@ -57,7 +57,9 @@ public protocol Workspace: Queryable {
    *                         with success / failure. You don't need to handle failure cases specifically
    *                         (such as retry), but rather to surface and log such error.
    */
-  func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
+  func performChanges(
+    _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler,
+    completionHandler: CompletionHandler?)
   // MARK - Observations
   typealias Subscription = WorkspaceSubscription
   /**
@@ -74,7 +76,10 @@ public protocol Workspace: Queryable {
    * - Returns: A subscription object that you can cancel the subscription. If no one hold the subscription
    *            object, it will cancel automatically.
    */
-  func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription where Element: Equatable
+  func subscribe<Element: Atom>(
+    fetchedResult: FetchedResult<Element>,
+    changeHandler: @escaping (_: FetchedResult<Element>) -> Void
+  ) -> Subscription where Element: Equatable
   /**
    * Subscribe to changes of an object. If anything in the object changed or
    * the object itself is deleted. Deletion is a terminal event for subscription.
@@ -91,32 +96,38 @@ public protocol Workspace: Queryable {
    * - Returns: A subscription object that you can cancel on. If no one hold the subscription, it will cancel
    *            automatically.
    */
-  func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription where Element: Equatable
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
-  // MARK - Combine-compliant
-  /**
+  func subscribe<Element: Atom>(
+    object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
+  ) -> Subscription where Element: Equatable
+  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    // MARK - Combine-compliant
+    /**
    * Return a publisher for object subscription in Combine.
    */
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
-  /**
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
+    /**
    * Return a publisher for fetched result subscription in Combine.
    */
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable
-  /**
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
+    where Element: Equatable
+    /**
    * Return a publisher builder for query subscription in Combine.
    */
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-  func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable
-#endif
+    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
+    where Element: Equatable
+  #endif
 }
 
-public extension Workspace {
-  func shutdown() {
+extension Workspace {
+  public func shutdown() {
     shutdown(completion: nil)
   }
-  func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler) {
+  public func performChanges(
+    _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
+  ) {
     performChanges(transactionalObjectTypes, changesHandler: changesHandler, completionHandler: nil)
   }
 }

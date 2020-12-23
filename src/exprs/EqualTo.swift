@@ -1,6 +1,10 @@
 import FlatBuffers
 
-public struct EqualToExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element, L.Element == Element {
+public struct EqualToExpr<L: Expr, R: Expr, Element>: Expr
+where
+  L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element,
+  L.Element == Element
+{
   public typealias ResultType = Bool
   public let left: L
   public let right: R
@@ -29,14 +33,22 @@ public struct EqualToExpr<L: Expr, R: Expr, Element>: Expr where L.ResultType ==
   }
 }
 
-public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<L, R, Element> where L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element, L.Element == Element {
+public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<L, R, Element>
+where
+  L.ResultType == R.ResultType, L.ResultType: Equatable, L.Element == R.Element,
+  L.Element == Element
+{
   return EqualToExpr(left: left, right: right)
 }
 
-public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<L, ValueExpr<R, Element>, Element> where L.ResultType == R, R: Equatable, L.Element == Element {
+public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<
+  L, ValueExpr<R, Element>, Element
+> where L.ResultType == R, R: Equatable, L.Element == Element {
   return EqualToExpr(left: left, right: ValueExpr(right))
 }
 
-public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<ValueExpr<L, Element>, R, Element> where L: Equatable, L == R.ResultType, Element == R.Element {
+public func == <L, R, Element: Atom>(left: L, right: R) -> EqualToExpr<
+  ValueExpr<L, Element>, R, Element
+> where L: Equatable, L == R.ResultType, Element == R.Element {
   return EqualToExpr(left: ValueExpr(left), right: right)
 }

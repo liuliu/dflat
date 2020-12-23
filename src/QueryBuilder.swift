@@ -9,7 +9,9 @@ public enum SortingOrder {
 public class OrderBy<Element: Atom> {
   public var name: String { fatalError() }
   public var sortingOrder: SortingOrder { fatalError() }
-  public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
+  public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+    -> SortingOrder
+  {
     fatalError()
   }
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -39,7 +41,9 @@ open class QueryBuilder<Element: Atom> {
    *
    * - Returns: Return a fetched result which interacts just like normal array.
    */
-  open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
+  open func `where`<T: Expr & SQLiteExpr>(
+    _ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []
+  ) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element {
     fatalError()
   }
   /**
@@ -51,7 +55,8 @@ open class QueryBuilder<Element: Atom> {
    *
    * - Returns: Return a fetched result which interacts just like normal array.
    */
-  open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> {
+  open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element>
+  {
     fatalError()
   }
 }

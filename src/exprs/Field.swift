@@ -17,7 +17,9 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
   }
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
-  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>) -> SortingOrder {
+  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+    -> SortingOrder
+  {
     let lval = field.evaluate(object: lhs)
     let rval = field.evaluate(object: rhs)
     if lval == nil && rval != nil {
@@ -46,7 +48,10 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
   let objectReader: ObjectReader
   let primaryKey: Bool
   let hasIndex: Bool
-  public required init(name: String, primaryKey: Bool, hasIndex: Bool, tableReader: @escaping TableReader, objectReader: @escaping ObjectReader) {
+  public required init(
+    name: String, primaryKey: Bool, hasIndex: Bool, tableReader: @escaping TableReader,
+    objectReader: @escaping ObjectReader
+  ) {
     self.name = name
     self.primaryKey = primaryKey
     self.hasIndex = hasIndex
@@ -82,4 +87,5 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
     }
   }
   public var ascending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .ascending) }
-  public var descending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .descending) }}
+  public var descending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .descending) }
+}

@@ -15,8 +15,9 @@ public final class SQLiteConnection {
   init?(filePath: String, createIfMissing: Bool, readOnly: Bool) {
     // Only 3.22 and above support read-only WAL: https://www.sqlite.org/wal.html#readonly
     var open = false
-    if readOnly && sqlite3_libversion_number() >= 3022000 {
-      let options = createIfMissing ? SQLITE_OPEN_READONLY | SQLITE_OPEN_CREATE : SQLITE_OPEN_READONLY
+    if readOnly && sqlite3_libversion_number() >= 3_022_000 {
+      let options =
+        createIfMissing ? SQLITE_OPEN_READONLY | SQLITE_OPEN_CREATE : SQLITE_OPEN_READONLY
       if SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) {
         // If this is OK, we are good.
         guard sqlite != nil else { return nil }
@@ -25,7 +26,8 @@ public final class SQLiteConnection {
       // Otherwise, continue to try ReadWrite.
     }
     if !open {
-      let options = createIfMissing ? SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE : SQLITE_OPEN_READWRITE
+      let options =
+        createIfMissing ? SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE : SQLITE_OPEN_READWRITE
       guard SQLITE_OK == sqlite3_open_v2(filePath, &sqlite, options, nil) else { return nil }
       guard sqlite != nil else { return nil }
     }
@@ -74,7 +76,8 @@ public final class SQLiteConnection {
       return prepared
     }
     var prepared: OpaquePointer? = nil
-    sqlite3_prepare_v2(sqlite, UnsafeRawPointer(identifier).assumingMemoryBound(to: Int8.self), -1, &prepared, nil)
+    sqlite3_prepare_v2(
+      sqlite, UnsafeRawPointer(identifier).assumingMemoryBound(to: Int8.self), -1, &prepared, nil)
     if let prepared = prepared {
       staticPool[identifier] = prepared
     }
@@ -86,7 +89,8 @@ extension SQLiteConnection {
   public func clearIndexStatus(for table: String) {
     tableIndexStatus[table] = [String: TableIndexStatus]()
   }
-  public func indexSurvey<S: Sequence>(_ existingIndexes: S, table: String) -> IndexSurvey where S.Element == String {
+  public func indexSurvey<S: Sequence>(_ existingIndexes: S, table: String) -> IndexSurvey
+  where S.Element == String {
     var indexStatus = tableIndexStatus[table] ?? [String: TableIndexStatus]()
     var indexSurvey = IndexSurvey()
     var savepoint: Bool = false
@@ -117,7 +121,10 @@ extension SQLiteConnection {
       // Query the main table for max rowid.
       if maxRowid == nil {
         var _maxQuery: OpaquePointer? = nil
-        guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT MAX(rowid) FROM \(table)", -1, &_maxQuery, nil) else {
+        guard
+          SQLITE_OK
+            == sqlite3_prepare_v2(sqlite, "SELECT MAX(rowid) FROM \(table)", -1, &_maxQuery, nil)
+        else {
           // Table doesn't exist at all. Not going to query bit. Just return no up-to-date index.
           return IndexSurvey()
         }
@@ -134,7 +141,11 @@ extension SQLiteConnection {
       }
       guard let maxRowid = maxRowid else { fatalError() }
       var _maxQuery: OpaquePointer? = nil
-      guard SQLITE_OK == sqlite3_prepare_v2(sqlite, "SELECT MAX(rowid) FROM \(table)__\(index)", -1, &_maxQuery, nil) else {
+      guard
+        SQLITE_OK
+          == sqlite3_prepare_v2(
+            sqlite, "SELECT MAX(rowid) FROM \(table)__\(index)", -1, &_maxQuery, nil)
+      else {
         // Table doesn't exist. Assuming it is unindexed. This may happen if we had schema upgrade and this is a new
         // index while the old table has 0 rows. For that case, it is indexed. However, this condition may also be
         // some other errors from SQLite, in that case, error on the safe side.

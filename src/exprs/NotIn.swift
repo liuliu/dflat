@@ -1,6 +1,7 @@
 import FlatBuffers
 
-public struct NotInExpr<T: Expr, Element>: Expr where T.ResultType: Hashable, T.ResultType: DflatFriendlyValue, T.Element == Element {
+public struct NotInExpr<T: Expr, Element>: Expr
+where T.ResultType: Hashable, T.ResultType: DflatFriendlyValue, T.Element == Element {
   public typealias ResultType = Bool
   public typealias Element = Element
   public let unary: T
@@ -17,8 +18,9 @@ public struct NotInExpr<T: Expr, Element>: Expr where T.ResultType: Hashable, T.
   }
 }
 
-public extension Expr {
-  func notIn<S>(_ sequence: S) -> NotInExpr<Self, Self.Element> where S: Sequence, S.Element == Self.ResultType {
+extension Expr {
+  public func notIn<S>(_ sequence: S) -> NotInExpr<Self, Self.Element>
+  where S: Sequence, S.Element == Self.ResultType {
     NotInExpr(unary: self, set: Set(sequence))
   }
 }

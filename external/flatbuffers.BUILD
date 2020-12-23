@@ -1,4 +1,3 @@
-
 licenses(["notice"])
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
@@ -52,10 +51,10 @@ cc_library(
 # Public flatc compiler.
 cc_library(
     name = "flatc",
+    linkopts = ["-lm"],
     deps = [
         "//src:flatc",
     ],
-    linkopts = ["-lm"]
 )
 
 filegroup(
@@ -81,7 +80,7 @@ cc_library(
 )
 
 swift_library(
-  name = "FlatBuffers",
-  module_name = "FlatBuffers",
-  srcs = glob(["swift/Sources/FlatBuffers/*.swift"]),
+    name = "FlatBuffers",
+    srcs = glob(["swift/Sources/FlatBuffers/*.swift"]),
+    module_name = "FlatBuffers",
 )

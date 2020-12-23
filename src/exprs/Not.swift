@@ -16,6 +16,7 @@ public struct NotExpr<T: Expr, Element>: Expr where T.ResultType == Bool, T.Elem
   }
 }
 
-public prefix func ! <T, Element: Atom>(unary: T) -> NotExpr<T, Element> where T.ResultType == Bool, T.Element == Element {
+public prefix func ! <T, Element: Atom>(unary: T) -> NotExpr<T, Element>
+where T.ResultType == Bool, T.Element == Element {
   return NotExpr(unary: unary)
 }
