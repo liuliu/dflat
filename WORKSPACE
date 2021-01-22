@@ -10,13 +10,6 @@ git_repository(
     shallow_since = "1610631418 -0600",
 )
 
-git_repository(
-    name = "build_bazel_rules_swift",
-    commit = "08e3036c6511dd5a0f0fe6b52e9a95a13e1a471c",
-    remote = "https://github.com/bazelbuild/rules_swift.git",
-    shallow_since = "1611278652 -0800",
-)
-
 new_git_repository(
     name = "flatbuffers",
     build_file = "flatbuffers.BUILD",
@@ -32,6 +25,13 @@ new_git_repository(
     remote = "https://github.com/apple/swift-atomics.git",
     shallow_since = "1603395818 -0700",
 )
+
+load(
+    "@build_bazel_rules_apple//apple:repositories.bzl",
+    "apple_rules_dependencies",
+)
+
+apple_rules_dependencies()
 
 load(
     "@build_bazel_rules_swift//swift:repositories.bzl",
@@ -53,13 +53,6 @@ load(
 )
 
 protobuf_deps()
-
-http_file(
-    name = "xctestrunner",
-    executable = 1,
-    sha256 = "298846d5ad7607eba33e786149c2b642ffe39508d4a99468a8280871d902fe5d",
-    urls = ["https://github.com/google/xctestrunner/releases/download/0.2.14/ios_test_runner.par"],
-)
 
 http_archive(
     name = "sqlite3",
