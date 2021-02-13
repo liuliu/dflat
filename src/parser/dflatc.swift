@@ -598,8 +598,16 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
 }
 
 func GenStructSerializer(_ structDef: Struct, code: inout String) {
-  code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
-  code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+  let selfRef: String
+  if structDef.fixed {
+    code += "\nextension \(GetDflatGenFullyQualifiedName(structDef)) {\n"
+    code += "  init(_ obj: \(GetFullyQualifiedName(structDef))) {\n"
+    selfRef = "obj"
+  } else {
+    code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
+    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    selfRef = "self"
+  }
   var parameters = [String]()
   for field in structDef.fields {
     guard !field.deprecated else { continue }
@@ -613,12 +621,12 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
       fallthrough
     case .union:
       code +=
-        "    let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder)\n"
+        "    let __\(field.name) = \(selfRef).\(field.name).to(flatBufferBuilder: &flatBufferBuilder)\n"
       parameters.append("offsetOf\(field.name.firstUppercased()): __\(field.name)")
     case .vector:
       if IsScalarElementType(field.type.element!) {
         code +=
-          "    let __vector_\(field.name) = flatBufferBuilder.createVector(self.\(field.name))\n"
+          "    let __vector_\(field.name) = flatBufferBuilder.createVector(\(selfRef).\(field.name))\n"
         parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
       } else {
         switch field.type.element!.type {
@@ -626,19 +634,20 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           let subStructDef = structDefs[field.type.element!.struct!]!
           if subStructDef.fixed {
             code +=
-              "    \(GetDflatGenFullyQualifiedName(structDef)).startVectorOf\(field.name.firstUppercased())(self.\(field.name).count, in: &flatBufferBuilder)\n"
-            code += "    for i in self.\(field.name) {\n"
-            code += "      let _ = i.to(flatBufferBuilder: &flatBufferBuilder)\n"
+              "    \(GetDflatGenFullyQualifiedName(structDef)).startVectorOf\(field.name.firstUppercased())(\(selfRef).\(field.name).count, in: &flatBufferBuilder)\n"
+            code += "    for i in \(selfRef).\(field.name) {\n"
+            code +=
+              "      _ = flatBufferBuilder.create(struct: \(GetDflatGenFullyQualifiedName(subStructDef))(i))\n"
             code += "    }\n"
             code +=
-              "    let __vector_\(field.name) = flatBufferBuilder.endVectorOfStructs(count: self.\(field.name).count)\n"
+              "    let __vector_\(field.name) = flatBufferBuilder.endVector(len: \(selfRef).\(field.name).count)\n"
             parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
             break
           }
           fallthrough
         case .union:
           code += "    var __\(field.name) = [Offset<UOffset>]()\n"
-          code += "    for i in self.\(field.name) {\n"
+          code += "    for i in \(selfRef).\(field.name) {\n"
           code += "      __\(field.name).append(i.to(flatBufferBuilder: &flatBufferBuilder))\n"
           code += "    }\n"
           code +=
@@ -648,7 +657,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           let enumDef = enumDefs[field.type.element!.utype!]!
           let fieldName = field.name
           code += "    var __\(fieldName) = [\(GetDflatGenFullyQualifiedName(enumDef))]()\n"
-          code += "    for i in self.\(fieldName.prefix(fieldName.count - 4)) {\n"
+          code += "    for i in \(selfRef).\(fieldName.prefix(fieldName.count - 4)) {\n"
           code += "      __\(fieldName).append(i._type)\n"
           code += "    }\n"
           code += "    let __vector_\(fieldName) = flatBufferBuilder.createVector(__\(fieldName))\n"
@@ -666,7 +675,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
         case .enum:
           let enumDef = enumDefs[field.type.element!.enum!]!
           code += "    var __\(field.name) = [\(GetDflatGenFullyQualifiedName(enumDef))]()\n"
-          code += "    for i in self.\(field.name) {\n"
+          code += "    for i in \(selfRef).\(field.name) {\n"
           code +=
             "      __\(field.name).append(\(GetDflatGenFullyQualifiedName(enumDef))(rawValue: i.rawValue) ?? \(GetEnumDefaultValue(field.type.element!.enum!).lowercased()))\n"
           code += "    }\n"
@@ -679,28 +688,34 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
       }
     case .utype:
       let fieldName = field.name
-      code += "    let __\(fieldName) = self.\(fieldName.prefix(fieldName.count - 4))._type\n"
+      code += "    let __\(fieldName) = \(selfRef).\(fieldName.prefix(fieldName.count - 4))._type\n"
       parameters.append("\(fieldName): __\(fieldName)")
     case .enum:
       let enumDef = enumDefs[field.type.enum!]!
       code +=
-        "    let __\(field.name) = \(GetDflatGenFullyQualifiedName(enumDef))(rawValue: self.\(field.name).rawValue) ?? \(GetFieldDefaultValue(field).lowercased())\n"
+        "    let __\(field.name) = \(GetDflatGenFullyQualifiedName(enumDef))(rawValue: \(selfRef).\(field.name).rawValue) ?? \(GetFieldDefaultValue(field).lowercased())\n"
       parameters.append("\(field.name): __\(field.name)")
     case .string:
       if field.isPrimary {
-        code += "    let __\(field.name) = flatBufferBuilder.create(string: self.\(field.name))\n"
+        code +=
+          "    let __\(field.name) = flatBufferBuilder.create(string: \(selfRef).\(field.name))\n"
       } else {
         code +=
-          "    let __\(field.name) = self.\(field.name).map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()\n"
+          "    let __\(field.name) = \(selfRef).\(field.name).map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()\n"
       }
       parameters.append("offsetOf\(field.name.firstUppercased()): __\(field.name)")
     default:
-      parameters.append("\(field.name): self.\(field.name)")
+      parameters.append("\(field.name): \(selfRef).\(field.name)")
     }
   }
   if structDef.fixed {
-    code +=
-      "    return \(GetDflatGenFullyQualifiedName(structDef)).create\(structDef.name)(builder: &flatBufferBuilder, \(parameters.joined(separator: ", ")))\n"
+    code += "    self.init(\(parameters.joined(separator: ", ")))\n"
+    code += "  }\n"
+    code += "  init?(_ obj: \(GetFullyQualifiedName(structDef))?) {\n"
+    code += "    guard let obj = obj else { return nil }\n"
+    code += "    self.init(obj)\n"
+    code += "  }\n"
+    code += "}\n"
   } else {
     // Account for zero-length table.
     code +=
@@ -716,7 +731,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           let subStructDef = structDefs[field.type.struct!]!
           if subStructDef.fixed {
             code +=
-              "    let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder)\n"
+              "    let __\(field.name) = \(GetDflatGenFullyQualifiedName(subStructDef))(self.\(field.name))\n"
           }
           fallthrough
         case .union, .enum, .string, .utype:
@@ -730,20 +745,14 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     }
     code +=
       "    return \(GetDflatGenFullyQualifiedName(structDef)).end\(structDef.name)(&flatBufferBuilder, start: start)\n"
-  }
-  code += "  }\n"
-  code += "}\n"
-  code += "\nextension Optional where Wrapped == \(GetFullyQualifiedName(structDef)) {\n"
-  if structDef.fixed {
-    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {\n"
-    code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }\n"
     code += "  }\n"
-  } else {
+    code += "}\n"
+    code += "\nextension Optional where Wrapped == \(GetFullyQualifiedName(structDef)) {\n"
     code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
     code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()\n"
     code += "  }\n"
+    code += "}\n"
   }
-  code += "}\n"
 }
 
 enum KeyPath {

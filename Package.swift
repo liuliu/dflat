@@ -6,7 +6,7 @@ import PackageDescription
 #if os(Linux)
   let dependencies: [Package.Dependency] = [
     .package(
-      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "1.0.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
     .package(
       name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0"),
@@ -15,7 +15,7 @@ import PackageDescription
 #else
   let dependencies: [Package.Dependency] = [
     .package(
-      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "0.8.0"),
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "1.0.0"),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]

@@ -41,16 +41,13 @@ extension Optional where Wrapped == Content {
   }
 }
 
-extension Vec3 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    return zzz_DflatGen_Vec3.createVec3(
-      builder: &flatBufferBuilder, x: self.x, y: self.y, z: self.z)
+extension zzz_DflatGen_Vec3 {
+  init(_ obj: Vec3) {
+    self.init(x: obj.x, y: obj.y, z: obj.z)
   }
-}
-
-extension Optional where Wrapped == Vec3 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {
-    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }
+  init?(_ obj: Vec3?) {
+    guard let obj = obj else { return nil }
+    self.init(obj)
   }
 }
 
@@ -96,7 +93,7 @@ extension BenchDoc {
     let __content = self.content.to(flatBufferBuilder: &flatBufferBuilder)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let start = zzz_DflatGen_BenchDoc.startBenchDoc(&flatBufferBuilder)
-    let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder)
+    let __pos = zzz_DflatGen_Vec3(self.pos)
     zzz_DflatGen_BenchDoc.add(pos: __pos, &flatBufferBuilder)
     zzz_DflatGen_BenchDoc.add(color: __color, &flatBufferBuilder)
     zzz_DflatGen_BenchDoc.add(title: __title, &flatBufferBuilder)

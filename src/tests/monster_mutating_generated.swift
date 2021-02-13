@@ -35,16 +35,13 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
   }
 }
 
-extension MyGame.Sample.Vec3 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    return zzz_DflatGen_MyGame_Sample_Vec3.createVec3(
-      builder: &flatBufferBuilder, x: self.x, y: self.y, z: self.z)
+extension zzz_DflatGen_MyGame_Sample_Vec3 {
+  init(_ obj: MyGame.Sample.Vec3) {
+    self.init(x: obj.x, y: obj.y, z: obj.z)
   }
-}
-
-extension Optional where Wrapped == MyGame.Sample.Vec3 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>? {
-    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) }
+  init?(_ obj: MyGame.Sample.Vec3?) {
+    guard let obj = obj else { return nil }
+    self.init(obj)
   }
 }
 
@@ -77,11 +74,11 @@ extension MyGame.Sample.Monster {
     let __vector_colors = flatBufferBuilder.createVector(__colors)
     zzz_DflatGen_MyGame_Sample_Monster.startVectorOfPath(self.path.count, in: &flatBufferBuilder)
     for i in self.path {
-      let _ = i.to(flatBufferBuilder: &flatBufferBuilder)
+      _ = flatBufferBuilder.create(struct: zzz_DflatGen_MyGame_Sample_Vec3(i))
     }
-    let __vector_path = flatBufferBuilder.endVectorOfStructs(count: self.path.count)
+    let __vector_path = flatBufferBuilder.endVector(len: self.path.count)
     let start = zzz_DflatGen_MyGame_Sample_Monster.startMonster(&flatBufferBuilder)
-    let __pos = self.pos.to(flatBufferBuilder: &flatBufferBuilder)
+    let __pos = zzz_DflatGen_MyGame_Sample_Vec3(self.pos)
     zzz_DflatGen_MyGame_Sample_Monster.add(pos: __pos, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(mana: self.mana, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(hp: self.hp, &flatBufferBuilder)
