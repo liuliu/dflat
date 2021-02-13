@@ -102,3 +102,5 @@ Package.resolved
 Documentation
 
 clang.bazelrc
+
+.index

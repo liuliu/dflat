@@ -646,9 +646,9 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           parameters.append("vectorOf\(field.name.firstUppercased()): __vector_\(field.name)")
         case .utype:
           let enumDef = enumDefs[field.type.element!.utype!]!
-          let fieldName = field.name.prefix(field.name.count - 5) + "Type"
+          let fieldName = field.name
           code += "    var __\(fieldName) = [\(GetDflatGenFullyQualifiedName(enumDef))]()\n"
-          code += "    for i in self.\(field.name.prefix(field.name.count - 5)) {\n"
+          code += "    for i in self.\(fieldName.prefix(fieldName.count - 4)) {\n"
           code += "      __\(fieldName).append(i._type)\n"
           code += "    }\n"
           code += "    let __vector_\(fieldName) = flatBufferBuilder.createVector(__\(fieldName))\n"
@@ -678,8 +678,8 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
         }
       }
     case .utype:
-      let fieldName = field.name.prefix(field.name.count - 5) + "Type"
-      code += "    let __\(fieldName) = self.\(field.name.prefix(field.name.count - 5))._type\n"
+      let fieldName = field.name
+      code += "    let __\(fieldName) = self.\(fieldName.prefix(fieldName.count - 4))._type\n"
       parameters.append("\(fieldName): __\(fieldName)")
     case .enum:
       let enumDef = enumDefs[field.type.enum!]!
@@ -710,15 +710,8 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
         guard !field.deprecated else { continue }
         switch field.type.type {
         case .vector:
-          switch field.type.element!.type {
-          case .utype:
-            let fieldName = field.name.prefix(field.name.count - 5) + "Type"
-            code +=
-              "    \(GetDflatGenFullyQualifiedName(structDef)).addVectorOf(\(fieldName): __vector_\(fieldName), &flatBufferBuilder)\n"
-          default:
-            code +=
-              "    \(GetDflatGenFullyQualifiedName(structDef)).addVectorOf(\(field.name): __vector_\(field.name), &flatBufferBuilder)\n"
-          }
+          code +=
+            "    \(GetDflatGenFullyQualifiedName(structDef)).addVectorOf(\(field.name): __vector_\(field.name), &flatBufferBuilder)\n"
         case .struct:
           let subStructDef = structDefs[field.type.struct!]!
           if subStructDef.fixed {
@@ -726,13 +719,9 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
               "    let __\(field.name) = self.\(field.name).to(flatBufferBuilder: &flatBufferBuilder)\n"
           }
           fallthrough
-        case .union, .enum, .string:
+        case .union, .enum, .string, .utype:
           code +=
             "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): __\(field.name), &flatBufferBuilder)\n"
-        case .utype:
-          let fieldName = field.name.prefix(field.name.count - 5) + "Type"
-          code +=
-            "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(fieldName): __\(fieldName), &flatBufferBuilder)\n"
         default:
           code +=
             "    \(GetDflatGenFullyQualifiedName(structDef)).add(\(field.name): self.\(field.name), &flatBufferBuilder)\n"

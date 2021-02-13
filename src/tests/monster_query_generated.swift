@@ -121,6 +121,16 @@ extension MyGame.Sample.Monster {
       objectReader: _or__f26__type)
 
   }
+
+  private static func _tr__f32(_ table: ByteBuffer) -> Int16? {
+    let tr0 = zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: table)
+    return tr0.hpOld
+  }
+  private static func _or__f32(_ or0: MyGame.Sample.Monster) -> Int16? {
+    return or0.hpOld
+  }
+  public static let hpOld: FieldExpr<Int16, MyGame.Sample.Monster> = FieldExpr(
+    name: "f32", primaryKey: false, hasIndex: false, tableReader: _tr__f32, objectReader: _or__f32)
 }
 
 public protocol zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {

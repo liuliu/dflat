@@ -96,6 +96,7 @@ extension MyGame.Sample.Monster {
     zzz_DflatGen_MyGame_Sample_Monster.add(equipped: __equipped, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(colors: __vector_colors, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(path: __vector_path, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(hpOld: self.hpOld, &flatBufferBuilder)
     return zzz_DflatGen_MyGame_Sample_Monster.endMonster(&flatBufferBuilder, start: start)
   }
 }
@@ -126,6 +127,7 @@ extension MyGame.Sample {
     public var equipped: Equipment?
     public var colors: [Color]
     public var path: [Vec3]
+    public var hpOld: Int16
     public init(type: ChangeRequestType) {
       _o = nil
       _type = type
@@ -141,6 +143,7 @@ extension MyGame.Sample {
       equipped = nil
       colors = []
       path = []
+      hpOld = 200
     }
     public init(type: ChangeRequestType, _ o: Monster) {
       _o = o
@@ -157,6 +160,7 @@ extension MyGame.Sample {
       equipped = o.equipped
       colors = o.colors
       path = o.path
+      hpOld = o.hpOld
     }
     public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
       let transactionContext = SQLiteTransactionContext.current!
@@ -189,7 +193,7 @@ extension MyGame.Sample {
     var _atom: Monster {
       let atom = Monster(
         name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag,
-        weapons: weapons, equipped: equipped, colors: colors, path: path)
+        weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld)
       atom._rowid = _rowid
       return atom
     }

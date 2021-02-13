@@ -39,6 +39,7 @@ extension MyGame.Sample {
       guard lhs.equipped == rhs.equipped else { return false }
       guard lhs.colors == rhs.colors else { return false }
       guard lhs.path == rhs.path else { return false }
+      guard lhs.hpOld == rhs.hpOld else { return false }
       return true
     }
     public let pos: Vec3?
@@ -52,10 +53,11 @@ extension MyGame.Sample {
     public let equipped: Equipment?
     public let colors: [Color]
     public let path: [Vec3]
+    public let hpOld: Int16
     public init(
       name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100,
       inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [],
-      equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = []
+      equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], hpOld: Int16 = 200
     ) {
       self.pos = pos
       self.mana = mana
@@ -68,6 +70,7 @@ extension MyGame.Sample {
       self.equipped = equipped
       self.colors = colors
       self.path = path
+      self.hpOld = hpOld
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Monster) {
       self.pos = obj.pos.map { Vec3($0) }
@@ -121,6 +124,7 @@ extension MyGame.Sample {
         __path.append(Vec3(o))
       }
       self.path = __path
+      self.hpOld = obj.hpOld
     }
     override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))

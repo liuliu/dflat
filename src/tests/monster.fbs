@@ -28,6 +28,7 @@ table Monster {
   equipped:Equipment (indexed);
   colors:[Color];
   path:[Vec3];
+  hp_old: short = 200;
 }
 
 root_type Monster;
