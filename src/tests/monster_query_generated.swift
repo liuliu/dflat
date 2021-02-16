@@ -137,6 +137,15 @@ public extension MyGame.Sample.Monster {
     return or0.type
   }
   static let type: FieldExpr<Bool, MyGame.Sample.Monster> = FieldExpr(name: "f36", primaryKey: false, hasIndex: false, tableReader: _tr__f36, objectReader: _or__f36)
+
+  private static func _tr__f38(_ table: ByteBuffer) -> Bool? {
+    let tr0 = zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: table)
+    return tr0.truth
+  }
+  private static func _or__f38(_ or0: MyGame.Sample.Monster) -> Bool? {
+    return or0.truth
+  }
+  static let truth: FieldExpr<Bool, MyGame.Sample.Monster> = FieldExpr(name: "f38", primaryKey: false, hasIndex: false, tableReader: _tr__f38, objectReader: _or__f38)
 }
 
 public protocol zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {

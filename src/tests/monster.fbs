@@ -35,6 +35,7 @@ table Monster {
   hp_old: short = 200;
   profile: Profile;
   type: bool;
+  truth: bool = true;
 }
 
 root_type Monster;

@@ -321,6 +321,9 @@ func GetFieldDefaultValue(_ field: Field) -> String {
       let enumVal = enumDef.findEnumVal(Int(val)!)!
       return ".\(enumVal.name.firstLowercased())"
     }
+    if field.type.type == .bool {
+      return val == "0" ? "false" : "true"
+    }
     return val
   }
   if field.isPrimary && field.type.type == .string {

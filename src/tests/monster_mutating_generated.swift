@@ -111,6 +111,7 @@ extension MyGame.Sample.Monster {
     zzz_DflatGen_MyGame_Sample_Monster.add(hpOld: self.hpOld, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(profile: __profile, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(type: self.type, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(truth: self.truth, &flatBufferBuilder)
     return zzz_DflatGen_MyGame_Sample_Monster.endMonster(&flatBufferBuilder, start: start)
   }
 }
@@ -144,6 +145,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   public var hpOld: Int16
   public var profile: Profile?
   public var type: Bool
+  public var truth: Bool
   public init(type _type: ChangeRequestType) {
     _o = nil
     self._type = _type
@@ -162,6 +164,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     hpOld = 200
     profile = nil
     type = false
+    truth = true
   }
   public init(type _type: ChangeRequestType, _ _o: Monster) {
     self._o = _o
@@ -181,6 +184,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     hpOld = _o.hpOld
     profile = _o.profile
     type = _o.type
+    truth = _o.truth
   }
   public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
@@ -209,7 +213,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     return u.map { MonsterChangeRequest(type: .deletion, $0) }
   }
   var _atom: Monster {
-    let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld, profile: profile, type: type)
+    let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld, profile: profile, type: type, truth: truth)
     atom._rowid = _rowid
     return atom
   }
