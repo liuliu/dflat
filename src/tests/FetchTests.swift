@@ -37,6 +37,7 @@ class FetchTests: XCTestCase {
         let creationRequest3 = MyGame.Sample.MonsterChangeRequest.creationRequest()
         creationRequest3.name = "name3"
         creationRequest3.mana = 20
+        creationRequest3.profile = MyGame.Sample.Profile(url: "https://")
         creationRequest3.color = .green
         try! txnContext.submit(creationRequest3)
         let creationRequest4 = MyGame.Sample.MonsterChangeRequest.creationRequest()
@@ -80,6 +81,7 @@ class FetchTests: XCTestCase {
       MyGame.Sample.Monster.mana < 100, orderBy: [MyGame.Sample.Monster.mana.ascending])
     XCTAssert(finalFetchedResult.count == 1)
     XCTAssertEqual(finalFetchedResult[0].name, "name3")
+    XCTAssertEqual(finalFetchedResult[0].profile!.url!, "https://")
   }
 
   static let allTests = [

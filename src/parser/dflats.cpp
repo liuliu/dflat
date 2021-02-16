@@ -51,7 +51,7 @@ static const char *idl_types[] = {
 };
 
 const std::string GenJSONType(const flatbuffers::Type &type) {
-	if (flatbuffers::IsStruct(type)) {
+	if (type.base_type == flatbuffers::BASE_TYPE_STRUCT) {
 		return std::string("{\"type\": \"struct\", \"struct\": \"") + flatbuffers::MakeCamel(type.struct_def->name, false) + "\"}";
 	} else if (flatbuffers::IsSeries(type)) {
 		if (type.element == flatbuffers::BASE_TYPE_STRUCT) {

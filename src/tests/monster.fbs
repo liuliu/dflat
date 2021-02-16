@@ -15,6 +15,10 @@ struct Vec3 {
   z:float;
 }
 
+table Profile {
+  url: string;
+}
+
 table Monster {
   pos:Vec3;
   mana:short = 150 (indexed);
@@ -29,6 +33,7 @@ table Monster {
   colors:[Color];
   path:[Vec3];
   hp_old: short = 200;
+  profile: Profile;
 }
 
 root_type Monster;
