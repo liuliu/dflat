@@ -337,6 +337,9 @@ func GetFieldDefaultValue(_ field: Field) -> String {
   if field.type.type == .vector {
     return "[]"
   }
+  if field.type.type == .bool {
+    return "false"
+  }
   return "0"
 }
 
@@ -928,22 +931,22 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     guard IsDataField(field) else { continue }
     code += "  public var \(field.name): \(GetFieldType(field))\n"
   }
-  code += "  public init(type: ChangeRequestType) {\n"
+  code += "  public init(type _type: ChangeRequestType) {\n"
   code += "    _o = nil\n"
-  code += "    _type = type\n"
+  code += "    self._type = _type\n"
   code += "    _rowid = -1\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
     code += "    \(field.name) = \(GetFieldDefaultValue(field))\n"
   }
   code += "  }\n"
-  code += "  public init(type: ChangeRequestType, _ o: \(structDef.name)) {\n"
-  code += "    _o = o\n"
-  code += "    _type = type\n"
-  code += "    _rowid = o._rowid\n"
+  code += "  public init(type _type: ChangeRequestType, _ _o: \(structDef.name)) {\n"
+  code += "    self._o = _o\n"
+  code += "    self._type = _type\n"
+  code += "    _rowid = _o._rowid\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
-    code += "    \(field.name) = o.\(field.name)\n"
+    code += "    \(field.name) = _o.\(field.name)\n"
   }
   code += "  }\n"
   code +=

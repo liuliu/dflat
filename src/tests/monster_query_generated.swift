@@ -128,6 +128,15 @@ public extension MyGame.Sample.Monster {
   public static let url: FieldExpr<String, MyGame.Sample.Monster> = FieldExpr(name: "f34__f4", primaryKey: false, hasIndex: false, tableReader: _tr__f34__f4, objectReader: _or__f34__f4)
 
   }
+
+  private static func _tr__f36(_ table: ByteBuffer) -> Bool? {
+    let tr0 = zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: table)
+    return tr0.type
+  }
+  private static func _or__f36(_ or0: MyGame.Sample.Monster) -> Bool? {
+    return or0.type
+  }
+  static let type: FieldExpr<Bool, MyGame.Sample.Monster> = FieldExpr(name: "f36", primaryKey: false, hasIndex: false, tableReader: _tr__f36, objectReader: _or__f36)
 }
 
 public protocol zzz_DflatGen_Proto__MyGame__Sample__Monster__f26 {

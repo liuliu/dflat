@@ -51,6 +51,7 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
     guard lhs.path == rhs.path else { return false }
     guard lhs.hpOld == rhs.hpOld else { return false }
     guard lhs.profile == rhs.profile else { return false }
+    guard lhs.type == rhs.type else { return false }
     return true
   }
   public let pos: Vec3?
@@ -66,7 +67,8 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public let path: [Vec3]
   public let hpOld: Int16
   public let profile: Profile?
-  public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], hpOld: Int16 = 200, profile: Profile? = nil) {
+  public let type: Bool
+  public init(name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [], equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], hpOld: Int16 = 200, profile: Profile? = nil, type: Bool = false) {
     self.pos = pos
     self.mana = mana
     self.hp = hp
@@ -80,6 +82,7 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
     self.path = path
     self.hpOld = hpOld
     self.profile = profile
+    self.type = type
   }
   public init(_ obj: zzz_DflatGen_MyGame_Sample_Monster) {
     self.pos = obj.pos.map { Vec3($0) }
@@ -131,6 +134,7 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
     self.path = __path
     self.hpOld = obj.hpOld
     self.profile = obj.profile.map { Profile($0) }
+    self.type = obj.type
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))

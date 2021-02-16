@@ -114,6 +114,7 @@ public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
     case path = 30
     case hpOld = 32
     case profile = 34
+    case type = 36
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
@@ -143,7 +144,8 @@ public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
   public func mutablePath(at index: Int32) -> zzz_DflatGen_MyGame_Sample_Vec3_Mutable? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Vec3_Mutable(_accessor.bb, o: _accessor.vector(at: o) + index * 12) }
   public var hpOld: Int16 { let o = _accessor.offset(VTOFFSET.hpOld.v); return o == 0 ? 200 : _accessor.readBuffer(of: Int16.self, at: o) }
   public var profile: zzz_DflatGen_MyGame_Sample_Profile? { let o = _accessor.offset(VTOFFSET.profile.v); return o == 0 ? nil : zzz_DflatGen_MyGame_Sample_Profile(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 16) }
+  public var type: Bool { let o = _accessor.offset(VTOFFSET.type.v); return o == 0 ? false : 0 != _accessor.readBuffer(of: Byte.self, at: o) }
+  public static func startMonster(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 17) }
   public static func add(pos: zzz_DflatGen_MyGame_Sample_Vec3?, _ fbb: inout FlatBufferBuilder) { guard let pos = pos else { return }; fbb.create(struct: pos, position: VTOFFSET.pos.p) }
   public static func add(mana: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: mana, def: 150, at: VTOFFSET.mana.p) }
   public static func add(hp: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: hp, def: 100, at: VTOFFSET.hp.p) }
@@ -162,6 +164,8 @@ public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
   }
   public static func add(hpOld: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: hpOld, def: 200, at: VTOFFSET.hpOld.p) }
   public static func add(profile: Offset<UOffset>, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: profile, at: VTOFFSET.profile.p) }
+  public static func add(type: Bool, _ fbb: inout FlatBufferBuilder) { fbb.add(element: type, def: false,
+   at: VTOFFSET.type.p) }
   public static func endMonster(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset<UOffset> { let end = Offset<UOffset>(offset: fbb.endTable(at: start)); return end }
   public static func createMonster(
     _ fbb: inout FlatBufferBuilder,
@@ -179,7 +183,8 @@ public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
     vectorOfColors colors: Offset<UOffset> = Offset(),
     vectorOfPath path: Offset<UOffset> = Offset(),
     hpOld: Int16 = 200,
-    offsetOfProfile profile: Offset<UOffset> = Offset()
+    offsetOfProfile profile: Offset<UOffset> = Offset(),
+    type: Bool = false
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_Sample_Monster.startMonster(&fbb)
     zzz_DflatGen_MyGame_Sample_Monster.add(pos: pos, &fbb)
@@ -197,6 +202,7 @@ public struct zzz_DflatGen_MyGame_Sample_Monster: FlatBufferObject {
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(path: path, &fbb)
     zzz_DflatGen_MyGame_Sample_Monster.add(hpOld: hpOld, &fbb)
     zzz_DflatGen_MyGame_Sample_Monster.add(profile: profile, &fbb)
+    zzz_DflatGen_MyGame_Sample_Monster.add(type: type, &fbb)
     return zzz_DflatGen_MyGame_Sample_Monster.endMonster(&fbb, start: __start)
   }
 }

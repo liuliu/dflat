@@ -34,6 +34,7 @@ table Monster {
   path:[Vec3];
   hp_old: short = 200;
   profile: Profile;
+  type: bool;
 }
 
 root_type Monster;

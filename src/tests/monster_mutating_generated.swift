@@ -110,6 +110,7 @@ extension MyGame.Sample.Monster {
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(path: __vector_path, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(hpOld: self.hpOld, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(profile: __profile, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.add(type: self.type, &flatBufferBuilder)
     return zzz_DflatGen_MyGame_Sample_Monster.endMonster(&flatBufferBuilder, start: start)
   }
 }
@@ -142,9 +143,10 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
   public var path: [Vec3]
   public var hpOld: Int16
   public var profile: Profile?
-  public init(type: ChangeRequestType) {
+  public var type: Bool
+  public init(type _type: ChangeRequestType) {
     _o = nil
-    _type = type
+    self._type = _type
     _rowid = -1
     pos = nil
     mana = 150
@@ -159,24 +161,26 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     path = []
     hpOld = 200
     profile = nil
+    type = false
   }
-  public init(type: ChangeRequestType, _ o: Monster) {
-    _o = o
-    _type = type
-    _rowid = o._rowid
-    pos = o.pos
-    mana = o.mana
-    hp = o.hp
-    name = o.name
-    color = o.color
-    inventory = o.inventory
-    bag = o.bag
-    weapons = o.weapons
-    equipped = o.equipped
-    colors = o.colors
-    path = o.path
-    hpOld = o.hpOld
-    profile = o.profile
+  public init(type _type: ChangeRequestType, _ _o: Monster) {
+    self._o = _o
+    self._type = _type
+    _rowid = _o._rowid
+    pos = _o.pos
+    mana = _o.mana
+    hp = _o.hp
+    name = _o.name
+    color = _o.color
+    inventory = _o.inventory
+    bag = _o.bag
+    weapons = _o.weapons
+    equipped = _o.equipped
+    colors = _o.colors
+    path = _o.path
+    hpOld = _o.hpOld
+    profile = _o.profile
+    type = _o.type
   }
   public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
@@ -205,7 +209,7 @@ public final class MonsterChangeRequest: Dflat.ChangeRequest {
     return u.map { MonsterChangeRequest(type: .deletion, $0) }
   }
   var _atom: Monster {
-    let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld, profile: profile)
+    let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld, profile: profile, type: type)
     atom._rowid = _rowid
     return atom
   }
