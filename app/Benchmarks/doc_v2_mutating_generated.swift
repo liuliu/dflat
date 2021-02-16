@@ -47,9 +47,9 @@ public final class BenchDocV2ChangeRequest: Dflat.ChangeRequest {
   public var tag: String?
   public var priority: Int32
   public var text: String?
-  public init(type: ChangeRequestType) {
+  private init(type _type: ChangeRequestType) {
     _o = nil
-    _type = type
+    self._type = _type
     _rowid = -1
     color = .red
     title = ""
@@ -57,15 +57,15 @@ public final class BenchDocV2ChangeRequest: Dflat.ChangeRequest {
     priority = 0
     text = nil
   }
-  public init(type: ChangeRequestType, _ o: BenchDocV2) {
-    _o = o
-    _type = type
-    _rowid = o._rowid
-    color = o.color
-    title = o.title
-    tag = o.tag
-    priority = o.priority
-    text = o.text
+  private init(type _type: ChangeRequestType, _ _o: BenchDocV2) {
+    self._o = _o
+    self._type = _type
+    _rowid = _o._rowid
+    color = _o.color
+    title = _o.title
+    tag = _o.tag
+    priority = _o.priority
+    text = _o.text
   }
   public static func changeRequest(_ o: BenchDocV2) -> BenchDocV2ChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!

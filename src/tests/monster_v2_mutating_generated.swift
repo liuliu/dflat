@@ -171,9 +171,9 @@ extension MyGame.SampleV2 {
     public var colors: [Color]
     public var path: [Vec3]
     public var wear: Equipment?
-    public init(type: ChangeRequestType) {
+    private init(type _type: ChangeRequestType) {
       _o = nil
-      _type = type
+      self._type = _type
       _rowid = -1
       pos = nil
       mana = 150
@@ -187,21 +187,21 @@ extension MyGame.SampleV2 {
       path = []
       wear = nil
     }
-    public init(type: ChangeRequestType, _ o: Monster) {
-      _o = o
-      _type = type
-      _rowid = o._rowid
-      pos = o.pos
-      mana = o.mana
-      hp = o.hp
-      name = o.name
-      color = o.color
-      inventory = o.inventory
-      weapons = o.weapons
-      equipped = o.equipped
-      colors = o.colors
-      path = o.path
-      wear = o.wear
+    private init(type _type: ChangeRequestType, _ _o: Monster) {
+      self._o = _o
+      self._type = _type
+      _rowid = _o._rowid
+      pos = _o.pos
+      mana = _o.mana
+      hp = _o.hp
+      name = _o.name
+      color = _o.color
+      inventory = _o.inventory
+      weapons = _o.weapons
+      equipped = _o.equipped
+      colors = _o.colors
+      path = _o.path
+      wear = _o.wear
     }
     public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
       let transactionContext = SQLiteTransactionContext.current!

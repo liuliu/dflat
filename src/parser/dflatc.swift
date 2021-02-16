@@ -934,7 +934,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     guard IsDataField(field) else { continue }
     code += "  public var \(field.name): \(GetFieldType(field))\n"
   }
-  code += "  public init(type _type: ChangeRequestType) {\n"
+  code += "  private init(type _type: ChangeRequestType) {\n"
   code += "    _o = nil\n"
   code += "    self._type = _type\n"
   code += "    _rowid = -1\n"
@@ -943,7 +943,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
     code += "    \(field.name) = \(GetFieldDefaultValue(field))\n"
   }
   code += "  }\n"
-  code += "  public init(type _type: ChangeRequestType, _ _o: \(structDef.name)) {\n"
+  code += "  private init(type _type: ChangeRequestType, _ _o: \(structDef.name)) {\n"
   code += "    self._o = _o\n"
   code += "    self._type = _type\n"
   code += "    _rowid = _o._rowid\n"
