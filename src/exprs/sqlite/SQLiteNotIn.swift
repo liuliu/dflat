@@ -10,10 +10,12 @@ extension NotInExpr: SQLiteExpr where T: SQLiteExpr, T.ResultType: SQLiteValue {
     if count > 0 {
       parameterCount += 1
       query.append("?\(parameterCount)")
-    }
-    for _ in 1..<count {
-      parameterCount += 1
-      query.append(", ?\(parameterCount)")
+      if count > 1 {
+        for _ in 1..<count {
+          parameterCount += 1
+          query.append(", ?\(parameterCount)")
+        }
+      }
     }
     query.append(")")
   }
