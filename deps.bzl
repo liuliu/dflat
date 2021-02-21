@@ -18,8 +18,8 @@ def dflat_deps():
         new_git_repository,
         name = "flatbuffers",
         remote = "https://github.com/google/flatbuffers.git",
-        commit = "86401e078d0746d2381735415f8c2dfe849f3f52",
-        shallow_since = "1613140870 -0500",
+        commit = "b5da526e6d44dfab9b03398af229eebbe835cc1e",
+        shallow_since = "1613851668 +0300",
         build_file = "@dflat//:external/flatbuffers.BUILD",
     )
 
