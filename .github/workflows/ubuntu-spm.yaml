@@ -1,0 +1,18 @@
+name: ubuntu-spm
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Swift dependencies
+        run: |
+          sudo apt-get install clang libicu-dev
+          wget https://swift.org/builds/swift-5.3.3-release/ubuntu2004/swift-5.3.3-RELEASE/swift-5.3.3-RELEASE-ubuntu20.04.tar.gz
+          tar xzf swift-5.3.3-RELEASE-ubuntu20.04.tar.gz
+          echo "$(pwd)/swift-5.3.3-RELEASE-ubuntu20.04/usr/bin" >> $GITHUB_PATH
+
+      - name: Run tests
+        run: |
+          swift test -v --enable-test-discovery
