@@ -4,6 +4,7 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fliuliu%2Fdflat%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/liuliu/dflat)
 
 [![macos-spm](https://github.com/liuliu/dflat/actions/workflows/macos-spm.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/macos-spm.yaml?query=branch%3Aunstable)
+[![macos-bazel](https://github.com/liuliu/dflat/actions/workflows/macos-bazel.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/macos-bazel.yaml?query=branch%3Aunstable)
 [![ubuntu-spm](https://github.com/liuliu/dflat/actions/workflows/ubuntu-spm.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/ubuntu-spm.yaml?query=branch%3Aunstable)
 [![ubuntu-bazel](https://github.com/liuliu/dflat/actions/workflows/ubuntu-bazel.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/ubuntu-bazel.yaml?query=branch%3Aunstable)
 
