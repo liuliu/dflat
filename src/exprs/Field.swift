@@ -38,19 +38,15 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
   }
 }
 
-final class OrderFromSequence<T, Element>: OrderBy<Element>
+final class OrderFromIndex<T, Element>: OrderBy<Element>
 where T: DflatFriendlyValue, Element: Atom {
   let field: FieldExpr<T, Element>
-  let orderIndex: [T: Int]
+  let index: [T: Int]
   override var name: String { field.name }
   override var sortingOrder: SortingOrder { .ascending }
-  init(field: FieldExpr<T, Element>, sequence: [T]) {
+  init(field: FieldExpr<T, Element>, index: [T: Int]) {
     self.field = field
-    var orderIndex = [T: Int]()
-    for (i, v) in sequence.enumerated() {
-      orderIndex[v] = i
-    }
-    self.orderIndex = orderIndex
+    self.index = index
   }
   override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     // No index to use for this one, because we order them by the sequence passed in.
@@ -72,11 +68,17 @@ where T: DflatFriendlyValue, Element: Atom {
       return .descending
     }
     guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else { return .same }
-    let lIndex = orderIndex[lvalUnwrapped]!
-    let rIndex = orderIndex[rvalUnwrapped]!
-    if lIndex < rIndex {
+    let lIndex = index[lvalUnwrapped]
+    let rIndex = index[rvalUnwrapped]
+    if lIndex == nil && rIndex != nil {
       return .ascending
-    } else if lIndex == rIndex {
+    } else if lIndex != nil && rIndex == nil {
+      return .descending
+    }
+    guard let lIndexUnwrapped = lIndex, let rIndexUnwrapped = rIndex else { return .same }
+    if lIndexUnwrapped < rIndexUnwrapped {
+      return .ascending
+    } else if lIndexUnwrapped == rIndexUnwrapped {
       return .same
     } else {
       return .descending
@@ -137,9 +139,24 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
 }
 
 extension Array where Element: DflatFriendlyValue {
-  public func index<AtomElement: Atom>(of field: FieldExpr<Element, AtomElement>) -> OrderBy<
+  public func firstIndex<AtomElement: Atom>(of field: FieldExpr<Element, AtomElement>) -> OrderBy<
     AtomElement
   > {
-    OrderFromSequence(field: field, sequence: self)
+    var index = [Element: Int]()
+    for (i, v) in self.enumerated() {
+      if index[v] == nil {
+        index[v] = i
+      }
+    }
+    return OrderFromIndex(field: field, index: index)
+  }
+  public func lastIndex<AtomElement: Atom>(of field: FieldExpr<Element, AtomElement>) -> OrderBy<
+    AtomElement
+  > {
+    var index = [Element: Int]()
+    for (i, v) in self.enumerated() {
+      index[v] = i
+    }
+    return OrderFromIndex(field: field, index: index)
   }
 }
