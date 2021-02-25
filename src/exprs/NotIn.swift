@@ -1,7 +1,7 @@
 import FlatBuffers
 
 public struct NotInExpr<T: Expr, Element>: Expr
-where T.ResultType: Hashable, T.ResultType: DflatFriendlyValue, T.Element == Element {
+where T.ResultType: DflatFriendlyValue, T.Element == Element {
   public typealias ResultType = Bool
   public typealias Element = Element
   public let unary: T

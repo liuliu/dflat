@@ -38,6 +38,52 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
   }
 }
 
+final class OrderFromSequence<T, Element>: OrderBy<Element>
+where T: DflatFriendlyValue, Element: Atom {
+  let field: FieldExpr<T, Element>
+  let orderIndex: [T: Int]
+  override var name: String { field.name }
+  override var sortingOrder: SortingOrder { .ascending }
+  init(field: FieldExpr<T, Element>, sequence: [T]) {
+    self.field = field
+    var orderIndex = [T: Int]()
+    for (i, v) in sequence.enumerated() {
+      orderIndex[v] = i
+    }
+    self.orderIndex = orderIndex
+  }
+  override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
+    // No index to use for this one, because we order them by the sequence passed in.
+    return .none
+  }
+  override func existingIndex(_ existingIndexes: inout Set<String>) {
+    // Do nothing.
+  }
+  // See: https://www.sqlite.org/lang_select.html#orderby
+  // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
+  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+    -> SortingOrder
+  {
+    let lval = field.evaluate(object: lhs)
+    let rval = field.evaluate(object: rhs)
+    if lval == nil && rval != nil {
+      return .ascending
+    } else if lval != nil && rval == nil {
+      return .descending
+    }
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else { return .same }
+    let lIndex = orderIndex[lvalUnwrapped]!
+    let rIndex = orderIndex[rvalUnwrapped]!
+    if lIndex < rIndex {
+      return .ascending
+    } else if lIndex == rIndex {
+      return .same
+    } else {
+      return .descending
+    }
+  }
+}
+
 public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Element: Atom {
   public typealias ResultType = T
   public typealias Element = Element
@@ -88,4 +134,12 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
   }
   public var ascending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .ascending) }
   public var descending: OrderBy<Element> { OrderByField(field: self, sortingOrder: .descending) }
+}
+
+extension Array where Element: DflatFriendlyValue {
+  public func index<AtomElement: Atom>(of field: FieldExpr<Element, AtomElement>) -> OrderBy<
+    AtomElement
+  > {
+    OrderFromSequence(field: field, sequence: self)
+  }
 }

@@ -1,6 +1,6 @@
 import FlatBuffers
 
-public protocol DflatFriendlyValue: Comparable {}
+public protocol DflatFriendlyValue: Comparable, Hashable {}
 
 extension Bool: Comparable {
   public static func < (lhs: Bool, rhs: Bool) -> Bool {
