@@ -194,6 +194,20 @@ extension MyGame.Sample {
         transactionContext.connection, ofType: Monster.self, for: key)
       return u.map { MonsterChangeRequest(type: .update, $0) }
     }
+    public static func upsertRequest(_ o: Monster) -> MonsterChangeRequest {
+      let transactionContext = SQLiteTransactionContext.current!
+      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
+      guard
+        let u = transactionContext.objectRepository.object(
+          transactionContext.connection, ofType: Monster.self, for: key)
+      else {
+        return Self.creationRequest(o)
+      }
+      let changeRequest = MonsterChangeRequest(type: .update, o)
+      changeRequest._o = u
+      changeRequest._rowid = u._rowid
+      return changeRequest
+    }
     public static func creationRequest(_ o: Monster) -> MonsterChangeRequest {
       let creationRequest = MonsterChangeRequest(type: .creation, o)
       creationRequest._rowid = -1
@@ -201,12 +215,6 @@ extension MyGame.Sample {
     }
     public static func creationRequest() -> MonsterChangeRequest {
       return MonsterChangeRequest(type: .creation)
-    }
-    public static func upsertRequest(_ o: Monster) -> MonsterChangeRequest {
-      guard let changeRequest = Self.changeRequest(o) else {
-        return Self.creationRequest(o)
-      }
-      return changeRequest
     }
     public static func deletionRequest(_ o: Monster) -> MonsterChangeRequest? {
       let transactionContext = SQLiteTransactionContext.current!

@@ -283,16 +283,16 @@ public struct zzz_DflatGen_MyGame_SampleV2_Monster: FlatBufferObject {
     pos: zzz_DflatGen_MyGame_SampleV2_Vec3? = nil,
     mana: Int16 = 150,
     hp: Int16 = 100,
-    offsetOfName name: Offset<String> = Offset(),
+    nameOffset name: Offset<String> = Offset(),
     color: zzz_DflatGen_MyGame_SampleV2_Color = .blue,
-    vectorOfInventory inventory: Offset<UOffset> = Offset(),
-    vectorOfWeapons weapons: Offset<UOffset> = Offset(),
+    inventoryVectorOffset inventory: Offset<UOffset> = Offset(),
+    weaponsVectorOffset weapons: Offset<UOffset> = Offset(),
     equippedType: zzz_DflatGen_MyGame_SampleV2_Equipment = .none_,
-    offsetOfEquipped equipped: Offset<UOffset> = Offset(),
-    vectorOfColors colors: Offset<UOffset> = Offset(),
-    vectorOfPath path: Offset<UOffset> = Offset(),
+    equippedOffset equipped: Offset<UOffset> = Offset(),
+    colorsVectorOffset colors: Offset<UOffset> = Offset(),
+    pathVectorOffset path: Offset<UOffset> = Offset(),
     wearType: zzz_DflatGen_MyGame_SampleV2_Equipment = .none_,
-    offsetOfWear wear: Offset<UOffset> = Offset()
+    wearOffset wear: Offset<UOffset> = Offset()
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_SampleV2_Monster.startMonster(&fbb)
     zzz_DflatGen_MyGame_SampleV2_Monster.add(pos: pos, &fbb)
@@ -359,7 +359,7 @@ public struct zzz_DflatGen_MyGame_SampleV2_Weapon: FlatBufferObject {
   }
   public static func createWeapon(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfName name: Offset<String> = Offset(),
+    nameOffset name: Offset<String> = Offset(),
     damage: Int16 = 0
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_SampleV2_Weapon.startWeapon(&fbb)
@@ -416,7 +416,7 @@ public struct zzz_DflatGen_MyGame_SampleV2_Orb: FlatBufferObject {
   }
   public static func createOrb(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfName name: Offset<String> = Offset(),
+    nameOffset name: Offset<String> = Offset(),
     color: zzz_DflatGen_MyGame_SampleV2_Color = .red
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_SampleV2_Orb.startOrb(&fbb)

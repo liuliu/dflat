@@ -63,6 +63,20 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
       transactionContext.connection, ofType: BenchDocV3.self, for: key)
     return u.map { BenchDocV3ChangeRequest(type: .update, $0) }
   }
+  public static func upsertRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest {
+    let transactionContext = SQLiteTransactionContext.current!
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
+    guard
+      let u = transactionContext.objectRepository.object(
+        transactionContext.connection, ofType: BenchDocV3.self, for: key)
+    else {
+      return Self.creationRequest(o)
+    }
+    let changeRequest = BenchDocV3ChangeRequest(type: .update, o)
+    changeRequest._o = u
+    changeRequest._rowid = u._rowid
+    return changeRequest
+  }
   public static func creationRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest {
     let creationRequest = BenchDocV3ChangeRequest(type: .creation, o)
     creationRequest._rowid = -1
@@ -70,12 +84,6 @@ public final class BenchDocV3ChangeRequest: Dflat.ChangeRequest {
   }
   public static func creationRequest() -> BenchDocV3ChangeRequest {
     return BenchDocV3ChangeRequest(type: .creation)
-  }
-  public static func upsertRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest {
-    guard let changeRequest = Self.changeRequest(o) else {
-      return Self.creationRequest(o)
-    }
-    return changeRequest
   }
   public static func deletionRequest(_ o: BenchDocV3) -> BenchDocV3ChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!

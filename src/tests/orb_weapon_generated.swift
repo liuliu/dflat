@@ -63,7 +63,7 @@ public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject {
   }
   public static func createWeapon(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfName name: Offset<String> = Offset(),
+    nameOffset name: Offset<String> = Offset(),
     damage: Int16 = 0
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_Sample_Weapon.startWeapon(&fbb)
@@ -121,7 +121,7 @@ public struct zzz_DflatGen_MyGame_Sample_Orb: FlatBufferObject {
   }
   public static func createOrb(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfName name: Offset<String> = Offset(),
+    nameOffset name: Offset<String> = Offset(),
     color: zzz_DflatGen_MyGame_Sample_Color = .red
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_MyGame_Sample_Orb.startOrb(&fbb)

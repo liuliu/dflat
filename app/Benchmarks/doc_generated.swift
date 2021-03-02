@@ -107,7 +107,7 @@ public struct zzz_DflatGen_TextContent: FlatBufferObject {
   }
   public static func createTextContent(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfText text: Offset<String> = Offset()
+    textOffset text: Offset<String> = Offset()
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_TextContent.startTextContent(&fbb)
     zzz_DflatGen_TextContent.add(text: text, &fbb)
@@ -159,7 +159,7 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject {
   }
   public static func createImageContent(
     _ fbb: inout FlatBufferBuilder,
-    vectorOfImages images: Offset<UOffset> = Offset()
+    imagesVectorOffset images: Offset<UOffset> = Offset()
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_ImageContent.startImageContent(&fbb)
     zzz_DflatGen_ImageContent.addVectorOf(images: images, &fbb)
@@ -266,10 +266,10 @@ public struct zzz_DflatGen_BenchDoc: FlatBufferObject {
     _ fbb: inout FlatBufferBuilder,
     pos: zzz_DflatGen_Vec3? = nil,
     color: zzz_DflatGen_Color = .red,
-    offsetOfTitle title: Offset<String> = Offset(),
+    titleOffset title: Offset<String> = Offset(),
     contentType: zzz_DflatGen_Content = .none_,
-    offsetOfContent content: Offset<UOffset> = Offset(),
-    offsetOfTag tag: Offset<String> = Offset(),
+    contentOffset content: Offset<UOffset> = Offset(),
+    tagOffset tag: Offset<String> = Offset(),
     priority: Int32 = 0
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_BenchDoc.startBenchDoc(&fbb)

@@ -962,6 +962,20 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "    return u.map { \(structDef.name)ChangeRequest(type: .update, $0) }\n"
   code += "  }\n"
   code +=
+    "  public static func upsertRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest {\n"
+  code += "    let transactionContext = SQLiteTransactionContext.current!\n"
+  code +=
+    "    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([\(primaryKeys.map { "o." + $0.name }.joined(separator: ", "))])\n"
+  code +=
+    "    guard let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: \(structDef.name).self, for: key) else {\n"
+  code += "      return Self.creationRequest(o)\n"
+  code += "    }\n"
+  code += "    let changeRequest = \(structDef.name)ChangeRequest(type: .update, o)\n"
+  code += "    changeRequest._o = u\n"
+  code += "    changeRequest._rowid = u._rowid\n"
+  code += "    return changeRequest\n"
+  code += "  }\n"
+  code +=
     "  public static func creationRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest {\n"
   code += "    let creationRequest = \(structDef.name)ChangeRequest(type: .creation, o)\n"
   code += "    creationRequest._rowid = -1\n"
@@ -969,13 +983,6 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   code += "  }\n"
   code += "  public static func creationRequest() -> \(structDef.name)ChangeRequest {\n"
   code += "    return \(structDef.name)ChangeRequest(type: .creation)\n"
-  code += "  }\n"
-  code +=
-    "  public static func upsertRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest {\n"
-  code += "    guard let changeRequest = Self.changeRequest(o) else {\n"
-  code += "      return Self.creationRequest(o)\n"
-  code += "    }\n"
-  code += "    return changeRequest\n"
   code += "  }\n"
   code +=
     "  public static func deletionRequest(_ o: \(structDef.name)) -> \(structDef.name)ChangeRequest? {\n"

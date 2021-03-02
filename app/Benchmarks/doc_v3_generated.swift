@@ -71,10 +71,10 @@ public struct zzz_DflatGen_BenchDocV3: FlatBufferObject {
   }
   public static func createBenchDocV3(
     _ fbb: inout FlatBufferBuilder,
-    offsetOfTitle title: Offset<String> = Offset(),
-    offsetOfTag tag: Offset<String> = Offset(),
+    titleOffset title: Offset<String> = Offset(),
+    tagOffset tag: Offset<String> = Offset(),
     priority: Int32 = 0,
-    offsetOfText text: Offset<String> = Offset()
+    textOffset text: Offset<String> = Offset()
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_BenchDocV3.startBenchDocV3(&fbb)
     zzz_DflatGen_BenchDocV3.add(title: title, &fbb)

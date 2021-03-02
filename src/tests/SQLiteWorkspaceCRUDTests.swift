@@ -38,6 +38,44 @@ class SQLiteWorkspaceCRUDTests: XCTestCase {
     XCTAssertEqual(firstMonster.name, "What's my name")
   }
 
+  func testObjectCreationAndUpsert() {
+    guard let dflat = dflat else { return }
+    let expectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges(
+      [MyGame.Sample.Monster.self],
+      changesHandler: { (txnContext) in
+        let creationRequest = MyGame.Sample.MonsterChangeRequest.creationRequest()
+        creationRequest.name = "What's my name"
+        try! txnContext.submit(creationRequest)
+      }
+    ) { success in
+      expectation.fulfill()
+    }
+    wait(for: [expectation], timeout: 10.0)
+    let fetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(
+      MyGame.Sample.Monster.name == "What's my name")
+    let firstMonster = fetchedResult[0]
+    XCTAssertEqual(firstMonster.name, "What's my name")
+    XCTAssertEqual(firstMonster.hp, 100)
+    let upsertExpectation = XCTestExpectation(description: "transcation done")
+    dflat.performChanges(
+      [MyGame.Sample.Monster.self],
+      changesHandler: { (txnContext) in
+        let monster = MyGame.Sample.Monster(name: "What's my name", color: .blue, hp: 10)
+        let upsertRequest = MyGame.Sample.MonsterChangeRequest.upsertRequest(monster)
+        try! txnContext.submit(upsertRequest)
+      }
+    ) { success in
+      upsertExpectation.fulfill()
+    }
+    wait(for: [upsertExpectation], timeout: 10.0)
+    let secondFetchedResult = dflat.fetch(for: MyGame.Sample.Monster.self).where(
+      MyGame.Sample.Monster.name == "What's my name")
+    let secondMonster = secondFetchedResult[0]
+    XCTAssertEqual(secondMonster.name, "What's my name")
+    XCTAssertEqual(secondMonster.hp, 10)
+  }
+
   func testObjectCreationAndQueryByNoneIndexedProperty() {
     guard let dflat = dflat else { return }
     let expectation = XCTestExpectation(description: "transcation done")
