@@ -23,7 +23,7 @@ struct Vec3 {
   z:float;
 }
 
-table Monster {
+table Monster (v: "1.1") {
   pos:Vec3;
   mana:short = 150 (indexed);
   hp:short = 100 (indexed);

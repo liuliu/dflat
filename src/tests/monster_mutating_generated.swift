@@ -238,7 +238,7 @@ extension MyGame.Sample {
         let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
         guard
           let insert = toolbox.connection.prepareStaticStatement(
-            "INSERT INTO mygame__sample__monster (__pk0, __pk1, p) VALUES (?1, ?2, ?3)")
+            "INSERT INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p) VALUES (?1, ?2, ?3)")
         else { return nil }
         name.bindSQLite(insert, parameterId: 1)
         color.bindSQLite(insert, parameterId: 2)
@@ -256,7 +256,7 @@ extension MyGame.Sample {
         if indexSurvey.full.contains("f6") {
           guard
             let i0 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)")
+              "INSERT INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
           else { return nil }
           _rowid.bindSQLite(i0, parameterId: 1)
           if let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom)) {
@@ -269,7 +269,8 @@ extension MyGame.Sample {
         if indexSurvey.full.contains("f26__type") {
           guard
             let i1 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)")
+              "INSERT INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)"
+            )
           else { return nil }
           _rowid.bindSQLite(i1, parameterId: 1)
           if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom)) {
@@ -282,7 +283,7 @@ extension MyGame.Sample {
         if indexSurvey.full.contains("f26__u2__f4") {
           guard
             let i2 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
+              "INSERT INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
             )
           else { return nil }
           _rowid.bindSQLite(i2, parameterId: 1)
@@ -308,7 +309,8 @@ extension MyGame.Sample {
         let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
         guard
           let update = toolbox.connection.prepareStaticStatement(
-            "REPLACE INTO mygame__sample__monster (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)")
+            "REPLACE INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)"
+          )
         else { return nil }
         name.bindSQLite(update, parameterId: 1)
         color.bindSQLite(update, parameterId: 2)
@@ -328,7 +330,7 @@ extension MyGame.Sample {
           if or0 != r0 {
             guard
               let u0 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster__f6 (rowid, f6) VALUES (?1, ?2)")
+                "REPLACE INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
             else { return nil }
             _rowid.bindSQLite(u0, parameterId: 1)
             if let ur0 = r0 {
@@ -345,7 +347,7 @@ extension MyGame.Sample {
           if or1 != r1 {
             guard
               let u1 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)"
+                "REPLACE INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)"
               )
             else { return nil }
             _rowid.bindSQLite(u1, parameterId: 1)
@@ -365,7 +367,7 @@ extension MyGame.Sample {
           if or2 != r2 {
             guard
               let u2 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
+                "REPLACE INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
               )
             else { return nil }
             _rowid.bindSQLite(u2, parameterId: 1)
@@ -382,24 +384,24 @@ extension MyGame.Sample {
       case .deletion:
         guard
           let deletion = toolbox.connection.prepareStaticStatement(
-            "DELETE FROM mygame__sample__monster WHERE rowid=?1")
+            "DELETE FROM mygame__sample__monster_v1_1 WHERE rowid=?1")
         else { return nil }
         _rowid.bindSQLite(deletion, parameterId: 1)
         guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
         if let d0 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster__f6 WHERE rowid=?1")
+          "DELETE FROM mygame__sample__monster_v1_1__f6 WHERE rowid=?1")
         {
           _rowid.bindSQLite(d0, parameterId: 1)
           sqlite3_step(d0)
         }
         if let d1 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster__f26__type WHERE rowid=?1")
+          "DELETE FROM mygame__sample__monster_v1_1__f26__type WHERE rowid=?1")
         {
           _rowid.bindSQLite(d1, parameterId: 1)
           sqlite3_step(d1)
         }
         if let d2 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster__f26__u2__f4 WHERE rowid=?1")
+          "DELETE FROM mygame__sample__monster_v1_1__f26__u2__f4 WHERE rowid=?1")
         {
           _rowid.bindSQLite(d2, parameterId: 1)
           sqlite3_step(d2)

@@ -85,7 +85,7 @@ struct Field: Decodable {
   var offset: Int32
   var `default`: String?
   var deprecated: Bool
-  var attributes: [String]
+  var attributes: [[String: String]]
   var key: String?
 }
 
@@ -94,6 +94,7 @@ struct Struct: Decodable {
   var fixed: Bool
   var namespace: [String]
   var fields: [Field]
+  var attributes: [[String: String]]
   var generated: Bool
 }
 
@@ -148,13 +149,13 @@ extension String {
 
 extension Field {
   var isPrimary: Bool {
-    attributes.contains("primary")
+    attributes.contains { $0["primary"] != nil }
   }
   var isUnique: Bool {
-    attributes.contains("unique")
+    attributes.contains { $0["unique"] != nil }
   }
   var hasIndex: Bool {
-    attributes.contains("indexed") || attributes.contains("unique")
+    attributes.contains { $0["indexed"] != nil || $0["unique"] != nil }
   }
 }
 
@@ -890,7 +891,17 @@ func GetIndexedFields(_ structDef: Struct) -> [IndexedField] {
 func GetTableName(_ structDef: Struct) -> String {
   var names: [String] = structDef.namespace.map { $0.lowercased() }
   names.append(structDef.name.lowercased())
-  return names.joined(separator: "__")
+  guard let version = structDef.attributes.first(where: { $0["v"] != nil }).flatMap({ $0["v"] })
+  else {
+    return names.joined(separator: "__")
+  }
+  let sanitizedVersion = version.replacingOccurrences(of: ".", with: "_")
+  // We only support number, letters, underscore in version.
+  precondition(
+    !sanitizedVersion.contains {
+      !$0.isASCII || !($0.isNumber || $0.isLetter || $0 == "_")
+    })
+  return names.joined(separator: "__") + "_v\(sanitizedVersion)"
 }
 
 func GetPrimaryKeys(_ structDef: Struct) -> [Field] {

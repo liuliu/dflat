@@ -171,7 +171,7 @@ extension MyGame.SampleV2 {
     override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_SampleV2_Monster.getRootAsMonster(bb: bb))
     }
-    public static var table: String { "mygame__samplev2__monster" }
+    public static var table: String { "mygame__samplev2__monster_v1_1" }
     public static var indexFields: [String] {
       ["f6", "f8", "f26__type", "f26__u2__f4", "f34__u2__f4"]
     }
@@ -181,47 +181,47 @@ extension MyGame.SampleV2 {
       }
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 INTEGER, p BLOB, UNIQUE(__pk0, __pk1))",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster__f6 (rowid INTEGER PRIMARY KEY, f6 INTEGER)",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1__f6 (rowid INTEGER PRIMARY KEY, f6 INTEGER)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster__f6 ON mygame__samplev2__monster__f6 (f6)",
+        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster_v1_1__f6 ON mygame__samplev2__monster_v1_1__f6 (f6)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster__f8 (rowid INTEGER PRIMARY KEY, f8 INTEGER)",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1__f8 (rowid INTEGER PRIMARY KEY, f8 INTEGER)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster__f8 ON mygame__samplev2__monster__f8 (f8)",
+        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster_v1_1__f8 ON mygame__samplev2__monster_v1_1__f8 (f8)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster__f26__type (rowid INTEGER PRIMARY KEY, f26__type INTEGER)",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1__f26__type (rowid INTEGER PRIMARY KEY, f26__type INTEGER)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster__f26__type ON mygame__samplev2__monster__f26__type (f26__type)",
+        "CREATE INDEX IF NOT EXISTS index__mygame__samplev2__monster_v1_1__f26__type ON mygame__samplev2__monster_v1_1__f26__type (f26__type)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster__f26__u2__f4 (rowid INTEGER PRIMARY KEY, f26__u2__f4 TEXT)",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1__f26__u2__f4 (rowid INTEGER PRIMARY KEY, f26__u2__f4 TEXT)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__samplev2__monster__f26__u2__f4 ON mygame__samplev2__monster__f26__u2__f4 (f26__u2__f4)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__samplev2__monster_v1_1__f26__u2__f4 ON mygame__samplev2__monster_v1_1__f26__u2__f4 (f26__u2__f4)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster__f34__u2__f4 (rowid INTEGER PRIMARY KEY, f34__u2__f4 TEXT)",
+        "CREATE TABLE IF NOT EXISTS mygame__samplev2__monster_v1_1__f34__u2__f4 (rowid INTEGER PRIMARY KEY, f34__u2__f4 TEXT)",
         nil, nil, nil)
       sqlite3_exec(
         sqlite.sqlite,
-        "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__samplev2__monster__f34__u2__f4 ON mygame__samplev2__monster__f34__u2__f4 (f34__u2__f4)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS index__mygame__samplev2__monster_v1_1__f34__u2__f4 ON mygame__samplev2__monster_v1_1__f34__u2__f4 (f34__u2__f4)",
         nil, nil, nil)
       sqlite.clearIndexStatus(for: Self.table)
     }
@@ -235,7 +235,7 @@ extension MyGame.SampleV2 {
       case "f6":
         guard
           let insert = sqlite.prepareStaticStatement(
-            "INSERT INTO mygame__samplev2__monster__f6 (rowid, f6) VALUES (?1, ?2)")
+            "INSERT INTO mygame__samplev2__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.SampleV2.Monster.mana.evaluate(object: .table(table)) {
@@ -247,7 +247,7 @@ extension MyGame.SampleV2 {
       case "f8":
         guard
           let insert = sqlite.prepareStaticStatement(
-            "INSERT INTO mygame__samplev2__monster__f8 (rowid, f8) VALUES (?1, ?2)")
+            "INSERT INTO mygame__samplev2__monster_v1_1__f8 (rowid, f8) VALUES (?1, ?2)")
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.SampleV2.Monster.hp.evaluate(object: .table(table)) {
@@ -259,7 +259,8 @@ extension MyGame.SampleV2 {
       case "f26__type":
         guard
           let insert = sqlite.prepareStaticStatement(
-            "INSERT INTO mygame__samplev2__monster__f26__type (rowid, f26__type) VALUES (?1, ?2)")
+            "INSERT INTO mygame__samplev2__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)"
+          )
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.SampleV2.Monster.equipped._type.evaluate(object: .table(table)) {
@@ -271,7 +272,7 @@ extension MyGame.SampleV2 {
       case "f26__u2__f4":
         guard
           let insert = sqlite.prepareStaticStatement(
-            "INSERT INTO mygame__samplev2__monster__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
+            "INSERT INTO mygame__samplev2__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
           )
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
@@ -286,7 +287,7 @@ extension MyGame.SampleV2 {
       case "f34__u2__f4":
         guard
           let insert = sqlite.prepareStaticStatement(
-            "INSERT INTO mygame__samplev2__monster__f34__u2__f4 (rowid, f34__u2__f4) VALUES (?1, ?2)"
+            "INSERT INTO mygame__samplev2__monster_v1_1__f34__u2__f4 (rowid, f34__u2__f4) VALUES (?1, ?2)"
           )
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)

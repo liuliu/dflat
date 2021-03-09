@@ -98,7 +98,8 @@ const std::string GenAttributes(const flatbuffers::SymbolTable<flatbuffers::Valu
 	std::string json = "\"attributes\": [";
 	for (auto it = attributes.dict.begin(); it != attributes.dict.end(); ++it) {
 		auto key = it->first;
-		json += "\"" + key + "\", ";
+		auto value = it->second;
+		json += "{\"" + key + "\": \"" + value->constant + "\"}, ";
 	}
 	if (attributes.dict.size() > 0) {
 		json = json.substr(0, json.size() - 2) + "]";
@@ -141,6 +142,7 @@ const std::string GenStruct(const flatbuffers::StructDef &struct_def) {
 	json += "\"generated\": ";
 	json += (struct_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*struct_def.defined_namespace) + "], ";
+	json += GenAttributes(struct_def.attributes) + ", ";
 	json += "\"fields\": [";
 	for (auto it = struct_def.fields.vec.begin(); it != struct_def.fields.vec.end(); ++it) {
 		const auto &field_def = **it;
@@ -263,6 +265,7 @@ int main(int argc, const char **argv) {
     parser->known_attributes_["primary"] = true;
     parser->known_attributes_["indexed"] = true;
     parser->known_attributes_["unique"] = true;
+    parser->known_attributes_["v"] = true;
     ParseFile(*parser.get(), filename, contents, include_directories);
 
     if (parser->root_struct_def_ && parser->root_struct_def_->fixed) {
