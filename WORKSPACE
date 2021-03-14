@@ -61,6 +61,40 @@ http_archive(
     urls = ["https://www.sqlite.org/2020/sqlite-amalgamation-3330000.zip"],
 )
 
+# Optional dependencies for Apollo GraphQL support
+
+new_git_repository(
+    name = "apollo-ios",
+    build_file = "apollo-ios.BUILD",
+    commit = "d1369d43cd38896547278f147a8654146e864448",
+    remote = "https://github.com/apollographql/apollo-ios.git",
+		shallow_since = "1615639417 +0000"
+)
+
+new_git_repository(
+    name = "PathKit",
+    build_file = "PathKit.BUILD",
+    commit = "c8f12353bca8c252713fd2e2fbc5789c39ff92f8",
+    remote = "https://github.com/kylef/PathKit.git",
+    shallow_since = "1581802267 +0100"
+)
+
+new_git_repository(
+    name = "Stencil",
+    build_file = "Stencil.BUILD",
+    commit = "fd107355c20110d3707ebc2b09aed6b92f3cff7c",
+    remote = "https://github.com/stencilproject/Stencil.git",
+    shallow_since = "1612728587 +0100"
+)
+
+new_git_repository(
+    name = "InflectorKit",
+    build_file = "InflectorKit.BUILD",
+    commit = "e28108ca05b3acb58990b0c05fb7ec57ba6e80bb",
+    remote = "https://github.com/mattt/InflectorKit.git",
+    shallow_since = "1607017920 -0800"
+)
+
 # Internal tools
 
 new_git_repository(
