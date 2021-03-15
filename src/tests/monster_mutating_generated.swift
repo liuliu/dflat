@@ -132,19 +132,19 @@ extension MyGame.Sample {
     public static var atomType: Any.Type { Monster.self }
     public var _type: ChangeRequestType
     public var _rowid: Int64
-    public var pos: Vec3?
+    public var pos: MyGame.Sample.Vec3?
     public var mana: Int16
     public var hp: Int16
     public var name: String
-    public var color: Color
+    public var color: MyGame.Sample.Color
     public var inventory: [UInt8]
-    public var bag: [Equipment]
-    public var weapons: [Weapon]
-    public var equipped: Equipment?
-    public var colors: [Color]
-    public var path: [Vec3]
+    public var bag: [MyGame.Sample.Equipment]
+    public var weapons: [MyGame.Sample.Weapon]
+    public var equipped: MyGame.Sample.Equipment?
+    public var colors: [MyGame.Sample.Color]
+    public var path: [MyGame.Sample.Vec3]
     public var hpOld: Int16
-    public var profile: Profile?
+    public var profile: MyGame.Sample.Profile?
     public var type: Bool
     public var truth: Bool
     private init(type _type: ChangeRequestType) {

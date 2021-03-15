@@ -55,26 +55,27 @@ extension MyGame.Sample {
       guard lhs.truth == rhs.truth else { return false }
       return true
     }
-    public let pos: Vec3?
+    public let pos: MyGame.Sample.Vec3?
     public let mana: Int16
     public let hp: Int16
     public let name: String
-    public let color: Color
+    public let color: MyGame.Sample.Color
     public let inventory: [UInt8]
-    public let bag: [Equipment]
-    public let weapons: [Weapon]
-    public let equipped: Equipment?
-    public let colors: [Color]
-    public let path: [Vec3]
+    public let bag: [MyGame.Sample.Equipment]
+    public let weapons: [MyGame.Sample.Weapon]
+    public let equipped: MyGame.Sample.Equipment?
+    public let colors: [MyGame.Sample.Color]
+    public let path: [MyGame.Sample.Vec3]
     public let hpOld: Int16
-    public let profile: Profile?
+    public let profile: MyGame.Sample.Profile?
     public let type: Bool
     public let truth: Bool
     public init(
-      name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100,
-      inventory: [UInt8] = [], bag: [Equipment] = [], weapons: [Weapon] = [],
-      equipped: Equipment? = nil, colors: [Color] = [], path: [Vec3] = [], hpOld: Int16 = 200,
-      profile: Profile? = nil, type: Bool = false, truth: Bool = true
+      name: String, color: MyGame.Sample.Color, pos: MyGame.Sample.Vec3? = nil, mana: Int16 = 150,
+      hp: Int16 = 100, inventory: [UInt8] = [], bag: [MyGame.Sample.Equipment] = [],
+      weapons: [MyGame.Sample.Weapon] = [], equipped: MyGame.Sample.Equipment? = nil,
+      colors: [MyGame.Sample.Color] = [], path: [MyGame.Sample.Vec3] = [], hpOld: Int16 = 200,
+      profile: MyGame.Sample.Profile? = nil, type: Bool = false, truth: Bool = true
     ) {
       self.pos = pos
       self.mana = mana
@@ -93,13 +94,13 @@ extension MyGame.Sample {
       self.truth = truth
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Monster) {
-      self.pos = obj.pos.map { Vec3($0) }
+      self.pos = obj.pos.map { MyGame.Sample.Vec3($0) }
       self.mana = obj.mana
       self.hp = obj.hp
       self.name = obj.name!
-      self.color = Color(rawValue: obj.color.rawValue) ?? .blue
+      self.color = MyGame.Sample.Color(rawValue: obj.color.rawValue) ?? .blue
       self.inventory = obj.inventory
-      var __bag = [Equipment]()
+      var __bag = [MyGame.Sample.Equipment]()
       for i: Int32 in 0..<obj.bagCount {
         guard let ot = obj.bagType(at: i) else { break }
         switch ot {
@@ -114,10 +115,10 @@ extension MyGame.Sample {
         }
       }
       self.bag = __bag
-      var __weapons = [Weapon]()
+      var __weapons = [MyGame.Sample.Weapon]()
       for i: Int32 in 0..<obj.weaponsCount {
         guard let o = obj.weapons(at: i) else { break }
-        __weapons.append(Weapon(o))
+        __weapons.append(MyGame.Sample.Weapon(o))
       }
       self.weapons = __weapons
       switch obj.equippedType {
@@ -132,20 +133,20 @@ extension MyGame.Sample {
           .orb(Orb($0))
         }
       }
-      var __colors = [Color]()
+      var __colors = [MyGame.Sample.Color]()
       for i: Int32 in 0..<obj.colorsCount {
         guard let o = obj.colors(at: i) else { break }
-        __colors.append(Color(rawValue: o.rawValue) ?? .red)
+        __colors.append(MyGame.Sample.Color(rawValue: o.rawValue) ?? .red)
       }
       self.colors = __colors
-      var __path = [Vec3]()
+      var __path = [MyGame.Sample.Vec3]()
       for i: Int32 in 0..<obj.pathCount {
         guard let o = obj.path(at: i) else { break }
-        __path.append(Vec3(o))
+        __path.append(MyGame.Sample.Vec3(o))
       }
       self.path = __path
       self.hpOld = obj.hpOld
-      self.profile = obj.profile.map { Profile($0) }
+      self.profile = obj.profile.map { MyGame.Sample.Profile($0) }
       self.type = obj.type
       self.truth = obj.truth
     }

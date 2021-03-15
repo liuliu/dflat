@@ -58,14 +58,14 @@ extension MyGame.SampleV2 {
 
   public struct Orb: Equatable {
     public var name: String?
-    public var color: Color
-    public init(name: String? = nil, color: Color = .red) {
+    public var color: MyGame.SampleV2.Color
+    public init(name: String? = nil, color: MyGame.SampleV2.Color = .red) {
       self.name = name
       self.color = color
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Orb) {
       self.name = obj.name
-      self.color = Color(rawValue: obj.color.rawValue) ?? .red
+      self.color = MyGame.SampleV2.Color(rawValue: obj.color.rawValue) ?? .red
     }
   }
 
@@ -84,21 +84,23 @@ extension MyGame.SampleV2 {
       guard lhs.wear == rhs.wear else { return false }
       return true
     }
-    public let pos: Vec3?
+    public let pos: MyGame.SampleV2.Vec3?
     public let mana: Int16
     public let hp: Int16
     public let name: String
-    public let color: Color
+    public let color: MyGame.SampleV2.Color
     public let inventory: [UInt8]
-    public let weapons: [Weapon]
-    public let equipped: Equipment?
-    public let colors: [Color]
-    public let path: [Vec3]
-    public let wear: Equipment?
+    public let weapons: [MyGame.SampleV2.Weapon]
+    public let equipped: MyGame.SampleV2.Equipment?
+    public let colors: [MyGame.SampleV2.Color]
+    public let path: [MyGame.SampleV2.Vec3]
+    public let wear: MyGame.SampleV2.Equipment?
     public init(
-      name: String, color: Color, pos: Vec3? = nil, mana: Int16 = 150, hp: Int16 = 100,
-      inventory: [UInt8] = [], weapons: [Weapon] = [], equipped: Equipment? = nil,
-      colors: [Color] = [], path: [Vec3] = [], wear: Equipment? = nil
+      name: String, color: MyGame.SampleV2.Color, pos: MyGame.SampleV2.Vec3? = nil,
+      mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [],
+      weapons: [MyGame.SampleV2.Weapon] = [], equipped: MyGame.SampleV2.Equipment? = nil,
+      colors: [MyGame.SampleV2.Color] = [], path: [MyGame.SampleV2.Vec3] = [],
+      wear: MyGame.SampleV2.Equipment? = nil
     ) {
       self.pos = pos
       self.mana = mana
@@ -113,16 +115,16 @@ extension MyGame.SampleV2 {
       self.wear = wear
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Monster) {
-      self.pos = obj.pos.map { Vec3($0) }
+      self.pos = obj.pos.map { MyGame.SampleV2.Vec3($0) }
       self.mana = obj.mana
       self.hp = obj.hp
       self.name = obj.name!
-      self.color = Color(rawValue: obj.color.rawValue) ?? .blue
+      self.color = MyGame.SampleV2.Color(rawValue: obj.color.rawValue) ?? .blue
       self.inventory = obj.inventory
-      var __weapons = [Weapon]()
+      var __weapons = [MyGame.SampleV2.Weapon]()
       for i: Int32 in 0..<obj.weaponsCount {
         guard let o = obj.weapons(at: i) else { break }
-        __weapons.append(Weapon(o))
+        __weapons.append(MyGame.SampleV2.Weapon(o))
       }
       self.weapons = __weapons
       switch obj.equippedType {
@@ -141,16 +143,16 @@ extension MyGame.SampleV2 {
           .empty(Empty($0))
         }
       }
-      var __colors = [Color]()
+      var __colors = [MyGame.SampleV2.Color]()
       for i: Int32 in 0..<obj.colorsCount {
         guard let o = obj.colors(at: i) else { break }
-        __colors.append(Color(rawValue: o.rawValue) ?? .red)
+        __colors.append(MyGame.SampleV2.Color(rawValue: o.rawValue) ?? .red)
       }
       self.colors = __colors
-      var __path = [Vec3]()
+      var __path = [MyGame.SampleV2.Vec3]()
       for i: Int32 in 0..<obj.pathCount {
         guard let o = obj.path(at: i) else { break }
-        __path.append(Vec3(o))
+        __path.append(MyGame.SampleV2.Vec3(o))
       }
       self.path = __path
       switch obj.wearType {

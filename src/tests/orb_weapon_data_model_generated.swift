@@ -29,14 +29,14 @@ extension MyGame.Sample {
 
   public struct Orb: Equatable {
     public var name: String?
-    public var color: Color
-    public init(name: String? = nil, color: Color = .red) {
+    public var color: MyGame.Sample.Color
+    public init(name: String? = nil, color: MyGame.Sample.Color = .red) {
       self.name = name
       self.color = color
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Orb) {
       self.name = obj.name
-      self.color = Color(rawValue: obj.color.rawValue) ?? .red
+      self.color = MyGame.Sample.Color(rawValue: obj.color.rawValue) ?? .red
     }
   }
 
