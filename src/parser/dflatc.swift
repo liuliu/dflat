@@ -98,10 +98,15 @@ struct Struct: Decodable {
   var generated: Bool
 }
 
+struct RootStruct: Decodable {
+  var name: String
+  var namespace: [String]
+}
+
 struct Schema: Decodable {
   var enums: [Enum]
   var structs: [Struct]
-  var root: String?
+  var root: RootStruct?
 }
 
 var SwiftType: [String: String] = [
@@ -547,14 +552,14 @@ func GenDataModel(schema: Schema, outputPath: String) {
   }
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
-    if structDef.name != schema.root {
+    if structDef.name != schema.root?.name || structDef.namespace != schema.root?.namespace {
       SetNamespace(structDef.namespace, previous: &namespace, code: &code)
       GenStructDataModel(structDef, code: &code)
     }
   }
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
-    if structDef.name == schema.root {
+    if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       SetNamespace(structDef.namespace, previous: &namespace, code: &code)
       GenRootDataModel(structDef, code: &code)
       break
@@ -1141,13 +1146,14 @@ func GenMutating(schema: Schema, outputPath: String) {
   }
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
-    guard structDef.name != schema.root else { continue }
+    guard structDef.name != schema.root?.name || structDef.namespace != schema.root?.namespace
+    else { continue }
     GenStructSerializer(structDef, code: &code)
   }
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
     guard !structDef.fixed else { continue }
-    if structDef.name == schema.root {
+    if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       GenStructSerializer(structDef, code: &code)
       break
     }
@@ -1156,7 +1162,7 @@ func GenMutating(schema: Schema, outputPath: String) {
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
     guard !structDef.fixed else { continue }
-    if structDef.name == schema.root {
+    if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       GenChangeRequest(structDef, code: &code)
       break
     }
@@ -1343,7 +1349,7 @@ func GenQuery(schema: Schema, outputPath: String) {
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
     guard !structDef.fixed else { continue }
-    if structDef.name == schema.root {
+    if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       GenQueryRoot(structDef, code: &code)
       break
     }
@@ -1358,10 +1364,10 @@ func GenSwift(_ filePath: String, _ outputPath: String) {
   decoder.keyDecodingStrategy = .convertFromSnakeCase
   let schema = try! decoder.decode(Schema.self, from: data)
   for enumDef in schema.enums {
-    enumDefs[enumDef.name] = enumDef
+    enumDefs[GetFullyQualifiedName(enumDef)] = enumDef
   }
   for structDef in schema.structs {
-    structDefs[structDef.name] = structDef
+    structDefs[GetFullyQualifiedName(structDef)] = structDef
   }
   let fileComponents = filePath.split(separator: "/")
   let filename = fileComponents.last!
