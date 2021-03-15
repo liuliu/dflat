@@ -422,7 +422,7 @@ class SubscribeTests: XCTestCase {
       let pubExpectation = XCTestExpectation(description: "publisher")
       var updatedMonster = firstMonster
       var updateCount = 0
-      let cancellable = dflat.publisher(for: firstMonster).subscribe(on: DispatchQueue.global())
+      let cancellable = dflat.publisher(for: firstMonster).subscribe(on: DispatchQueue.main)
         .sink { newMonster in
           if case let .updated(monster) = newMonster {
             updatedMonster = monster
@@ -486,7 +486,7 @@ class SubscribeTests: XCTestCase {
       var updateCount = 0
       let subExpectation = XCTestExpectation(description: "subscribe")
       var updatedFetchedResult = fetchedResult
-      let cancellable = dflat.publisher(for: fetchedResult).subscribe(on: DispatchQueue.global())
+      let cancellable = dflat.publisher(for: fetchedResult).subscribe(on: DispatchQueue.main)
         .sink { newFetchedResult in
           updatedFetchedResult = newFetchedResult
           updateCount += 1
@@ -594,7 +594,7 @@ class SubscribeTests: XCTestCase {
       var updatedFetchedResult: FetchedResult<MyGame.Sample.Monster>? = nil
       let cancellable = dflat.publisher(for: MyGame.Sample.Monster.self)
         .where(MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
-        .subscribe(on: DispatchQueue.global())
+        .subscribe(on: DispatchQueue.main)
         .sink { newFetchedResult in
           updatedFetchedResult = newFetchedResult
           updateCount += 1

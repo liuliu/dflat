@@ -101,6 +101,14 @@ for operation in compilationResult.operations {
 // First, generate the flatbuffers schema file. One file per entity.
 
 for entity in entities {
+  let entityType = try schema.getType(named: entity)
+  if let interfaceType = entityType as? GraphQLInterfaceType {
+    print(interfaceType.fields)
+  } else if let objectType = entityType as? GraphQLObjectType {
+    print(objectType.fields)
+  } else {
+    fatalError("Root type has to be either an interface type or object type.")
+  }
 }
 
 print(objectFields)
