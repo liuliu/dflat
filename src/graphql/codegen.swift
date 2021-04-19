@@ -98,17 +98,92 @@ for operation in compilationResult.operations {
     marked: false)
 }
 
+func flatbuffersType(_ graphQLType: GraphQLType, rootType: GraphQLNamedType) -> String {
+  let scalarTypes: [String: String] = [
+    "Int": "int", "Float": "double", "Boolean": "bool", "ID": "string", "String": "string",
+  ]
+  switch graphQLType {
+  case .named(let namedType):
+    if namedType == rootType {
+      return "string"
+    } else {
+      return scalarTypes[namedType.name] ?? namedType.name
+    }
+  case .nonNull(let graphQLType):
+    return flatbuffersType(graphQLType, rootType: rootType)
+  case .list(let itemType):
+    return "[\(flatbuffersType(itemType, rootType: rootType))]"
+  }
+}
+
 // First, generate the flatbuffers schema file. One file per entity.
+
+func generateObjectType(_ objectType: GraphQLObjectType, rootType: GraphQLNamedType) -> String {
+  var existingFields = objectFields[objectType.name]!
+  for interfaceType in objectType.interfaces {
+    existingFields.formUnion(objectFields[interfaceType.name]!)
+  }
+  var fbs = ""
+  fbs += "table \(objectType.name) {\n"
+  let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
+  for field in fields {
+    guard existingFields.contains(field.name) else { continue }
+    guard field.name != "id" else {
+      if rootType == objectType {
+        fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
+      }
+      continue
+    }
+    fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
+  }
+  fbs += "}\n"
+  return fbs
+}
+
+func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: GraphQLNamedType)
+  -> String
+{
+  let implementations = try! schema.getImplementations(interfaceType: interfaceType)
+  // For interfaces with multiple implementations, we first have all fields in the interface into the flatbuffers
+  // and then having a union type that encapsulated into InterfaceSubtype and can be accessed through subtype field.
+  var fbs = ""
+  if implementations.objects.count > 0 {
+    fbs += "union \(interfaceType.name)Subtype {\n"
+    for object in implementations.objects {
+      fbs += "  \(object.name),\n"
+    }
+    fbs += "}\n"
+  }
+  fbs += "table \(interfaceType.name) {\n"
+  if implementations.objects.count > 0 {
+    fbs += "  subtype: \(interfaceType.name)Subtype;\n"
+  }
+  let fields = interfaceType.fields.values.sorted(by: { $0.name < $1.name })
+  let existingFields = objectFields[interfaceType.name]!
+  for field in fields {
+    guard existingFields.contains(field.name) else { continue }
+    guard field.name == "id" else { continue }
+    fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
+  }
+  fbs += "}\n"
+  return fbs
+}
+
+func generateFlatbuffers(_ interfaceType: GraphQLInterfaceType) -> String {
+  return generateInterfaceType(interfaceType, rootType: interfaceType)
+}
+
+func generateFlatbuffers(_ objectType: GraphQLObjectType) -> String {
+  return generateObjectType(objectType, rootType: objectType)
+}
 
 for entity in entities {
   let entityType = try schema.getType(named: entity)
   if let interfaceType = entityType as? GraphQLInterfaceType {
-    print(interfaceType.fields)
+    print(generateFlatbuffers(interfaceType))
   } else if let objectType = entityType as? GraphQLObjectType {
-    print(objectType.fields)
+    print(generateFlatbuffers(objectType))
   } else {
     fatalError("Root type has to be either an interface type or object type.")
   }
 }
-
-print(objectFields)

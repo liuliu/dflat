@@ -67,7 +67,7 @@ new_git_repository(
     name = "apollo-ios",
     build_file = "apollo-ios.BUILD",
     commit = "1ea466499e204f51a95a484d649109437877206e",
-    remote = "https://github.com/liuliu/apollo-ios.git",
+    remote = "https://github.com/apollographql/apollo-ios.git",
     shallow_since = "1615699959 -0500"
 )
 
