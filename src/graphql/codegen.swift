@@ -118,6 +118,17 @@ func flatbuffersType(_ graphQLType: GraphQLType, rootType: GraphQLNamedType) -> 
 
 // First, generate the flatbuffers schema file. One file per entity.
 
+func generateEnumType(_ enumType: GraphQLEnumType) -> String {
+  var fbs = ""
+  fbs += "enum \(enumType.name): int {\n"
+  let values = enumType.values
+  for value in values {
+    fbs += "  \(value.name),\n"
+  }
+  fbs += "}\n"
+  return fbs
+}
+
 func generateObjectType(_ objectType: GraphQLObjectType, rootType: GraphQLNamedType) -> String {
   var existingFields = objectFields[objectType.name]!
   for interfaceType in objectType.interfaces {
@@ -147,34 +158,128 @@ func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: Grap
   // For interfaces with multiple implementations, we first have all fields in the interface into the flatbuffers
   // and then having a union type that encapsulated into InterfaceSubtype and can be accessed through subtype field.
   var fbs = ""
+  let isRoot = rootType == interfaceType
   if implementations.objects.count > 0 {
-    fbs += "union \(interfaceType.name)Subtype {\n"
+    fbs += isRoot ? "union Subtype {\n" : "union \(interfaceType.name)Subtype {\n"
     for object in implementations.objects {
       fbs += "  \(object.name),\n"
     }
     fbs += "}\n"
   }
+  if isRoot {
+    // Remove the extra namespace.
+    fbs += "namespace;\n"
+  }
   fbs += "table \(interfaceType.name) {\n"
   if implementations.objects.count > 0 {
-    fbs += "  subtype: \(interfaceType.name)Subtype;\n"
+    fbs +=
+      isRoot
+      ? "  subtype: \(interfaceType.name).Subtype;\n" : "  subtype: \(interfaceType.name)Subtype;\n"
   }
   let fields = interfaceType.fields.values.sorted(by: { $0.name < $1.name })
   let existingFields = objectFields[interfaceType.name]!
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
     guard field.name == "id" else { continue }
-    fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
+    if rootType == interfaceType {
+      fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
+    } else {
+      fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
+    }
   }
   fbs += "}\n"
   return fbs
 }
 
-func generateFlatbuffers(_ interfaceType: GraphQLInterfaceType) -> String {
-  return generateInterfaceType(interfaceType, rootType: interfaceType)
+func referencedTypes(
+  rootType: GraphQLNamedType, set: inout Set<String>, _ array: inout [GraphQLNamedType]
+) {
+  if let interfaceType = rootType as? GraphQLInterfaceType {
+    let implementations = try! schema.getImplementations(interfaceType: interfaceType)
+    for objectType in implementations.objects {
+      array.append(objectType)
+      guard !set.contains(objectType.name) else { continue }
+      set.insert(objectType.name)
+      referencedTypes(rootType: objectType, set: &set, &array)
+    }
+  } else if let objectType = rootType as? GraphQLObjectType {
+    func namedType(_ graphQLType: GraphQLType) -> GraphQLNamedType {
+      switch graphQLType {
+      case .named(let namedType):
+        return namedType
+      case .nonNull(let graphQLType):
+        return namedType(graphQLType)
+      case .list(let itemType):
+        return namedType(itemType)
+      }
+    }
+    let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
+    var existingFields = objectFields[objectType.name]!
+    for interfaceType in objectType.interfaces {
+      existingFields.formUnion(objectFields[interfaceType.name]!)
+    }
+    for field in fields {
+      guard existingFields.contains(field.name) else { continue }
+      let fieldType = namedType(field.type)
+      guard fieldType is GraphQLInterfaceType || fieldType is GraphQLObjectType else {
+        if fieldType is GraphQLEnumType {
+          set.insert(fieldType.name)
+          array.append(fieldType)
+        }
+        continue
+      }
+      array.append(fieldType)
+      guard !set.contains(fieldType.name) else { continue }
+      set.insert(fieldType.name)
+      referencedTypes(rootType: fieldType, set: &set, &array)
+    }
+  }
 }
 
-func generateFlatbuffers(_ objectType: GraphQLObjectType) -> String {
-  return generateObjectType(objectType, rootType: objectType)
+func generateFlatbuffers(_ rootType: GraphQLInterfaceType) -> String {
+  var array = [GraphQLNamedType]()
+  var set = Set<String>()
+  set.insert(rootType.name)
+  referencedTypes(rootType: rootType, set: &set, &array)
+  set.removeAll()
+  set.insert(rootType.name)
+  var fbs = "namespace \(rootType.name);\n"
+  for entityType in array.reversed() {
+    guard !set.contains(entityType.name) else { continue }
+    set.insert(entityType.name)
+    if let interfaceType = entityType as? GraphQLInterfaceType {
+      fbs += generateInterfaceType(interfaceType, rootType: rootType)
+    } else if let objectType = entityType as? GraphQLObjectType {
+      fbs += generateObjectType(objectType, rootType: rootType)
+    } else if let enumType = entityType as? GraphQLEnumType {
+      fbs += generateEnumType(enumType)
+    }
+  }
+  fbs += generateInterfaceType(rootType, rootType: rootType)
+  return fbs
+}
+
+func generateFlatbuffers(_ rootType: GraphQLObjectType) -> String {
+  var array = [GraphQLNamedType]()
+  var set = Set<String>()
+  set.insert(rootType.name)
+  referencedTypes(rootType: rootType, set: &set, &array)
+  set.removeAll()
+  set.insert(rootType.name)
+  var fbs = "namespace \(rootType.name);\n"
+  for entityType in array.reversed() {
+    guard !set.contains(entityType.name) else { continue }
+    set.insert(entityType.name)
+    if let interfaceType = entityType as? GraphQLInterfaceType {
+      fbs += generateInterfaceType(interfaceType, rootType: rootType)
+    } else if let objectType = entityType as? GraphQLObjectType {
+      fbs += generateObjectType(objectType, rootType: rootType)
+    } else if let enumType = entityType as? GraphQLEnumType {
+      fbs += generateEnumType(enumType)
+    }
+  }
+  fbs += generateObjectType(rootType, rootType: rootType)
+  return fbs
 }
 
 for entity in entities {
