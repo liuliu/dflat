@@ -1,5 +1,6 @@
 import Dflat
 import FlatBuffers
+import Foundation
 import SQLite3
 import SQLiteDflat
 

@@ -1,5 +1,6 @@
 import Dflat
 import FlatBuffers
+import Foundation
 import SQLite3
 import SQLiteDflat
 
@@ -42,6 +43,14 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
     self.tag = obj.tag
     self.priority = obj.priority
     self.text = obj.text
+  }
+  public static func from(data: Data) -> Self {
+    return data.withUnsafeBytes { buffer in
+      let bb = ByteBuffer(
+        assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
+        capacity: buffer.count)
+      return Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
+    }
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))

@@ -1,5 +1,6 @@
 import Dflat
 import FlatBuffers
+import Foundation
 import SQLite3
 import SQLiteDflat
 
@@ -148,6 +149,15 @@ extension MyGame.SampleV2.Monster {
 extension Optional where Wrapped == MyGame.SampleV2.Monster {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
+  }
+}
+
+extension MyGame.SampleV2.Monster {
+  public func toData() -> Data {
+    var fbb = FlatBufferBuilder()
+    let offset = to(flatBufferBuilder: &fbb)
+    fbb.finish(offset: offset)
+    return fbb.data
   }
 }
 

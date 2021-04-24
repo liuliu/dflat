@@ -1,5 +1,6 @@
 import Dflat
 import FlatBuffers
+import Foundation
 import SQLite3
 import SQLiteDflat
 
@@ -168,6 +169,14 @@ extension MyGame.SampleV2 {
         self.wear = obj.wear(type: zzz_DflatGen_MyGame_SampleV2_Empty.self).map {
           .empty(Empty($0))
         }
+      }
+    }
+    public static func from(data: Data) -> Self {
+      return data.withUnsafeBytes { buffer in
+        let bb = ByteBuffer(
+          assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
+          capacity: buffer.count)
+        return Self(zzz_DflatGen_MyGame_SampleV2_Monster.getRootAsMonster(bb: bb))
       }
     }
     override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {

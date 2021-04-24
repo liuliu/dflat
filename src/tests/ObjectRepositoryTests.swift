@@ -7,6 +7,16 @@ import XCTest
 
 class ObjectRepositoryTests: XCTestCase {
 
+  func testSerializeObjects() {
+    let monster1 = MyGame.Sample.Monster(
+      name: "name1", color: .red, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [],
+      equipped: nil, path: [])
+    let data1 = monster1.toData()
+    let monster2 = MyGame.Sample.Monster.from(data: data1)
+    XCTAssertEqual(monster2.name, monster1.name)
+    XCTAssertEqual(monster2.color, monster1.color)
+  }
+
   func testSetUpdatedObjects() {
     var objectRepository = SQLiteObjectRepository()
     let monster1 = MyGame.Sample.Monster(
@@ -103,6 +113,7 @@ class ObjectRepositoryTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testSerializeObjects", testSerializeObjects),
     ("testSetUpdatedObjects", testSetUpdatedObjects),
     ("testSetFetchedObjects", testSetFetchedObjects),
   ]

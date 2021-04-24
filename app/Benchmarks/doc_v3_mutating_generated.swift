@@ -1,5 +1,6 @@
 import Dflat
 import FlatBuffers
+import Foundation
 import SQLite3
 import SQLiteDflat
 
@@ -24,6 +25,15 @@ extension BenchDocV3 {
 extension Optional where Wrapped == BenchDocV3 {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
+  }
+}
+
+extension BenchDocV3 {
+  public func toData() -> Data {
+    var fbb = FlatBufferBuilder()
+    let offset = to(flatBufferBuilder: &fbb)
+    fbb.finish(offset: offset)
+    return fbb.data
   }
 }
 

@@ -481,6 +481,14 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "  public init(_ obj: \(GetDflatGenFullyQualifiedName(structDef))) {\n"
   code += GetStructDeserializer(structDef)
   code += "  }\n"
+  code += "  public static func from(data: Data) -> Self {\n"
+  code += "    return data.withUnsafeBytes { buffer in\n"
+  code +=
+    "      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!), capacity: buffer.count)\n"
+  code +=
+    "      return Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
+  code += "    }\n"
+  code += "  }\n"
   code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
   code +=
     "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
@@ -539,7 +547,8 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
 }
 
 func GenDataModel(schema: Schema, outputPath: String) {
-  var code = "import Dflat\nimport FlatBuffers\nimport SQLiteDflat\nimport SQLite3\n"
+  var code =
+    "import Dflat\nimport FlatBuffers\nimport Foundation\nimport SQLiteDflat\nimport SQLite3\n"
   var namespace: [String] = []
   for enumDef in schema.enums {
     guard !enumDef.generated else { continue }
@@ -605,6 +614,17 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "  }\n"
   code += "  var _type: \(GetDflatGenFullyQualifiedName(enumDef)) {\n"
   code += "    self.map { $0._type } ?? .none_\n"
+  code += "  }\n"
+  code += "}\n"
+}
+
+func GenStructDataSerializer(_ structDef: Struct, code: inout String) {
+  code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
+  code += "  public func toData() -> Data {\n"
+  code += "    var fbb = FlatBufferBuilder()\n"
+  code += "    let offset = to(flatBufferBuilder: &fbb)\n"
+  code += "    fbb.finish(offset: offset)\n"
+  code += "    return fbb.data\n"
   code += "  }\n"
   code += "}\n"
 }
@@ -1131,7 +1151,8 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
 }
 
 func GenMutating(schema: Schema, outputPath: String) {
-  var code = "import Dflat\nimport SQLiteDflat\nimport SQLite3\nimport FlatBuffers\n\n"
+  var code =
+    "import Dflat\nimport SQLiteDflat\nimport SQLite3\nimport FlatBuffers\nimport Foundation\n\n"
   code += "// MARK - SQLiteValue for Enumerations\n"
   for enumDef in schema.enums {
     guard !enumDef.generated else { continue }
@@ -1155,6 +1176,7 @@ func GenMutating(schema: Schema, outputPath: String) {
     guard !structDef.fixed else { continue }
     if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       GenStructSerializer(structDef, code: &code)
+      GenStructDataSerializer(structDef, code: &code)
       break
     }
   }
