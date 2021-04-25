@@ -17,7 +17,7 @@ let codegenFrontend = try ApolloCodegenFrontend()
 let schemaPath = CommandLine.arguments[1]
 var documentPaths = [String]()
 var entities = [String]()
-var outputPath = ""
+var outputDir: String? = nil
 enum CommandOptions {
   case document
   case entity
@@ -36,7 +36,7 @@ for argument in CommandLine.arguments[2...] {
     case .entity:
       entities.append(argument)
     case .output:
-      outputPath = argument
+      outputDir = argument
     }
   }
 }
@@ -256,6 +256,7 @@ func generateFlatbuffers(_ rootType: GraphQLInterfaceType) -> String {
     }
   }
   fbs += generateInterfaceType(rootType, rootType: rootType)
+  fbs += "root_type \(rootType.name);\n"
   return fbs
 }
 
@@ -279,15 +280,22 @@ func generateFlatbuffers(_ rootType: GraphQLObjectType) -> String {
     }
   }
   fbs += generateObjectType(rootType, rootType: rootType)
+  fbs += "root_type \(rootType.name);\n"
   return fbs
 }
 
 for entity in entities {
   let entityType = try schema.getType(named: entity)
   if let interfaceType = entityType as? GraphQLInterfaceType {
-    print(generateFlatbuffers(interfaceType))
+    let fbs = generateFlatbuffers(interfaceType)
+    let outputPath = "\(outputDir!)/\(entity)_generated.fbs"
+    try! fbs.write(
+      to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
   } else if let objectType = entityType as? GraphQLObjectType {
-    print(generateFlatbuffers(objectType))
+    let fbs = generateFlatbuffers(objectType)
+    let outputPath = "\(outputDir!)/\(entity)_generated.fbs"
+    try! fbs.write(
+      to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
   } else {
     fatalError("Root type has to be either an interface type or object type.")
   }

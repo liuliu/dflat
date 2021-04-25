@@ -147,6 +147,12 @@ extension String {
   func firstLowercased() -> String {
     prefix(1).lowercased() + dropFirst()
   }
+  func firstLowercasedIfNotAllCaps() -> String {
+    guard uppercased() != self else {
+      return self
+    }
+    return firstLowercased()
+  }
   func firstUppercased() -> String {
     prefix(1).uppercased() + dropFirst()
   }
@@ -194,7 +200,7 @@ func GenEnumDataModel(_ enumDef: Enum, code: inout String) {
   code +=
     "\npublic enum \(enumDef.name): \(SwiftType[enumDef.underlyingType!]!), DflatFriendlyValue {\n"
   for field in enumDef.fields {
-    code += "  case \(field.name.firstLowercased()) = \(field.value)\n"
+    code += "  case \(field.name.firstLowercasedIfNotAllCaps()) = \(field.value)\n"
   }
   code += "  public static func < (lhs: \(enumDef.name), rhs: \(enumDef.name)) -> Bool {\n"
   code += "    return lhs.rawValue < rhs.rawValue\n"
@@ -317,7 +323,7 @@ func GetDflatGenFullyQualifiedName(_ enumDef: Enum) -> String {
 func GetEnumDefaultValue(_ en: String) -> String {
   let enumDef = enumDefs[en]!
   let enumVal = enumDef.findEnumVal(0) ?? enumDef.fields.first!
-  return ".\(enumVal.name.firstLowercased())"
+  return ".\(enumVal.name.firstLowercasedIfNotAllCaps())"
 }
 
 func GetFieldDefaultValue(_ field: Field) -> String {
@@ -325,7 +331,7 @@ func GetFieldDefaultValue(_ field: Field) -> String {
     if field.type.type == .enum {
       let enumDef = enumDefs[field.type.enum!]!
       let enumVal = enumDef.findEnumVal(Int(val)!)!
-      return ".\(enumVal.name.firstLowercased())"
+      return ".\(enumVal.name.firstLowercasedIfNotAllCaps())"
     }
     if field.type.type == .bool {
       return val == "0" ? "false" : "true"
@@ -398,7 +404,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
             code +=
               "        guard let oe = obj.\(field.name)(at: i, type: \(GetDflatGenFullyQualifiedName(subStructDef)).self) else { break }\n"
             code +=
-              "        __\(field.name).append(.\(enumVal.name.firstLowercased())(\(enumVal.name)(oe)))\n"
+              "        __\(field.name).append(.\(enumVal.name.firstLowercasedIfNotAllCaps())(\(enumVal.name)(oe)))\n"
           }
           code += "      }\n"
         case .enum:
@@ -421,7 +427,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
         code += "    case .\(enumVal.name.lowercased()):\n"
         let subStructDef = structDefs[enumVal.struct!]!
         code +=
-          "      self.\(field.name) = obj.\(field.name)(type: \(GetDflatGenFullyQualifiedName(subStructDef)).self).map { .\(enumVal.name.firstLowercased())(\(enumVal.name)($0)) }\n"
+          "      self.\(field.name) = obj.\(field.name)(type: \(GetDflatGenFullyQualifiedName(subStructDef)).self).map { .\(enumVal.name.firstLowercasedIfNotAllCaps())(\(enumVal.name)($0)) }\n"
       }
       code += "    }\n"
     case .enum:
@@ -593,7 +599,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "    switch self {\n"
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
-    code += "    case .\(enumVal.name.firstLowercased())(let o):\n"
+    code += "    case .\(enumVal.name.firstLowercasedIfNotAllCaps())(let o):\n"
     code += "      return o.to(flatBufferBuilder: &flatBufferBuilder)\n"
   }
   code += "    }\n"
@@ -602,7 +608,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "    switch self {\n"
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
-    code += "    case .\(enumVal.name.firstLowercased())(_):\n"
+    code += "    case .\(enumVal.name.firstLowercasedIfNotAllCaps())(_):\n"
     code += "      return \(GetDflatGenFullyQualifiedName(enumDef)).\(enumVal.name.lowercased())\n"
   }
   code += "    }\n"
@@ -1231,7 +1237,7 @@ func GenQueryForField(
     code += "    switch o {\n"
     for enumVal in unionDef.fields {
       guard enumVal.name != "NONE" else { continue }
-      code += "    case .\(enumVal.name.firstLowercased()):\n"
+      code += "    case .\(enumVal.name.firstLowercasedIfNotAllCaps()):\n"
       code += "      return \(enumVal.value)\n"
     }
     code += "    }\n"
