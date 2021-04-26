@@ -123,7 +123,7 @@ func generateEnumType(_ enumType: GraphQLEnumType) -> String {
   fbs += "enum \(enumType.name): int {\n"
   let values = enumType.values
   for value in values {
-    fbs += "  \(value.name),\n"
+    fbs += "  \(value.name.lowercased()),\n"
   }
   fbs += "}\n"
   return fbs

@@ -1,0 +1,29 @@
+namespace Character;
+enum Episode: int {
+  newhope,
+  empire,
+  jedi,
+}
+table Droid {
+  appearsIn: [Episode];
+  friends: [string];
+  name: string;
+  primaryFunction: string;
+}
+table Human {
+  appearsIn: [Episode];
+  friends: [string];
+  height: double;
+  homePlanet: string;
+  name: string;
+}
+union Subtype {
+  Human,
+  Droid,
+}
+namespace;
+table Character {
+  subtype: Character.Subtype;
+  id: string (primary);
+}
+root_type Character;

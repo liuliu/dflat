@@ -15,6 +15,17 @@ swift_library(
 )
 
 swift_library(
+    name = "Apollo",
+    srcs = glob([
+        "Sources/Apollo/**/*.swift",
+    ]),
+    module_name = "Apollo",
+    deps = [
+        ":ApolloCore",
+    ],
+)
+
+swift_library(
     name = "ApolloCodegenLib",
     srcs = glob([
         "Sources/ApolloCodegenLib/**/*.swift",
