@@ -395,7 +395,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
           code += "      guard let ot = obj.\(field.name)Type(at: i) else { break }\n"
           code += "      switch ot {\n"
           code += "      case .none_:\n"
-          code += "        fatalError()\n"
+          code += "        continue\n"
           let enumDef = enumDefs[field.type.element!.union!]!
           for enumVal in enumDef.fields {
             guard enumVal.name != "NONE" else { continue }
