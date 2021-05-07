@@ -6,7 +6,7 @@ let bundle = Bundle(for: ApolloCodegenFrontend.self)
 if let resourceUrl = bundle.resourceURL,
   let bazelResourceUrl = bundle.url(
     forResource: "ApolloCodegenFrontend.bundle", withExtension: "js",
-    subdirectory: "schema.runfiles/apollo-ios/Sources/ApolloCodegenLib/Frontend/JavaScript/dist")
+    subdirectory: "codegen.runfiles/apollo-ios/Sources/ApolloCodegenLib/Frontend/JavaScript/dist")
 {
   let standardUrl = resourceUrl.appendingPathComponent("ApolloCodegenFrontend.bundle.js")
   try? FileManager.default.linkItem(at: bazelResourceUrl, to: standardUrl)
@@ -282,6 +282,45 @@ func generateFlatbuffers(_ rootType: GraphQLObjectType) -> String {
   fbs += generateObjectType(rootType, rootType: rootType)
   fbs += "root_type \(rootType.name);\n"
   return fbs
+}
+
+func generateInits(
+  entities: Set<String>,
+  selectionSet: CompilationResult.SelectionSet, marked: Bool
+) {
+  let typeName = selectionSet.parentType.name
+  let marked = marked || entities.contains(typeName)
+  for selection in selectionSet.selections {
+    switch selection {
+    case let .field(field):
+      print("field: \(field.name)")
+      if marked {
+      }
+      if let selectionSet = field.selectionSet {
+        generateInits(
+          entities: entities, selectionSet: selectionSet,
+          marked: marked)
+      }
+    case let .inlineFragment(inlineFragment):
+      print("inline fragment \(inlineFragment.selectionSet.parentType as Optional)")
+      generateInits(
+        entities: entities, selectionSet: inlineFragment.selectionSet,
+        marked: marked)
+    case let .fragmentSpread(fragmentSpread):
+      print("fragment spread")
+      generateInits(
+        entities: entities,
+        selectionSet: fragmentSpread.fragment.selectionSet, marked: marked)
+      break
+    }
+  }
+}
+
+for operation in compilationResult.operations {
+  print("-- operation: \(operation.name)")
+  generateInits(
+    entities: Set(entities), selectionSet: operation.selectionSet,
+    marked: false)
 }
 
 for entity in entities {
