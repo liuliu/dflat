@@ -2,15 +2,20 @@ load("@build_bazel_rules_apple//apple:ios.bzl", "ios_unit_test")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 load("@dflat//:dflat.bzl", "dflatc")
 
+filegroup(
+    name = "OrbWeapon_Sources",
+    srcs = ["orb_weapon.fbs"],
+)
+
 dflatc(
     name = "monster_schema",
     src = "monster.fbs",
-    includes = ["orb_weapon.fbs"],
+    includes = [":OrbWeapon_Sources"],
 )
 
 dflatc(
     name = "orb_weapon_schema",
-    src = "orb_weapon.fbs",
+    src = ":OrbWeapon_Sources",
 )
 
 dflatc(
