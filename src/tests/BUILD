@@ -9,18 +9,16 @@ filegroup(
 
 dflatc(
     name = "monster_schema",
-    src = "monster.fbs",
+    srcs = [
+        "monster.fbs",
+        "monster_v2.fbs",
+    ],
     includes = [":OrbWeapon_Sources"],
 )
 
 dflatc(
     name = "orb_weapon_schema",
-    src = ":OrbWeapon_Sources",
-)
-
-dflatc(
-    name = "monster_v2_schema",
-    src = "monster_v2.fbs",
+    srcs = [":OrbWeapon_Sources"],
 )
 
 swift_library(
@@ -36,7 +34,6 @@ swift_library(
         "main.swift",
         "namespace.swift",
         ":monster_schema",
-        ":monster_v2_schema",
         ":orb_weapon_schema",
     ],
     deps = [

@@ -33,22 +33,22 @@ swift_library(
 
 dflatc(
     name = "doc",
-    src = "Benchmarks/doc.fbs",
+    srcs = ["Benchmarks/doc.fbs"],
 )
 
 dflatc(
     name = "doc_v2",
-    src = "Benchmarks/doc_v2.fbs",
+    srcs = ["Benchmarks/doc_v2.fbs"],
 )
 
 dflatc(
     name = "doc_v3",
-    src = "Benchmarks/doc_v3.fbs",
+    srcs = ["Benchmarks/doc_v3.fbs"],
 )
 
 dflatc(
     name = "doc_v4",
-    src = "Benchmarks/doc_v4.fbs",
+    srcs = ["Benchmarks/doc_v4.fbs"],
 )
 
 swift_binary(
