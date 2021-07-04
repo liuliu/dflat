@@ -8,6 +8,7 @@ swift_binary(
     name = "codegen",
     srcs = ["codegen.swift"],
     deps = [
+        "@InflectorKit",
         "@apollo-ios//:ApolloCodegenLib",
     ],
 )

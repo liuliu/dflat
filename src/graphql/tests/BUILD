@@ -4,13 +4,14 @@ load("@dflat//:dflat.bzl", "dflatc")
 
 dflatc(
     name = "Character_generated_schema",
-    src = "Character_generated.fbs",
+    srcs = ["Character_generated.fbs"],
 )
 
 swift_library(
     name = "Tests_lib",
     srcs = [
         "API.swift",
+        "Character_inits_generated.swift",
         "GraphQLTests.swift",
         "main.swift",
         ":Character_generated_schema",
