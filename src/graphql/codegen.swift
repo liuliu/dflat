@@ -379,10 +379,12 @@ func generateObjectInits(
     existingFields.formUnion(objectFields[interfaceType.name]!)
   }
   var existingSelections = Set<String>()
+  var fieldSelectionSet = [String: CompilationResult.SelectionSet]()
   for selection in selections {
     switch selection {
     case let .field(field):
       existingSelections.insert(field.name)
+      fieldSelectionSet[field.name] = field.selectionSet
     case .inlineFragment(_):
       break
     case .fragmentSpread(_):
@@ -401,6 +403,12 @@ func generateObjectInits(
       continue
     }
     if namedType(field.type) == rootType {
+      guard let selectionSet = fieldSelectionSet[field.name],
+        (selectionSet.selections.contains {
+          guard case let .field(field) = $0 else { return false }
+          return field.name == "id"
+        })
+      else { continue }
       switch field.type {
       case .named(_):
         fieldAssignments.append("\(field.name): obj.\(field.name)?.id")

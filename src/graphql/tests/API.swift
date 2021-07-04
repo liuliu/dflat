@@ -981,7 +981,7 @@ public final class HeroAndFriendsIDsQuery: GraphQLQuery {
   }
 }
 
-public final class HeroAndFriendsNamesWithIdForParentOnlyQuery: GraphQLQuery {
+public final class HeroAndFriendsNamesWithIDForParentOnlyQuery: GraphQLQuery {
   /// The raw GraphQL definition of this operation.
   public let operationDefinition: String =
     """
@@ -4794,7 +4794,7 @@ public final class HeroNameQuery: GraphQLQuery {
   }
 }
 
-public final class HeroNameWithIdQuery: GraphQLQuery {
+public final class HeroNameWithIDQuery: GraphQLQuery {
   /// The raw GraphQL definition of this operation.
   public let operationDefinition: String =
     """
@@ -5051,7 +5051,7 @@ public final class HeroNameWithFragmentQuery: GraphQLQuery {
   }
 }
 
-public final class HeroNameWithFragmentAndIdQuery: GraphQLQuery {
+public final class HeroNameWithFragmentAndIDQuery: GraphQLQuery {
   /// The raw GraphQL definition of this operation.
   public let operationDefinition: String =
     """
