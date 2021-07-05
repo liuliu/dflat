@@ -66,9 +66,9 @@ http_archive(
 new_git_repository(
     name = "apollo-ios",
     build_file = "apollo-ios.BUILD",
-    commit = "1ea466499e204f51a95a484d649109437877206e",
+    commit = "b17ae4cef6e78d60913b33b821ff6ec32ce38c38",
     remote = "https://github.com/apollographql/apollo-ios.git",
-    shallow_since = "1615699959 -0500"
+    shallow_since = "1625073576 -0700"
 )
 
 new_git_repository(

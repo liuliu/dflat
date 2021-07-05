@@ -14,12 +14,14 @@ extension String {
 
 let bundle = Bundle(for: ApolloCodegenFrontend.self)
 if let resourceUrl = bundle.resourceURL,
-  let bazelResourceUrl = bundle.url(
+  let bazelResourceJsUrl = bundle.url(
     forResource: "ApolloCodegenFrontend.bundle", withExtension: "js",
-    subdirectory: "codegen.runfiles/apollo-ios/Sources/ApolloCodegenLib/Frontend/JavaScript/dist")
+    subdirectory: "codegen.runfiles/apollo-ios/Sources/ApolloCodegenLib/Frontend/dist")
 {
-  let standardUrl = resourceUrl.appendingPathComponent("ApolloCodegenFrontend.bundle.js")
-  try? FileManager.default.linkItem(at: bazelResourceUrl, to: standardUrl)
+  let standardDistUrl = resourceUrl.appendingPathComponent("dist")
+  try? FileManager.default.createDirectory(at: standardDistUrl, withIntermediateDirectories: true)
+  let standardJsUrl = standardDistUrl.appendingPathComponent("ApolloCodegenFrontend.bundle.js")
+  try? FileManager.default.linkItem(at: bazelResourceJsUrl, to: standardJsUrl)
 }
 
 let codegenFrontend = try ApolloCodegenFrontend()

@@ -5,11 +5,21 @@ package(
 )
 
 swift_library(
-    name = "ApolloCore",
+    name = "ApolloUtils",
     srcs = glob([
-        "Sources/ApolloCore/**/*.swift",
+        "Sources/ApolloUtils/**/*.swift",
     ]),
-    module_name = "ApolloCore",
+    module_name = "ApolloUtils",
+    deps = [
+    ],
+)
+
+swift_library(
+    name = "ApolloAPI",
+    srcs = glob([
+        "Sources/ApolloAPI/*.swift",
+    ]),
+    module_name = "ApolloAPI",
     deps = [
     ],
 )
@@ -21,7 +31,8 @@ swift_library(
     ]),
     module_name = "Apollo",
     deps = [
-        ":ApolloCore",
+        ":ApolloAPI",
+        ":ApolloUtils",
     ],
 )
 
@@ -31,11 +42,12 @@ swift_library(
         "Sources/ApolloCodegenLib/**/*.swift",
     ]),
     data = [
-        "Sources/ApolloCodegenLib/Frontend/JavaScript/dist/ApolloCodegenFrontend.bundle.js",
+        "Sources/ApolloCodegenLib/Frontend/dist/ApolloCodegenFrontend.bundle.js",
+        "Sources/ApolloCodegenLib/Frontend/dist/ApolloCodegenFrontend.bundle.js.map",
     ],
     module_name = "ApolloCodegenLib",
     deps = [
-        ":ApolloCore",
+        ":ApolloUtils",
         "@InflectorKit",
         "@Stencil",
     ],
