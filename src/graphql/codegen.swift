@@ -433,11 +433,11 @@ func generateObjectInits(
 
 func generateInits(
   entities: Set<String>, namespaces: [String],
-  selectionSet: CompilationResult.SelectionSet, entityName: String?,
+  selectionSet: CompilationResult.SelectionSet,
   entityInits: inout [String: String]
 ) {
   let typeName = selectionSet.parentType.name
-  let entityName = entities.contains(typeName) ? typeName : entityName
+  let hasEntity = entities.contains(typeName)
   var hasID = false
   for selection in selectionSet.selections {
     switch selection {
@@ -450,31 +450,31 @@ func generateInits(
         generateInits(
           entities: entities,
           namespaces: namespaces + [field.name.firstUppercased().singularized()],
-          selectionSet: selectionSet, entityName: entityName, entityInits: &entityInits)
+          selectionSet: selectionSet, entityInits: &entityInits)
       }
     case let .inlineFragment(inlineFragment):
       print("inline fragment \(inlineFragment.selectionSet.parentType as Optional)")
       generateInits(
         entities: entities, namespaces: namespaces,
-        selectionSet: inlineFragment.selectionSet, entityName: entityName, entityInits: &entityInits
+        selectionSet: inlineFragment.selectionSet, entityInits: &entityInits
       )
     case let .fragmentSpread(fragmentSpread):
       print("fragment spread")
       generateInits(
         entities: entities, namespaces: namespaces,
-        selectionSet: fragmentSpread.fragment.selectionSet, entityName: entityName,
+        selectionSet: fragmentSpread.fragment.selectionSet,
         entityInits: &entityInits)
       break
     }
   }
-  guard hasID, let entityName = entityName, let entityType = try? schema.getType(named: entityName)
+  guard hasID && hasEntity, let entityType = try? schema.getType(named: typeName)
   else { return }
   if let interfaceType = entityType as? GraphQLInterfaceType {
-    entityInits[entityName, default: ""] += generateInterfaceInits(
+    entityInits[typeName, default: ""] += generateInterfaceInits(
       interfaceType, rootType: entityType, namespaces: namespaces,
       selections: selectionSet.selections)
   } else if let objectType = entityType as? GraphQLObjectType {
-    entityInits[entityName, default: ""] += generateObjectInits(
+    entityInits[typeName, default: ""] += generateObjectInits(
       objectType, rootType: entityType, namespaces: namespaces, selections: selectionSet.selections)
   } else {
     fatalError("Entity type has to be either an interface type or object type.")
@@ -495,7 +495,7 @@ for operation in compilationResult.operations {
   print("-- operation: \(operation.name)")
   generateInits(
     entities: Set(entities), namespaces: [firstNamespace, "Data"],
-    selectionSet: operation.selectionSet, entityName: nil, entityInits: &entityInits)
+    selectionSet: operation.selectionSet, entityInits: &entityInits)
 }
 
 for entity in entities {
