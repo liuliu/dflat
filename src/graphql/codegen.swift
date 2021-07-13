@@ -30,10 +30,12 @@ let schemaPath = CommandLine.arguments[1]
 var documentPaths = [String]()
 var entities = [String]()
 var outputDir: String? = nil
+var primaryKey: String = "id"
 enum CommandOptions {
   case document
   case entity
   case output
+  case primaryKey
 }
 var options = CommandOptions.document
 for argument in CommandLine.arguments[2...] {
@@ -41,6 +43,8 @@ for argument in CommandLine.arguments[2...] {
     options = .entity
   } else if argument == "-o" {
     options = .output
+  } else if argument == "--primary-key" {
+    options = .primaryKey
   } else {
     switch options {
     case .document:
@@ -49,6 +53,8 @@ for argument in CommandLine.arguments[2...] {
       entities.append(argument)
     case .output:
       outputDir = argument
+    case .primaryKey:
+      primaryKey = argument
     }
   }
 }
@@ -152,7 +158,7 @@ func generateObjectType(_ objectType: GraphQLObjectType, rootType: GraphQLNamedT
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
-    guard field.name != "id" else {
+    guard field.name != primaryKey else {
       if isRoot {
         fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
       }
@@ -193,7 +199,7 @@ func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: Grap
   let existingFields = objectFields[interfaceType.name]!
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
-    guard field.name == "id" else { continue }
+    guard field.name == primaryKey else { continue }
     if isRoot {
       fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
     } else {
@@ -320,9 +326,31 @@ func isIDType(_ graphQLType: GraphQLType) -> Bool {
   }
 }
 
+func hasPrimaryKey(selections: [CompilationResult.Selection]) -> Bool {
+  for selection in selections {
+    switch selection {
+    case let .field(field):
+      if field.name == primaryKey && isIDType(field.type) {
+        return true
+      }
+    case let .fragmentSpread(fragmentSpread):
+      for selection in fragmentSpread.fragment.selectionSet.selections {
+        if case let .field(field) = selection {
+          if field.name == primaryKey && isIDType(field.type) {
+            return true
+          }
+        }
+      }
+    case .inlineFragment(_):
+      break
+    }
+  }
+  return false
+}
+
 func generateInterfaceInits(
   _ interfaceType: GraphQLInterfaceType,
-  rootType: GraphQLNamedType, namespaces: [String],
+  rootType: GraphQLNamedType, fullyQualifiedName: [String],
   selections: [CompilationResult.Selection]
 ) -> String {
   let isRoot = rootType == interfaceType
@@ -330,11 +358,11 @@ func generateInterfaceInits(
     !isRoot
     ? "extension \(rootType.name).\(interfaceType.name) {\n" : "extension \(interfaceType.name) {\n"
   if isRoot {
-    inits += "  public convenience init(_ obj: \(namespaces.joined(separator: "."))) {\n"
+    inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   } else {
-    inits += "  public init(_ obj: \(namespaces.joined(separator: "."))) {\n"
+    inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   }
-  inits += "    self.init(id: obj.id, subtype: .init(obj))\n"
+  inits += "    self.init(\(primaryKey): obj.\(primaryKey), subtype: .init(obj))\n"
   inits += "  }\n"
   inits += "}\n"
   let implementations = try! schema.getImplementations(interfaceType: interfaceType)
@@ -343,7 +371,7 @@ func generateInterfaceInits(
     !isRoot
     ? "extension \(rootType.name).\(interfaceType.name)Subtype {\n"
     : "extension \(interfaceType.name).Subtype {\n"
-  inits += "  public init?(_ obj: \(namespaces.joined(separator: "."))) {\n"
+  inits += "  public init?(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   inits += "    switch obj.__typename {\n"
   for object in implementations.objects {
     inits += "    case \"\(object.name)\":\n"
@@ -356,14 +384,14 @@ func generateInterfaceInits(
   inits += "}\n"
   for object in implementations.objects {
     inits += generateObjectInits(
-      object, rootType: rootType, namespaces: namespaces, selections: selections)
+      object, rootType: rootType, fullyQualifiedName: fullyQualifiedName, selections: selections)
   }
   return inits
 }
 
 func generateObjectInits(
   _ objectType: GraphQLObjectType,
-  rootType: GraphQLNamedType, namespaces: [String],
+  rootType: GraphQLNamedType, fullyQualifiedName: [String],
   selections: [CompilationResult.Selection]
 ) -> String {
   let isRoot = rootType == objectType
@@ -371,9 +399,9 @@ func generateObjectInits(
     !isRoot
     ? "extension \(rootType.name).\(objectType.name) {\n" : "extension \(objectType.name) {\n"
   if isRoot {
-    inits += "  public convenience init(_ obj: \(namespaces.joined(separator: "."))) {\n"
+    inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   } else {
-    inits += "  public init(_ obj: \(namespaces.joined(separator: "."))) {\n"
+    inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   }
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
   var existingFields = objectFields[objectType.name]!
@@ -398,7 +426,7 @@ func generateObjectInits(
     guard existingFields.contains(field.name) && existingSelections.contains(field.name) else {
       continue
     }
-    guard field.name != "id" else {
+    guard field.name != primaryKey else {
       if isRoot {
         fieldAssignments.append("\(field.name): obj.\(field.name)")
       }
@@ -408,16 +436,17 @@ func generateObjectInits(
       guard let selectionSet = fieldSelectionSet[field.name],
         (selectionSet.selections.contains {
           guard case let .field(field) = $0 else { return false }
-          return field.name == "id"
+          return field.name == primaryKey
         })
       else { continue }
       switch field.type {
       case .named(_):
-        fieldAssignments.append("\(field.name): obj.\(field.name)?.id")
+        fieldAssignments.append("\(field.name): obj.\(field.name)?.\(primaryKey)")
       case .nonNull(_):
-        fieldAssignments.append("\(field.name): obj.\(field.name).id")
+        fieldAssignments.append("\(field.name): obj.\(field.name).\(primaryKey)")
       case .list(_):
-        fieldAssignments.append("\(field.name): obj.\(field.name)?.compactMap { $0?.id } ?? []")
+        fieldAssignments.append(
+          "\(field.name): obj.\(field.name)?.compactMap { $0?.\(primaryKey) } ?? []")
       }
     } else if isBaseType(field.type) {
       fieldAssignments.append("\(field.name): obj.\(field.name)")
@@ -432,86 +461,76 @@ func generateObjectInits(
 }
 
 func generateInits(
-  entities: Set<String>, namespaces: [String],
-  selectionSet: CompilationResult.SelectionSet,
-  generated: inout Set<[String]>,
-  entityInits: inout [String: String]
-) {
-  let typeName = selectionSet.parentType.name
-  let hasEntity = entities.contains(typeName)
-  var hasID = false
+  entities: Set<String>, fullyQualifiedName: [String],
+  selectionSet: CompilationResult.SelectionSet
+) -> [String: [[String]: String]] {
+  let entityName = selectionSet.parentType.name
+  let hasEntity = entities.contains(entityName)
+  let hasPrimaryKey = hasPrimaryKey(selections: selectionSet.selections)
+  var entityInits = [String: [[String]: String]]()
   for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
       print("field: \(field.name), \(field.type)")
-      if field.name == "id" && isIDType(field.type) {
-        hasID = true
-      }
       if let selectionSet = field.selectionSet {
-        generateInits(
+        let newEntityInits = generateInits(
           entities: entities,
-          namespaces: namespaces + [field.name.firstUppercased().singularized()],
-          selectionSet: selectionSet,
-          generated: &generated,
-          entityInits: &entityInits)
+          fullyQualifiedName: fullyQualifiedName + [field.name.firstUppercased().singularized()],
+          selectionSet: selectionSet)
+        entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
       }
     case let .inlineFragment(inlineFragment):
       print("inline fragment \(inlineFragment.selectionSet.parentType as Optional)")
-      generateInits(
-        entities: entities, namespaces: namespaces,
-        selectionSet: inlineFragment.selectionSet,
-        generated: &generated,
-        entityInits: &entityInits
-      )
+      let newEntityInits = generateInits(
+        entities: entities, fullyQualifiedName: fullyQualifiedName,
+        selectionSet: inlineFragment.selectionSet)
+      entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
     case let .fragmentSpread(fragmentSpread):
       print("fragment spread")
-      generateInits(
-        entities: entities, namespaces: [fragmentSpread.fragment.name],
-        selectionSet: fragmentSpread.fragment.selectionSet,
-        generated: &generated,
-        entityInits: &entityInits)
-      break
+      let newEntityInits = generateInits(
+        entities: entities, fullyQualifiedName: [fragmentSpread.fragment.name],
+        selectionSet: fragmentSpread.fragment.selectionSet)
+      entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
     }
   }
-  guard hasID && hasEntity, let entityType = try? schema.getType(named: typeName)
-  else { return }
+  guard hasPrimaryKey && hasEntity, let entityType = try? schema.getType(named: entityName)
+  else { return entityInits }
   if let interfaceType = entityType as? GraphQLInterfaceType {
-    if !generated.contains(namespaces) {
-      entityInits[typeName, default: ""] += generateInterfaceInits(
-        interfaceType, rootType: entityType, namespaces: namespaces,
-        selections: selectionSet.selections)
-      generated.insert(namespaces)
+    if entityInits[entityName]?[fullyQualifiedName] == nil {
+      entityInits[entityName, default: [[String]: String]()][fullyQualifiedName] =
+        generateInterfaceInits(
+          interfaceType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+          selections: selectionSet.selections)
     }
   } else if let objectType = entityType as? GraphQLObjectType {
-    if !generated.contains(namespaces) {
-      entityInits[typeName, default: ""] += generateObjectInits(
-        objectType, rootType: entityType, namespaces: namespaces,
-        selections: selectionSet.selections)
-      generated.insert(namespaces)
+    if entityInits[entityName]?[fullyQualifiedName] == nil {
+      entityInits[entityName, default: [[String]: String]()][fullyQualifiedName] =
+        generateObjectInits(
+          objectType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+          selections: selectionSet.selections)
     }
   } else {
     fatalError("Entity type has to be either an interface type or object type.")
   }
+  return entityInits
 }
 
-var entityInits = [String: String]()
-var generated = Set<[String]>()
+var entityInits = [String: [[String]: String]]()
 for operation in compilationResult.operations {
-  let firstNamespace: String
+  let firstName: String
   switch operation.operationType {
   case .query:
-    firstNamespace = operation.name + "Query"
+    firstName = operation.name + "Query"
   case .mutation:
-    firstNamespace = operation.name + "Mutation"
+    firstName = operation.name + "Mutation"
   case .subscription:
-    firstNamespace = operation.name + "Subscription"
+    firstName = operation.name + "Subscription"
   }
   print("-- operation: \(operation.name)")
-  generateInits(
-    entities: Set(entities), namespaces: [firstNamespace, "Data"],
-    selectionSet: operation.selectionSet,
-    generated: &generated,
-    entityInits: &entityInits)
+  let newEntityInits = generateInits(
+    entities: Set(entities), fullyQualifiedName: [firstName, "Data"],
+    selectionSet: operation.selectionSet)
+  entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
 }
 
 for entity in entities {
@@ -530,8 +549,9 @@ for entity in entities {
     fatalError("Root type has to be either an interface type or object type.")
   }
   if let inits = entityInits[entity] {
+    let sourceCode: String = inits.values.reduce("") { $0 + $1 }
     let outputPath = "\(outputDir!)/\(entity)_inits_generated.swift"
-    try! inits.write(
+    try! sourceCode.write(
       to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
   }
 }
