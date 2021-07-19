@@ -283,6 +283,14 @@ func GetFieldRequiredType(_ field: Field) -> String {
   return fieldType
 }
 
+func GetFieldOptionalType(_ field: Field) -> String {
+  let fieldType = GetFieldType(field)
+  if fieldType.suffix(1) == "?" {
+    return fieldType
+  }
+  return fieldType + "?"
+}
+
 func IsDataField(_ field: Field) -> Bool {
   if field.deprecated {
     return false
@@ -368,7 +376,8 @@ func GetStructInit(_ structDef: Struct) -> String {
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
     guard !field.isPrimary else { continue }
-    parameters.append("\(field.name): \(GetFieldType(field)) = \(GetFieldDefaultValue(field))")
+    parameters.append(
+      "\(field.name): \(GetFieldOptionalType(field)) = \(GetFieldDefaultValue(field))")
   }
   return parameters.joined(separator: ", ")
 }
@@ -455,7 +464,11 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "  public init(\(GetStructInit(structDef))) {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
-    code += "    self.\(field.name) = \(field.name)\n"
+    if field.isPrimary {
+      code += "    self.\(field.name) = \(field.name)\n"
+    } else {
+      code += "    self.\(field.name) = \(field.name) ?? \(GetFieldDefaultValue(field))\n"
+    }
   }
   code += "  }\n"
   code += "  public init(_ obj: \(GetDflatGenFullyQualifiedName(structDef))) {\n"
@@ -481,7 +494,11 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "  public init(\(GetStructInit(structDef))) {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
-    code += "    self.\(field.name) = \(field.name)\n"
+    if field.isPrimary {
+      code += "    self.\(field.name) = \(field.name)\n"
+    } else {
+      code += "    self.\(field.name) = \(field.name) ?? \(GetFieldDefaultValue(field))\n"
+    }
   }
   code += "  }\n"
   code += "  public init(_ obj: \(GetDflatGenFullyQualifiedName(structDef))) {\n"

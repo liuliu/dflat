@@ -22,10 +22,10 @@ public struct Vec3: Equatable {
   public var x: Float32
   public var y: Float32
   public var z: Float32
-  public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
-    self.x = x
-    self.y = y
-    self.z = z
+  public init(x: Float32? = 0.0, y: Float32? = 0.0, z: Float32? = 0.0) {
+    self.x = x ?? 0.0
+    self.y = y ?? 0.0
+    self.z = z ?? 0.0
   }
   public init(_ obj: zzz_DflatGen_Vec3) {
     self.x = obj.x
@@ -37,7 +37,7 @@ public struct Vec3: Equatable {
 public struct TextContent: Equatable {
   public var text: String?
   public init(text: String? = nil) {
-    self.text = text
+    self.text = text ?? nil
   }
   public init(_ obj: zzz_DflatGen_TextContent) {
     self.text = obj.text
@@ -46,8 +46,8 @@ public struct TextContent: Equatable {
 
 public struct ImageContent: Equatable {
   public var images: [String]
-  public init(images: [String] = []) {
-    self.images = images
+  public init(images: [String]? = []) {
+    self.images = images ?? []
   }
   public init(_ obj: zzz_DflatGen_ImageContent) {
     var __images = [String]()
@@ -76,15 +76,15 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public let tag: String?
   public let priority: Int32
   public init(
-    title: String, pos: Vec3? = nil, color: Color = .red, content: Content? = nil,
-    tag: String? = nil, priority: Int32 = 0
+    title: String, pos: Vec3? = nil, color: Color? = .red, content: Content? = nil,
+    tag: String? = nil, priority: Int32? = 0
   ) {
-    self.pos = pos
-    self.color = color
+    self.pos = pos ?? nil
+    self.color = color ?? .red
     self.title = title
-    self.content = content
-    self.tag = tag
-    self.priority = priority
+    self.content = content ?? nil
+    self.tag = tag ?? nil
+    self.priority = priority ?? 0
   }
   public init(_ obj: zzz_DflatGen_BenchDoc) {
     self.pos = obj.pos.map { Vec3($0) }

@@ -15,10 +15,10 @@ extension MyGame.Sample {
     public var x: Float32
     public var y: Float32
     public var z: Float32
-    public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
-      self.x = x
-      self.y = y
-      self.z = z
+    public init(x: Float32? = 0.0, y: Float32? = 0.0, z: Float32? = 0.0) {
+      self.x = x ?? 0.0
+      self.y = y ?? 0.0
+      self.z = z ?? 0.0
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Vec3) {
       self.x = obj.x
@@ -30,7 +30,7 @@ extension MyGame.Sample {
   public struct Profile: Equatable {
     public var url: String?
     public init(url: String? = nil) {
-      self.url = url
+      self.url = url ?? nil
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Profile) {
       self.url = obj.url
@@ -72,27 +72,27 @@ extension MyGame.Sample {
     public let type: Bool
     public let truth: Bool
     public init(
-      name: String, color: MyGame.Sample.Color, pos: MyGame.Sample.Vec3? = nil, mana: Int16 = 150,
-      hp: Int16 = 100, inventory: [UInt8] = [], bag: [MyGame.Sample.Equipment] = [],
-      weapons: [MyGame.Sample.Weapon] = [], equipped: MyGame.Sample.Equipment? = nil,
-      colors: [MyGame.Sample.Color] = [], path: [MyGame.Sample.Vec3] = [], hpOld: Int16 = 200,
-      profile: MyGame.Sample.Profile? = nil, type: Bool = false, truth: Bool = true
+      name: String, color: MyGame.Sample.Color, pos: MyGame.Sample.Vec3? = nil, mana: Int16? = 150,
+      hp: Int16? = 100, inventory: [UInt8]? = [], bag: [MyGame.Sample.Equipment]? = [],
+      weapons: [MyGame.Sample.Weapon]? = [], equipped: MyGame.Sample.Equipment? = nil,
+      colors: [MyGame.Sample.Color]? = [], path: [MyGame.Sample.Vec3]? = [], hpOld: Int16? = 200,
+      profile: MyGame.Sample.Profile? = nil, type: Bool? = false, truth: Bool? = true
     ) {
-      self.pos = pos
-      self.mana = mana
-      self.hp = hp
+      self.pos = pos ?? nil
+      self.mana = mana ?? 150
+      self.hp = hp ?? 100
       self.name = name
       self.color = color
-      self.inventory = inventory
-      self.bag = bag
-      self.weapons = weapons
-      self.equipped = equipped
-      self.colors = colors
-      self.path = path
-      self.hpOld = hpOld
-      self.profile = profile
-      self.type = type
-      self.truth = truth
+      self.inventory = inventory ?? []
+      self.bag = bag ?? []
+      self.weapons = weapons ?? []
+      self.equipped = equipped ?? nil
+      self.colors = colors ?? []
+      self.path = path ?? []
+      self.hpOld = hpOld ?? 200
+      self.profile = profile ?? nil
+      self.type = type ?? false
+      self.truth = truth ?? true
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Monster) {
       self.pos = obj.pos.map { MyGame.Sample.Vec3($0) }
@@ -106,7 +106,7 @@ extension MyGame.Sample {
         guard let ot = obj.bagType(at: i) else { break }
         switch ot {
         case .none_:
-          fatalError()
+          continue
         case .weapon:
           guard let oe = obj.bag(at: i, type: zzz_DflatGen_MyGame_Sample_Weapon.self) else { break }
           __bag.append(.weapon(Weapon(oe)))

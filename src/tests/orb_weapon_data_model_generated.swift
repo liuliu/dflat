@@ -18,9 +18,9 @@ extension MyGame.Sample {
   public struct Weapon: Equatable {
     public var name: String?
     public var damage: Int16
-    public init(name: String? = nil, damage: Int16 = 0) {
-      self.name = name
-      self.damage = damage
+    public init(name: String? = nil, damage: Int16? = 0) {
+      self.name = name ?? nil
+      self.damage = damage ?? 0
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Weapon) {
       self.name = obj.name
@@ -31,9 +31,9 @@ extension MyGame.Sample {
   public struct Orb: Equatable {
     public var name: String?
     public var color: MyGame.Sample.Color
-    public init(name: String? = nil, color: MyGame.Sample.Color = .red) {
-      self.name = name
-      self.color = color
+    public init(name: String? = nil, color: MyGame.Sample.Color? = .red) {
+      self.name = name ?? nil
+      self.color = color ?? .red
     }
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Orb) {
       self.name = obj.name

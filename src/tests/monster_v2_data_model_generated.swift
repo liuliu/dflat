@@ -25,10 +25,10 @@ extension MyGame.SampleV2 {
     public var x: Float32
     public var y: Float32
     public var z: Float32
-    public init(x: Float32 = 0.0, y: Float32 = 0.0, z: Float32 = 0.0) {
-      self.x = x
-      self.y = y
-      self.z = z
+    public init(x: Float32? = 0.0, y: Float32? = 0.0, z: Float32? = 0.0) {
+      self.x = x ?? 0.0
+      self.y = y ?? 0.0
+      self.z = z ?? 0.0
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Vec3) {
       self.x = obj.x
@@ -47,9 +47,9 @@ extension MyGame.SampleV2 {
   public struct Weapon: Equatable {
     public var name: String?
     public var damage: Int16
-    public init(name: String? = nil, damage: Int16 = 0) {
-      self.name = name
-      self.damage = damage
+    public init(name: String? = nil, damage: Int16? = 0) {
+      self.name = name ?? nil
+      self.damage = damage ?? 0
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Weapon) {
       self.name = obj.name
@@ -60,9 +60,9 @@ extension MyGame.SampleV2 {
   public struct Orb: Equatable {
     public var name: String?
     public var color: MyGame.SampleV2.Color
-    public init(name: String? = nil, color: MyGame.SampleV2.Color = .red) {
-      self.name = name
-      self.color = color
+    public init(name: String? = nil, color: MyGame.SampleV2.Color? = .red) {
+      self.name = name ?? nil
+      self.color = color ?? .red
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Orb) {
       self.name = obj.name
@@ -98,22 +98,22 @@ extension MyGame.SampleV2 {
     public let wear: MyGame.SampleV2.Equipment?
     public init(
       name: String, color: MyGame.SampleV2.Color, pos: MyGame.SampleV2.Vec3? = nil,
-      mana: Int16 = 150, hp: Int16 = 100, inventory: [UInt8] = [],
-      weapons: [MyGame.SampleV2.Weapon] = [], equipped: MyGame.SampleV2.Equipment? = nil,
-      colors: [MyGame.SampleV2.Color] = [], path: [MyGame.SampleV2.Vec3] = [],
+      mana: Int16? = 150, hp: Int16? = 100, inventory: [UInt8]? = [],
+      weapons: [MyGame.SampleV2.Weapon]? = [], equipped: MyGame.SampleV2.Equipment? = nil,
+      colors: [MyGame.SampleV2.Color]? = [], path: [MyGame.SampleV2.Vec3]? = [],
       wear: MyGame.SampleV2.Equipment? = nil
     ) {
-      self.pos = pos
-      self.mana = mana
-      self.hp = hp
+      self.pos = pos ?? nil
+      self.mana = mana ?? 150
+      self.hp = hp ?? 100
       self.name = name
       self.color = color
-      self.inventory = inventory
-      self.weapons = weapons
-      self.equipped = equipped
-      self.colors = colors
-      self.path = path
-      self.wear = wear
+      self.inventory = inventory ?? []
+      self.weapons = weapons ?? []
+      self.equipped = equipped ?? nil
+      self.colors = colors ?? []
+      self.path = path ?? []
+      self.wear = wear ?? nil
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Monster) {
       self.pos = obj.pos.map { MyGame.SampleV2.Vec3($0) }

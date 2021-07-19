@@ -16,11 +16,11 @@ public final class BenchDocV4: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public let tag: String?
   public let priority: Int32
   public let text: String?
-  public init(title: String, tag: String? = nil, priority: Int32 = 0, text: String? = nil) {
+  public init(title: String, tag: String? = nil, priority: Int32? = 0, text: String? = nil) {
     self.title = title
-    self.tag = tag
-    self.priority = priority
-    self.text = text
+    self.tag = tag ?? nil
+    self.priority = priority ?? 0
+    self.text = text ?? nil
   }
   public init(_ obj: zzz_DflatGen_BenchDocV4) {
     self.title = obj.title!

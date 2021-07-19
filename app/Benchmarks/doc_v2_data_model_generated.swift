@@ -28,14 +28,14 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
   public let priority: Int32
   public let text: String?
   public init(
-    title: String, color: ColorV2 = .red, tag: String? = nil, priority: Int32 = 0,
+    title: String, color: ColorV2? = .red, tag: String? = nil, priority: Int32? = 0,
     text: String? = nil
   ) {
-    self.color = color
+    self.color = color ?? .red
     self.title = title
-    self.tag = tag
-    self.priority = priority
-    self.text = text
+    self.tag = tag ?? nil
+    self.priority = priority ?? 0
+    self.text = text ?? nil
   }
   public init(_ obj: zzz_DflatGen_BenchDocV2) {
     self.color = ColorV2(rawValue: obj.color.rawValue) ?? .red
