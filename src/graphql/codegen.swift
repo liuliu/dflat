@@ -329,10 +329,12 @@ func isIDType(_ graphQLType: GraphQLType) -> Bool {
 enum FieldKeyPosition: Equatable {
   case noKey
   case inField
-  case inFragment(String, Bool)
+  case inInlineFragment(String)
+  case inFragmentSpread(String, Bool)
 }
 
-func isOptionalFragments(fragmentType: GraphQLCompositeType, objectType: GraphQLCompositeType) -> Bool
+func isOptionalFragments(fragmentType: GraphQLCompositeType, objectType: GraphQLCompositeType)
+  -> Bool
 {
   // If the object type is interface while fragment is not, that means we may have empty object for
   // a given interface, hence, this fragment can be optional.
@@ -361,7 +363,9 @@ func primaryKeyPosition(objectType: GraphQLCompositeType, selections: [Compilati
       for selection in fragmentSpread.fragment.selectionSet.selections {
         if case let .field(field) = selection {
           if field.name == primaryKey && isIDType(field.type) {
-            return .inFragment(fragmentSpread.fragment.name, isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
+            return .inFragmentSpread(
+              fragmentSpread.fragment.name,
+              isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
           }
         }
       }
@@ -388,10 +392,10 @@ func generateInterfaceInits(
   switch primaryKeyPosition {
   case .inField:
     inits += "    self.init(\(primaryKey): obj.\(primaryKey), subtype: .init(obj))\n"
-  case let .inFragment(name, _):
+  case let .inFragmentSpread(name, _):
     inits +=
       "    self.init(\(primaryKey): obj.fragments.\(name.firstLowercased()).\(primaryKey), subtype: .init(obj))\n"
-  case .noKey:
+  case .noKey, .inInlineFragment(_):
     fatalError("Shouldn't generate interface for no primary key entities")
   }
   inits += "  }\n"
@@ -450,18 +454,32 @@ func generateObjectInits(
         fieldPrimaryKeyPosition[field.name] = primaryKeyPosition(
           objectType: selectionSet.parentType, selections: selectionSet.selections)
       }
-    case .inlineFragment(_):
-      break
+    case let .inlineFragment(inlineFragment):
+      let inlineFragmentType = inlineFragment.selectionSet.parentType
+      guard inlineFragmentType == objectType else {
+        continue
+      }
+      let selectionSet = inlineFragment.selectionSet
+      for selection in selectionSet.selections {
+        switch selection {
+        case let .field(field):
+          existingSelections[field.name] = .inInlineFragment(inlineFragmentType.name)
+        case .inlineFragment(_), .fragmentSpread(_):
+          break
+        }
+      }
     case let .fragmentSpread(fragmentSpread):
       let fragment = fragmentSpread.fragment
       let selectionSet = fragment.selectionSet
       let fragmentType = selectionSet.parentType
       for selection in selectionSet.selections {
         switch selection {
-          case let .field(field):
-            existingSelections[field.name] = .inFragment(fragmentSpread.fragment.name, isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
-          case .inlineFragment(_), .fragmentSpread(_):
-            break
+        case let .field(field):
+          existingSelections[field.name] = .inFragmentSpread(
+            fragmentSpread.fragment.name,
+            isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
+        case .inlineFragment(_), .fragmentSpread(_):
+          break
         }
       }
     }
@@ -469,14 +487,17 @@ func generateObjectInits(
   var fieldAssignments = [String]()
   for field in fields {
     guard existingFields.contains(field.name),
-      let fieldKeyPosition = existingSelections[field.name] else {
+      let fieldKeyPosition = existingSelections[field.name]
+    else {
       continue
     }
     let prefix: String
     switch fieldKeyPosition {
     case .inField, .noKey:
       prefix = ""
-    case let .inFragment(name, optional):
+    case let .inInlineFragment(name):
+      prefix = ".as\(name)?"
+    case let .inFragmentSpread(name, optional):
       prefix = ".fragments.\(name.firstLowercased())\(optional ? "?" : "")"
     }
     guard field.name != primaryKey else {
@@ -520,18 +541,17 @@ func generateInits(
   switch primaryKeyPosition(
     objectType: selectionSet.parentType, selections: selectionSet.selections)
   {
-  case .noKey:
+  case .noKey, .inInlineFragment(_):  // Cannot be a primary key if it only exists in inlineFragment (which requires optional).
     hasPrimaryKey = false
   case .inField:
     hasPrimaryKey = true
-  case .inFragment(_, let optional):
+  case .inFragmentSpread(_, let optional):
     hasPrimaryKey = !optional  // Only treat this as primary key if it is not optional from the fragment.
   }
   var entityInits = [String: [[String]: String]]()
   for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
-      print("field: \(field.name), \(field.type)")
       if let selectionSet = field.selectionSet {
         let newEntityInits = generateInits(
           entities: entities,
@@ -540,13 +560,11 @@ func generateInits(
         entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
       }
     case let .inlineFragment(inlineFragment):
-      print("inline fragment \(inlineFragment.selectionSet.parentType as Optional)")
       let newEntityInits = generateInits(
         entities: entities, fullyQualifiedName: fullyQualifiedName,
         selectionSet: inlineFragment.selectionSet)
       entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
     case let .fragmentSpread(fragmentSpread):
-      print("fragment spread")
       let newEntityInits = generateInits(
         entities: entities, fullyQualifiedName: [fragmentSpread.fragment.name],
         selectionSet: fragmentSpread.fragment.selectionSet)
