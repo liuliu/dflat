@@ -2,6 +2,33 @@ load("@build_bazel_rules_apple//apple:ios.bzl", "ios_unit_test")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 load("@dflat//:dflat.bzl", "dflatc")
 
+filegroup(
+    name = "GraphQL_Files",
+    srcs = glob(["starwars/*.graphql"]),
+)
+
+filegroup(
+    name = "GraphQL_Schema",
+    srcs = ["starwars/schema.json"],
+)
+
+genrule(
+    name = "StarWarsAPI_Sources",
+    srcs = [
+        ":GraphQL_Files",
+        ":GraphQL_Schema",
+    ],
+    outs = ["API.swift"],
+    # Apollo CLI is not happy to see bunch of symlinked files. So we copied the GraphQL files out
+    # such that we can use --includes properly.
+    cmd = """
+mkdir -p $$(dirname $(location API.swift))/SearchPaths && \
+cp $(locations :GraphQL_Files) $$(dirname $(location API.swift))/SearchPaths && \
+$(location //src/graphql/tests/apollo:cli) codegen:generate --target=swift --includes=$$(dirname $(location API.swift))/SearchPaths/*.graphql --localSchemaFile=$(location :GraphQL_Schema) $(location API.swift)
+""",
+    tools = ["//src/graphql/tests/apollo:cli"],
+)
+
 dflatc(
     name = "Character_generated_schema",
     srcs = ["Character_generated.fbs"],
@@ -10,11 +37,11 @@ dflatc(
 swift_library(
     name = "Tests_lib",
     srcs = [
-        "API.swift",
         "Character_inits_generated.swift",
         "GraphQLTests.swift",
         "main.swift",
         ":Character_generated_schema",
+        ":StarWarsAPI_Sources",
     ],
     deps = [
         "//:SQLiteDflat",

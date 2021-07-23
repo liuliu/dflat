@@ -98,9 +98,9 @@ new_git_repository(
 http_archive(
     name = "apollo_cli",
     build_file = "apollo_cli.BUILD",
-    sha256 = "da96984c487478113829d31e13245e8cfed9957d0373fa6f00d6a451d459d063",
+    sha256 = "b39b2e9a6fc5296f6c39daf1a0145e4f2474077c22dc3e7a9faad638730a5c46",
     type = "tar.gz",
-    urls = ["https://install.apollographql.com/legacy-cli/darwin/2.32.13"],
+    urls = ["https://install.apollographql.com/legacy-cli/darwin/2.33.4"],
 )
 
 # Internal tools
