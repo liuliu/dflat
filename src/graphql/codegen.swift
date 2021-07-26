@@ -519,10 +519,10 @@ func unwrapType(prefix: String, inner: String, type: GraphQLType, optional: Bool
   case .list(let listType):
     if optional {
       return
-        "\(prefix).compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: true)) }"
+        "\(prefix)?.compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: false)) } ?? []"
     } else {
       return
-        "\(prefix)?.compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: true)) } ?? []"
+        "\(prefix).compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: false)) }"
     }
   }
 }
@@ -689,6 +689,31 @@ struct EntityInit {
   var selections: [CompilationResult.Selection]
 }
 
+func insertEntityInits(
+  _ entityInits: inout [String: [String: [[String]: EntityInit]]], entityType: GraphQLNamedType,
+  rootType: GraphQLNamedType, fullyQualifiedName: [String],
+  selections: [CompilationResult.Selection]
+) {
+  if let _ = entityType as? GraphQLEnumType {
+    // Remove fullyQualifiedName for enums.
+    entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+      entityType.name, default: [[String]: EntityInit]()][[]] = EntityInit(
+        entityType: entityType, rootType: rootType, fullyQualifiedName: [],
+        selections: selections)
+  } else {
+    entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+      entityType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+        entityType: entityType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+        selections: selections)
+    for namedType in getImplementations(from: entityType) {
+      entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+        namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+          entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+          selections: selections)
+    }
+  }
+}
+
 func findEntityInits(
   entities: Set<String>,
   rootType: GraphQLNamedType?,
@@ -735,28 +760,14 @@ func findEntityInits(
       } else if !isBaseType(field.type) && marked {  // This is pretty much only covers enum type, otherwise you need to have selectionSet.
         let namedType = namedType(field.type)
         if hasEntity && hasPrimaryKey {
-          entityInits[entityName, default: [String: [[String]: EntityInit]]()][
-            namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-              entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
-              selections: selectionSet.selections)
-          for namedType in getImplementations(from: namedType) {
-            entityInits[entityName, default: [String: [[String]: EntityInit]]()][
-              namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-                entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
-                selections: selectionSet.selections)
-          }
+          insertEntityInits(
+            &entityInits, entityType: namedType, rootType: entityType,
+            fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
         }
         if let rootType = rootType {
-          entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
-            namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-              entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-              selections: selectionSet.selections)
-          for namedType in getImplementations(from: namedType) {
-            entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
-              namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-                entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-                selections: selectionSet.selections)
-          }
+          insertEntityInits(
+            &entityInits, entityType: namedType, rootType: rootType,
+            fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
         }
       }
     case let .inlineFragment(inlineFragment):
@@ -790,28 +801,14 @@ func findEntityInits(
   }
   guard marked else { return entityInits }
   if hasEntity && hasPrimaryKey {
-    entityInits[entityName, default: [String: [[String]: EntityInit]]()][
-      entityName, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-        entityType: entityType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
-        selections: selectionSet.selections)
-    for namedType in getImplementations(from: entityType) {
-      entityInits[entityName, default: [String: [[String]: EntityInit]]()][
-        namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-          entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
-          selections: selectionSet.selections)
-    }
+    insertEntityInits(
+      &entityInits, entityType: entityType, rootType: entityType,
+      fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
   }
   if let rootType = rootType {
-    entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
-      entityName, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-        entityType: entityType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-        selections: selectionSet.selections)
-    for namedType in getImplementations(from: entityType) {
-      entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
-        namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
-          entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
-          selections: selectionSet.selections)
-    }
+    insertEntityInits(
+      &entityInits, entityType: entityType, rootType: rootType,
+      fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
   }
   return entityInits
 }
@@ -827,7 +824,6 @@ for operation in compilationResult.operations {
   case .subscription:
     firstName = pascalCase(input: operation.name) + "Subscription"
   }
-  print("-- operation: \(operation.name)")
   let newEntityInits = findEntityInits(
     entities: Set(entities), rootType: nil, fullyQualifiedName: [firstName, "Data"],
     selectionSet: operation.selectionSet, marked: false)
@@ -850,9 +846,25 @@ for entity in entities {
     fatalError("Root type has to be either an interface type or object type.")
   }
   if let inits = entityInits[entity] {
-    let sourceCode: String = inits.values.reduce("") {
+    let sourceCode: String = inits.sorted(by: { $0.key < $1.key }).map { $0.value }.reduce("") {
       $0
-        + $1.values.reduce("") {
+        + $1.sorted(by: {
+          // Sort by array.
+          if $0.key.count < $1.key.count {
+            return true
+          } else if $0.key.count > $1.key.count {
+            return false
+          }
+          let count = $0.key.count
+          for i in 0..<count {
+            if $0.key[i] < $1.key[i] {
+              return true
+            } else if $0.key[i] > $1.key[i] {
+              return false
+            }
+          }
+          return true
+        }).map { $0.value }.reduce("") {
           $0
             + generateInits(
               $1.entityType, rootType: $1.rootType, fullyQualifiedName: $1.fullyQualifiedName,
