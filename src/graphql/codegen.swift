@@ -473,7 +473,8 @@ func generateInterfaceInits(
     inits +=
       "    self.init(\(primaryKey): obj.fragments.\(name.firstLowercased()).\(primaryKey), subtype: .init(obj))\n"
   case .noKey, .inInlineFragment(_):
-    fatalError("Shouldn't generate interface for no primary key entities")
+    // fatalError("Shouldn't generate interface for no primary key entities")
+    return ""
   }
   inits += "  }\n"
   inits += "}\n"
@@ -494,11 +495,36 @@ func generateInterfaceInits(
   inits += "    }\n"
   inits += "  }\n"
   inits += "}\n"
-  for object in implementations.objects {
-    inits += generateObjectInits(
-      object, rootType: rootType, fullyQualifiedName: fullyQualifiedName, selections: selections)
-  }
   return inits
+}
+
+func getImplementations(from namedType: GraphQLNamedType) -> [GraphQLObjectType] {
+  guard let interfaceType = namedType as? GraphQLInterfaceType else {
+    return []
+  }
+  let implementations = try! schema.getImplementations(interfaceType: interfaceType)
+  return implementations.objects
+}
+
+func unwrapType(prefix: String, inner: String, type: GraphQLType, optional: Bool) -> String {
+  switch type {
+  case .named(_):
+    return inner == "" ? prefix : "\(prefix).flatMap { \(inner) }"
+  case .nonNull(let nonNullType):
+    if case .list(_) = nonNullType {
+      return unwrapType(prefix: prefix, inner: inner, type: nonNullType, optional: false)
+    } else {
+      return inner == "" ? prefix : "\(prefix).map { \(inner) }"
+    }
+  case .list(let listType):
+    if optional {
+      return
+        "\(prefix).compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: true)) }"
+    } else {
+      return
+        "\(prefix)?.compactMap { \(unwrapType(prefix: "$0", inner: inner, type: listType, optional: true)) } ?? []"
+    }
+  }
 }
 
 func generateObjectInits(
@@ -597,9 +623,13 @@ func generateObjectInits(
           "\(field.name): obj\(prefix).\(field.name)?.compactMap { $0?.\(primaryKey) } ?? []")
       }
     } else if isBaseType(field.type) {
-      fieldAssignments.append("\(field.name): obj\(prefix).\(field.name)")
+      fieldAssignments.append(
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name)", inner: "", type: field.type, optional: true))"
+      )
     } else {
-      fieldAssignments.append("\(field.name): .init(obj\(prefix).\(field.name))")
+      fieldAssignments.append(
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name)", inner: ".init($0)", type: field.type, optional: true))"
+      )
     }
   }
   inits += "    self.init(\(fieldAssignments.joined(separator: ", ")))\n"
@@ -608,10 +638,64 @@ func generateObjectInits(
   return inits
 }
 
+func generateEnumInits(
+  _ enumType: GraphQLEnumType,
+  rootType: GraphQLNamedType
+) -> String {
+  let isRoot = rootType == enumType
+  let values = enumType.values
+  guard let defaultValue = values.first else { return "" }
+  var inits =
+    !isRoot
+    ? "extension \(rootType.name).\(enumType.name) {\n" : "extension \(enumType.name) {\n"
+  inits += "  public init(_ obj: \(enumType.name)) {\n"
+  inits += "    switch obj {\n"
+  for value in values {
+    inits += "    case .\(value.name.lowercased()):\n"
+    inits += "      self = .\(value.name.lowercased())\n"
+  }
+  inits += "    case .__unknown(_):\n"
+  inits += "      self = .\(defaultValue.name.lowercased())\n"
+  inits += "    }\n"
+  inits += "  }\n"
+  inits += "}\n"
+  return inits
+}
+
 func generateInits(
-  entities: Set<String>, fullyQualifiedName: [String],
-  selectionSet: CompilationResult.SelectionSet
-) -> [String: [[String]: String]] {
+  _ entityType: GraphQLNamedType,
+  rootType: GraphQLNamedType, fullyQualifiedName: [String],
+  selections: [CompilationResult.Selection]
+) -> String {
+  if let interfaceType = entityType as? GraphQLInterfaceType {
+    return generateInterfaceInits(
+      interfaceType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+      selections: selections)
+  } else if let objectType = entityType as? GraphQLObjectType {
+    return generateObjectInits(
+      objectType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+      selections: selections)
+  } else if let enumType = entityType as? GraphQLEnumType {
+    return generateEnumInits(enumType, rootType: rootType)
+  } else {
+    fatalError("Entity type has to be either an interface type, object type or enum type.")
+  }
+}
+
+struct EntityInit {
+  var entityType: GraphQLNamedType
+  var rootType: GraphQLNamedType
+  var fullyQualifiedName: [String]
+  var selections: [CompilationResult.Selection]
+}
+
+func findEntityInits(
+  entities: Set<String>,
+  rootType: GraphQLNamedType?,
+  fullyQualifiedName: [String],
+  selectionSet: CompilationResult.SelectionSet,
+  marked: Bool
+) -> [String: [String: [[String]: EntityInit]]] {
   let entityName = selectionSet.parentType.name
   let hasEntity = entities.contains(entityName)
   let hasPrimaryKey: Bool
@@ -625,52 +709,114 @@ func generateInits(
   case .inFragmentSpread(_, let optional):
     hasPrimaryKey = !optional  // Only treat this as primary key if it is not optional from the fragment.
   }
-  var entityInits = [String: [[String]: String]]()
+  var entityInits = [String: [String: [[String]: EntityInit]]]()
+  let marked = marked || (hasEntity && hasPrimaryKey)
+  guard let entityType = try? schema.getType(named: entityName) else { return entityInits }
   for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
       if let selectionSet = field.selectionSet {
-        let newEntityInits = generateInits(
-          entities: entities,
+        if hasEntity && hasPrimaryKey {
+          let newEntityInits = findEntityInits(
+            entities: entities, rootType: entityType,
+            fullyQualifiedName: fullyQualifiedName + [field.name.firstUppercased().singularized()],
+            selectionSet: selectionSet,
+            marked: marked)
+          entityInits.merge(newEntityInits) {
+            $0.merging($1) { $0.merging($1) { data, _ in data } }
+          }
+        }
+        let newEntityInits = findEntityInits(
+          entities: entities, rootType: rootType,
           fullyQualifiedName: fullyQualifiedName + [field.name.firstUppercased().singularized()],
-          selectionSet: selectionSet)
-        entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
+          selectionSet: selectionSet,
+          marked: marked)
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+      } else if !isBaseType(field.type) && marked {  // This is pretty much only covers enum type, otherwise you need to have selectionSet.
+        let namedType = namedType(field.type)
+        if hasEntity && hasPrimaryKey {
+          entityInits[entityName, default: [String: [[String]: EntityInit]]()][
+            namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+              entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+              selections: selectionSet.selections)
+          for namedType in getImplementations(from: namedType) {
+            entityInits[entityName, default: [String: [[String]: EntityInit]]()][
+              namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+                entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+                selections: selectionSet.selections)
+          }
+        }
+        if let rootType = rootType {
+          entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+            namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+              entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+              selections: selectionSet.selections)
+          for namedType in getImplementations(from: namedType) {
+            entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+              namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+                entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+                selections: selectionSet.selections)
+          }
+        }
       }
     case let .inlineFragment(inlineFragment):
-      let newEntityInits = generateInits(
-        entities: entities, fullyQualifiedName: fullyQualifiedName,
-        selectionSet: inlineFragment.selectionSet)
-      entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
+      if hasEntity && hasPrimaryKey {
+        let newEntityInits = findEntityInits(
+          entities: entities, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+          selectionSet: inlineFragment.selectionSet,
+          marked: marked)
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+      }
+      let newEntityInits = findEntityInits(
+        entities: entities, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+        selectionSet: inlineFragment.selectionSet,
+        marked: marked)
+      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
     case let .fragmentSpread(fragmentSpread):
-      let newEntityInits = generateInits(
-        entities: entities, fullyQualifiedName: [fragmentSpread.fragment.name],
-        selectionSet: fragmentSpread.fragment.selectionSet)
-      entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
+      if hasEntity && hasPrimaryKey {
+        let newEntityInits = findEntityInits(
+          entities: entities, rootType: entityType,
+          fullyQualifiedName: [fragmentSpread.fragment.name],
+          selectionSet: fragmentSpread.fragment.selectionSet,
+          marked: marked)
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+      }
+      let newEntityInits = findEntityInits(
+        entities: entities, rootType: rootType, fullyQualifiedName: [fragmentSpread.fragment.name],
+        selectionSet: fragmentSpread.fragment.selectionSet,
+        marked: marked)
+      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
     }
   }
-  guard hasPrimaryKey && hasEntity, let entityType = try? schema.getType(named: entityName)
-  else { return entityInits }
-  if let interfaceType = entityType as? GraphQLInterfaceType {
-    if entityInits[entityName]?[fullyQualifiedName] == nil {
-      entityInits[entityName, default: [[String]: String]()][fullyQualifiedName] =
-        generateInterfaceInits(
-          interfaceType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+  guard marked else { return entityInits }
+  if hasEntity && hasPrimaryKey {
+    entityInits[entityName, default: [String: [[String]: EntityInit]]()][
+      entityName, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+        entityType: entityType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+        selections: selectionSet.selections)
+    for namedType in getImplementations(from: entityType) {
+      entityInits[entityName, default: [String: [[String]: EntityInit]]()][
+        namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+          entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
           selections: selectionSet.selections)
     }
-  } else if let objectType = entityType as? GraphQLObjectType {
-    if entityInits[entityName]?[fullyQualifiedName] == nil {
-      entityInits[entityName, default: [[String]: String]()][fullyQualifiedName] =
-        generateObjectInits(
-          objectType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+  }
+  if let rootType = rootType {
+    entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+      entityName, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+        entityType: entityType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+        selections: selectionSet.selections)
+    for namedType in getImplementations(from: entityType) {
+      entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
+        namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
+          entityType: namedType, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
           selections: selectionSet.selections)
     }
-  } else {
-    fatalError("Entity type has to be either an interface type or object type.")
   }
   return entityInits
 }
 
-var entityInits = [String: [[String]: String]]()
+var entityInits = [String: [String: [[String]: EntityInit]]]()
 for operation in compilationResult.operations {
   let firstName: String
   switch operation.operationType {
@@ -682,10 +828,10 @@ for operation in compilationResult.operations {
     firstName = pascalCase(input: operation.name) + "Subscription"
   }
   print("-- operation: \(operation.name)")
-  let newEntityInits = generateInits(
-    entities: Set(entities), fullyQualifiedName: [firstName, "Data"],
-    selectionSet: operation.selectionSet)
-  entityInits.merge(newEntityInits) { $0.merging($1) { data, _ in data } }
+  let newEntityInits = findEntityInits(
+    entities: Set(entities), rootType: nil, fullyQualifiedName: [firstName, "Data"],
+    selectionSet: operation.selectionSet, marked: false)
+  entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
 }
 
 for entity in entities {
@@ -704,7 +850,15 @@ for entity in entities {
     fatalError("Root type has to be either an interface type or object type.")
   }
   if let inits = entityInits[entity] {
-    let sourceCode: String = inits.values.reduce("") { $0 + $1 }
+    let sourceCode: String = inits.values.reduce("") {
+      $0
+        + $1.values.reduce("") {
+          $0
+            + generateInits(
+              $1.entityType, rootType: $1.rootType, fullyQualifiedName: $1.fullyQualifiedName,
+              selections: $1.selections)
+        }
+    }
     let outputPath = "\(outputDir!)/\(entity)_inits_generated.swift"
     try! sourceCode.write(
       to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
