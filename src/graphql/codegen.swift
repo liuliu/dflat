@@ -1,93 +1,8 @@
+import ChangeCases
 import Foundation
 import InflectorKit
 
 @testable import ApolloCodegenLib
-
-extension String {
-  func firstLowercased() -> String {
-    prefix(1).lowercased() + dropFirst()
-  }
-  func firstUppercased() -> String {
-    prefix(1).uppercased() + dropFirst()
-  }
-}
-
-// This is a method that mimics https://github.com/blakeembrey/change-case/blob/master/packages/pascal-case/src/index.ts
-// https://github.com/apollographql/apollo-tooling/blob/master/packages/apollo-codegen-swift/src/codeGeneration.ts uses
-// this method for operation class name, hence, without it, we may end up with mismatch class names.
-func pascalCase(input: String) -> String {
-  let camelCase1 = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
-  let camelCase2 = try! NSRegularExpression(pattern: "([A-Z])([A-Z][a-z])", options: [])
-  let textRange = NSRange(input.startIndex..<input.endIndex, in: input)
-  var breakpoints = [String.Index]()
-  let camelCase1Matches = camelCase1.matches(in: input, options: [], range: textRange)
-  for match in camelCase1Matches {
-    let range = Range(match.range(at: 1), in: input)!
-    breakpoints.append(range.upperBound)
-  }
-  let camelCase2Matches = camelCase2.matches(in: input, options: [], range: textRange)
-  for match in camelCase2Matches {
-    let range = Range(match.range(at: 1), in: input)!
-    breakpoints.append(range.upperBound)
-  }
-  breakpoints.sort(by: <)
-  var sequences = [String]()
-  for (i, breakpoint) in breakpoints.enumerated() {
-    if i == 0 {
-      sequences.append(String(input[input.startIndex..<breakpoint]))
-    } else {
-      sequences.append(String(input[breakpoints[i - 1]..<breakpoint]))
-    }
-  }
-  if let last = breakpoints.last {
-    sequences.append(String(input[last..<input.endIndex]))
-  } else {
-    sequences.append(input)
-  }
-  let stripCase = try! NSRegularExpression(pattern: "[^A-Za-z0-9]+", options: [])
-  // This mimics: https://github.com/blakeembrey/change-case/blob/master/packages/no-case/src/index.ts#L19
-  let finalSequences: [String] = sequences.flatMap({ input -> [String] in
-    let range = NSRange(input.startIndex..<input.endIndex, in: input)
-    let matches = stripCase.matches(in: input, options: [], range: range)
-    var substrings = [String]()
-    var lastUpperBound: String.Index? = nil
-    for match in matches {
-      let range = Range(match.range(at: 0), in: input)!
-      if let lastUpperBound = lastUpperBound {
-        substrings.append(String(input[lastUpperBound..<range.lowerBound]))
-      } else {
-        substrings.append(String(input[input.startIndex..<range.lowerBound]))
-      }
-      lastUpperBound = range.upperBound
-    }
-    if let last = matches.last {
-      let range = Range(last.range(at: 0), in: input)!
-      substrings.append(String(input[range.upperBound..<input.endIndex]))
-    } else {
-      substrings.append(input)
-    }
-    return substrings
-  }).filter { $0.count > 0 }
-  // This mimics: https://github.com/blakeembrey/change-case/blob/master/packages/pascal-case/src/index.ts#L18
-  let composedString = finalSequences.enumerated().map({ (i, sequence) -> String in
-    let prefix = sequence.prefix(1)
-    let dropFirstLowercased = sequence.dropFirst().lowercased()
-    if i > 0 && prefix >= "0" && prefix <= "9" {
-      return "_" + prefix + dropFirstLowercased
-    }
-    return prefix.uppercased() + dropFirstLowercased
-  }).joined(separator: "")
-  // Final part, mimics: https://github.com/apollographql/apollo-tooling/blob/master/packages/apollo-codegen-swift/src/helpers.ts#L420
-  // Skips prefix _ and suffix _ (don't remove these)
-  var finalComposedString = composedString
-  if let firstIndex = (input.firstIndex { $0 != "_" }) {
-    finalComposedString = input[input.startIndex..<firstIndex] + finalComposedString
-  }
-  if let lastIndex = (input.lastIndex { $0 != "_" }) {
-    finalComposedString += input[input.index(after: lastIndex)..<input.endIndex]
-  }
-  return finalComposedString
-}
 
 let bundle = Bundle(for: ApolloCodegenFrontend.self)
 if let resourceUrl = bundle.resourceURL,
@@ -441,7 +356,7 @@ func primaryKeyPosition(objectType: GraphQLCompositeType, selections: [Compilati
         if case let .field(field) = selection {
           if field.name == primaryKey && isIDType(field.type) {
             return .inFragmentSpread(
-              fragmentSpread.fragment.name,
+              fragmentSpread.fragment.name.pascalCase(),
               isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
           }
         }
@@ -468,10 +383,10 @@ func generateInterfaceInits(
   let primaryKeyPosition = primaryKeyPosition(objectType: interfaceType, selections: selections)
   switch primaryKeyPosition {
   case .inField:
-    inits += "    self.init(\(primaryKey): obj.\(primaryKey), subtype: .init(obj))\n"
+    inits += "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: .init(obj))\n"
   case let .inFragmentSpread(name, _):
     inits +=
-      "    self.init(\(primaryKey): obj.fragments.\(name.firstLowercased()).\(primaryKey), subtype: .init(obj))\n"
+      "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: .init(obj))\n"
   case .noKey, .inInlineFragment(_):
     // fatalError("Shouldn't generate interface for no primary key entities")
     return ""
@@ -579,7 +494,7 @@ func generateObjectInits(
         switch selection {
         case let .field(field):
           existingSelections[field.name] = .inFragmentSpread(
-            fragmentSpread.fragment.name,
+            fragmentSpread.fragment.name.pascalCase(),
             isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
         case .inlineFragment(_), .fragmentSpread(_):
           break
@@ -601,11 +516,11 @@ func generateObjectInits(
     case let .inInlineFragment(name):
       prefix = ".as\(name)?"
     case let .inFragmentSpread(name, optional):
-      prefix = ".fragments.\(name.firstLowercased())\(optional ? "?" : "")"
+      prefix = ".fragments.\(name.camelCase())\(optional ? "?" : "")"
     }
     guard field.name != primaryKey else {
       if isRoot {
-        fieldAssignments.append("\(field.name): obj.\(field.name)")
+        fieldAssignments.append("\(field.name): obj.\(field.name.camelCase())")
       }
       continue
     }
@@ -615,20 +530,23 @@ func generateObjectInits(
       else { continue }
       switch field.type {
       case .named(_):
-        fieldAssignments.append("\(field.name): obj\(prefix).\(field.name)?.\(primaryKey)")
+        fieldAssignments.append(
+          "\(field.name): obj\(prefix).\(field.name.camelCase())?.\(primaryKey.camelCase())")
       case .nonNull(_):
-        fieldAssignments.append("\(field.name): obj\(prefix).\(field.name).\(primaryKey)")
+        fieldAssignments.append(
+          "\(field.name): obj\(prefix).\(field.name.camelCase()).\(primaryKey.camelCase())")
       case .list(_):
         fieldAssignments.append(
-          "\(field.name): obj\(prefix).\(field.name)?.compactMap { $0?.\(primaryKey) } ?? []")
+          "\(field.name): obj\(prefix).\(field.name.camelCase())?.compactMap { $0?.\(primaryKey.camelCase()) } ?? []"
+        )
       }
     } else if isBaseType(field.type) {
       fieldAssignments.append(
-        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name)", inner: "", type: field.type, optional: true))"
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "", type: field.type, optional: true))"
       )
     } else {
       fieldAssignments.append(
-        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name)", inner: ".init($0)", type: field.type, optional: true))"
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: ".init($0)", type: field.type, optional: true))"
       )
     }
   }
@@ -744,7 +662,7 @@ func findEntityInits(
         if hasEntity && hasPrimaryKey {
           let newEntityInits = findEntityInits(
             entities: entities, rootType: entityType,
-            fullyQualifiedName: fullyQualifiedName + [field.name.firstUppercased().singularized()],
+            fullyQualifiedName: fullyQualifiedName + [field.name.singularized().pascalCase()],
             selectionSet: selectionSet,
             marked: marked)
           entityInits.merge(newEntityInits) {
@@ -753,7 +671,7 @@ func findEntityInits(
         }
         let newEntityInits = findEntityInits(
           entities: entities, rootType: rootType,
-          fullyQualifiedName: fullyQualifiedName + [field.name.firstUppercased().singularized()],
+          fullyQualifiedName: fullyQualifiedName + [field.name.singularized().pascalCase()],
           selectionSet: selectionSet,
           marked: marked)
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
@@ -787,13 +705,14 @@ func findEntityInits(
       if hasEntity && hasPrimaryKey {
         let newEntityInits = findEntityInits(
           entities: entities, rootType: entityType,
-          fullyQualifiedName: [fragmentSpread.fragment.name],
+          fullyQualifiedName: [fragmentSpread.fragment.name.pascalCase()],
           selectionSet: fragmentSpread.fragment.selectionSet,
           marked: marked)
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
       }
       let newEntityInits = findEntityInits(
-        entities: entities, rootType: rootType, fullyQualifiedName: [fragmentSpread.fragment.name],
+        entities: entities, rootType: rootType,
+        fullyQualifiedName: [fragmentSpread.fragment.name.pascalCase()],
         selectionSet: fragmentSpread.fragment.selectionSet,
         marked: marked)
       entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
@@ -818,11 +737,11 @@ for operation in compilationResult.operations {
   let firstName: String
   switch operation.operationType {
   case .query:
-    firstName = pascalCase(input: operation.name) + "Query"
+    firstName = operation.name.pascalCase() + "Query"
   case .mutation:
-    firstName = pascalCase(input: operation.name) + "Mutation"
+    firstName = operation.name.pascalCase() + "Mutation"
   case .subscription:
-    firstName = pascalCase(input: operation.name) + "Subscription"
+    firstName = operation.name.pascalCase() + "Subscription"
   }
   let newEntityInits = findEntityInits(
     entities: Set(entities), rootType: nil, fullyQualifiedName: [firstName, "Data"],
