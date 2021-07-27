@@ -22,7 +22,7 @@ union Subtype {
   Droid,
 }
 namespace;
-table Character {
+table Character (v: "6c4396195456665b") {
   subtype: Character.Subtype;
   id: string (primary);
 }

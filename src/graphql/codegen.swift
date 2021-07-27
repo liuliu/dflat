@@ -1,8 +1,29 @@
 import ChangeCases
+import CommonCrypto
 import Foundation
 import InflectorKit
 
 @testable import ApolloCodegenLib
+
+extension String {
+  func digest() -> String {
+    guard let input = self.data(using: .utf8) else {
+      return ""
+    }
+    let digestLength = Int(CC_SHA256_DIGEST_LENGTH)
+    let bytes = input.withUnsafeBytes { input -> [UInt8] in
+      guard let baseAddress = input.baseAddress else { return [] }
+      var bytes = [UInt8](repeating: 0, count: digestLength)
+      CC_SHA256(baseAddress, UInt32(input.count), &bytes)
+      return bytes
+    }
+    var hexString = ""
+    for byte in bytes {
+      hexString += String(format: "%02x", UInt8(byte))
+    }
+    return hexString
+  }
+}
 
 let bundle = Bundle(for: ApolloCodegenFrontend.self)
 if let resourceUrl = bundle.resourceURL,
@@ -126,6 +147,25 @@ func flatbuffersType(_ graphQLType: GraphQLType, rootType: GraphQLNamedType) -> 
   }
 }
 
+func digestType(
+  _ graphQLType: GraphQLType, rootType: GraphQLNamedType, typeDigests: [String: String]
+) -> String {
+  switch graphQLType {
+  case .named(let namedType):
+    if namedType == rootType {
+      return "string"
+    } else if isBaseType(graphQLType) {
+      return namedType.name
+    } else {
+      return typeDigests[namedType.name]!
+    }
+  case .nonNull(let graphQLType):
+    return digestType(graphQLType, rootType: rootType, typeDigests: typeDigests)
+  case .list(let itemType):
+    return "[\(digestType(itemType, rootType: rootType, typeDigests: typeDigests))]"
+  }
+}
+
 // First, generate the flatbuffers schema file. One file per entity.
 
 func generateEnumType(_ enumType: GraphQLEnumType) -> String {
@@ -139,14 +179,24 @@ func generateEnumType(_ enumType: GraphQLEnumType) -> String {
   return fbs
 }
 
-func generateObjectType(_ objectType: GraphQLObjectType, rootType: GraphQLNamedType) -> String {
+func generateEnumDigest(_ enumType: GraphQLEnumType) -> String {
+  return enumType.values.map { $0.name.lowercased() }.joined(separator: ",").digest()
+}
+
+func generateObjectType(
+  _ objectType: GraphQLObjectType, rootType: GraphQLNamedType, v: String? = nil
+) -> String {
   var existingFields = objectFields[objectType.name]!
   for interfaceType in objectType.interfaces {
     existingFields.formUnion(objectFields[interfaceType.name]!)
   }
   var fbs = ""
   let isRoot = rootType == objectType
-  fbs += "table \(objectType.name) {\n"
+  if let v = v {
+    fbs += "table \(objectType.name) (v: \"\(v)\") {\n"
+  } else {
+    fbs += "table \(objectType.name) {\n"
+  }
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
@@ -162,7 +212,33 @@ func generateObjectType(_ objectType: GraphQLObjectType, rootType: GraphQLNamedT
   return fbs
 }
 
-func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: GraphQLNamedType)
+func generateObjectDigest(
+  _ objectType: GraphQLObjectType, rootType: GraphQLNamedType, typeDigests: [String: String]
+) -> String {
+  var existingFields = objectFields[objectType.name]!
+  for interfaceType in objectType.interfaces {
+    existingFields.formUnion(objectFields[interfaceType.name]!)
+  }
+  let isRoot = rootType == objectType
+  let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
+  var raw = [String]()
+  for field in fields {
+    guard existingFields.contains(field.name) else { continue }
+    guard field.name != primaryKey else {
+      if isRoot {
+        raw.append("\(field.name):\(field.type)")
+      }
+      continue
+    }
+    raw.append(
+      "\(field.name):\(digestType(field.type, rootType: rootType, typeDigests: typeDigests))")
+  }
+  return raw.joined(separator: ",").digest()
+}
+
+func generateInterfaceType(
+  _ interfaceType: GraphQLInterfaceType, rootType: GraphQLNamedType, v: String? = nil
+)
   -> String
 {
   let implementations = try! schema.getImplementations(interfaceType: interfaceType)
@@ -181,7 +257,11 @@ func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: Grap
     // Remove the extra namespace.
     fbs += "namespace;\n"
   }
-  fbs += "table \(interfaceType.name) {\n"
+  if let v = v {
+    fbs += "table \(interfaceType.name) (v: \"\(v)\") {\n"
+  } else {
+    fbs += "table \(interfaceType.name) {\n"
+  }
   if implementations.objects.count > 0 {
     fbs +=
       isRoot
@@ -200,6 +280,25 @@ func generateInterfaceType(_ interfaceType: GraphQLInterfaceType, rootType: Grap
   }
   fbs += "}\n"
   return fbs
+}
+
+func generateInterfaceDigest(
+  _ interfaceType: GraphQLInterfaceType, rootType: GraphQLNamedType, typeDigests: [String: String]
+) -> String {
+  let implementations = try! schema.getImplementations(interfaceType: interfaceType)
+  var raw = ""
+  if implementations.objects.count > 0 {
+    raw +=
+      "{" + implementations.objects.map({ typeDigests[$0.name]! }).joined(separator: ",") + "},"
+  }
+  let fields = interfaceType.fields.values.sorted(by: { $0.name < $1.name })
+  let existingFields = objectFields[interfaceType.name]!
+  for field in fields {
+    guard existingFields.contains(field.name) else { continue }
+    guard field.name == primaryKey else { continue }
+    raw += "{\(field.name):\(flatbuffersType(field.type, rootType: rootType))}"
+  }
+  return raw.digest()
 }
 
 func namedType(_ graphQLType: GraphQLType) -> GraphQLNamedType {
@@ -248,7 +347,7 @@ func referencedTypes(
   }
 }
 
-func generateFlatbuffers(_ rootType: GraphQLInterfaceType) -> String {
+func generateFlatbuffers(_ rootType: GraphQLNamedType) -> String {
   var array = [GraphQLNamedType]()
   var set = Set<String>()
   set.insert(rootType.name)
@@ -256,42 +355,35 @@ func generateFlatbuffers(_ rootType: GraphQLInterfaceType) -> String {
   set.removeAll()
   set.insert(rootType.name)
   var fbs = "namespace \(rootType.name);\n"
+  var typeDigests = [String: String]()
   for entityType in array.reversed() {
     guard !set.contains(entityType.name) else { continue }
     set.insert(entityType.name)
     if let interfaceType = entityType as? GraphQLInterfaceType {
+      typeDigests[entityType.name] = generateInterfaceDigest(
+        interfaceType, rootType: rootType, typeDigests: typeDigests)
       fbs += generateInterfaceType(interfaceType, rootType: rootType)
     } else if let objectType = entityType as? GraphQLObjectType {
+      typeDigests[entityType.name] = generateObjectDigest(
+        objectType, rootType: rootType, typeDigests: typeDigests)
       fbs += generateObjectType(objectType, rootType: rootType)
     } else if let enumType = entityType as? GraphQLEnumType {
+      typeDigests[entityType.name] = generateEnumDigest(enumType)
       fbs += generateEnumType(enumType)
     }
   }
-  fbs += generateInterfaceType(rootType, rootType: rootType)
-  fbs += "root_type \(rootType.name);\n"
-  return fbs
-}
-
-func generateFlatbuffers(_ rootType: GraphQLObjectType) -> String {
-  var array = [GraphQLNamedType]()
-  var set = Set<String>()
-  set.insert(rootType.name)
-  referencedTypes(rootType: rootType, set: &set, &array)
-  set.removeAll()
-  set.insert(rootType.name)
-  var fbs = "namespace \(rootType.name);\n"
-  for entityType in array.reversed() {
-    guard !set.contains(entityType.name) else { continue }
-    set.insert(entityType.name)
-    if let interfaceType = entityType as? GraphQLInterfaceType {
-      fbs += generateInterfaceType(interfaceType, rootType: rootType)
-    } else if let objectType = entityType as? GraphQLObjectType {
-      fbs += generateObjectType(objectType, rootType: rootType)
-    } else if let enumType = entityType as? GraphQLEnumType {
-      fbs += generateEnumType(enumType)
-    }
+  if let interfaceType = rootType as? GraphQLInterfaceType {
+    let v = String(
+      generateInterfaceDigest(interfaceType, rootType: rootType, typeDigests: typeDigests).prefix(
+        16))
+    fbs += generateInterfaceType(interfaceType, rootType: rootType, v: v)
+  } else if let objectType = rootType as? GraphQLObjectType {
+    let v = String(
+      generateObjectDigest(objectType, rootType: rootType, typeDigests: typeDigests).prefix(16))
+    fbs += generateObjectType(objectType, rootType: rootType, v: v)
+  } else {
+    fatalError("Cannot generate flatbuffers schema for root enum type")
   }
-  fbs += generateObjectType(rootType, rootType: rootType)
   fbs += "root_type \(rootType.name);\n"
   return fbs
 }
