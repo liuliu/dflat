@@ -50,18 +50,28 @@ dflatc = rule(
     },
 )
 
+DflatSchemaInfo = provider(
+    "Info to split flatbuffers file and Swift file.",
+    fields = {
+        "schema": "The flatbuffers schema file.",
+        "swift": "The Swift files."
+    }
+)
+
 def _dflat_schema_impl(ctx):
-    outputs = [
-        ctx.actions.declare_file(ctx.attr.root + "_generated.fbs"),
-        ctx.actions.declare_file(ctx.attr.root + "_inits_generated.swift"),
-    ]
+    flatbuffers = ctx.actions.declare_file(ctx.attr.root + "_generated.fbs")
+    swift = ctx.actions.declare_file(ctx.attr.root + "_inits_generated.swift")
+    outputs = [flatbuffers, swift]
     ctx.actions.run(
         inputs = [ctx.file.schema] + ctx.files.srcs,
         outputs = outputs,
         arguments = [ctx.file.schema.path] + [x.path for x in ctx.files.srcs] + ["--entity", ctx.attr.root, "--primary-key", ctx.attr.primary_key, "-o", outputs[0].dirname],
         executable = ctx.executable._codegen,
     )
-    return DefaultInfo(files = depset(outputs))
+    return [
+        DefaultInfo(files = depset(outputs)),
+        DflatSchemaInfo(schema = depset([flatbuffers]), swift = depset([swift]))
+    ]
 
 dflat_schema = rule(
     implementation = _dflat_schema_impl,
@@ -77,4 +87,24 @@ dflat_schema = rule(
             default = Label("@dflat//src/graphql:codegen"),
         ),
     },
+)
+
+def _dflat_schema_flatbuffers_impl(ctx):
+    return DefaultInfo(files = ctx.attr.schema[DflatSchemaInfo].schema)
+
+dflat_schema_flatbuffers = rule(
+    implementation = _dflat_schema_flatbuffers_impl,
+    attrs = {
+        "schema": attr.label(mandatory = True),
+    }
+)
+
+def _dflat_schema_swift_impl(ctx):
+    return DefaultInfo(files = ctx.attr.schema[DflatSchemaInfo].swift)
+
+dflat_schema_swift = rule(
+    implementation = _dflat_schema_swift_impl,
+    attrs = {
+        "schema": attr.label(mandatory = True),
+    }
 )
