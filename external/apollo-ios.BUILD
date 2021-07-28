@@ -41,6 +41,7 @@ swift_library(
     srcs = glob([
         "Sources/ApolloCodegenLib/**/*.swift",
     ]),
+    copts = ["-enable-testing"],
     data = [
         "Sources/ApolloCodegenLib/Frontend/dist/ApolloCodegenFrontend.bundle.js",
         "Sources/ApolloCodegenLib/Frontend/dist/ApolloCodegenFrontend.bundle.js.map",

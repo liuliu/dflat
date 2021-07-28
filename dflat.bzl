@@ -49,3 +49,32 @@ dflatc = rule(
         ),
     },
 )
+
+def _dflat_schema_impl(ctx):
+    outputs = [
+        ctx.actions.declare_file(ctx.attr.root + "_generated.fbs"),
+        ctx.actions.declare_file(ctx.attr.root + "_inits_generated.swift"),
+    ]
+    ctx.actions.run(
+        inputs = [ctx.file.schema] + ctx.files.srcs,
+        outputs = outputs,
+        arguments = [ctx.file.schema.path] + [x.path for x in ctx.files.srcs] + ["--entity", ctx.attr.root, "--primary-key", ctx.attr.primary_key, "-o", outputs[0].dirname],
+        executable = ctx.executable._codegen,
+    )
+    return DefaultInfo(files = depset(outputs))
+
+dflat_schema = rule(
+    implementation = _dflat_schema_impl,
+    attrs = {
+        "srcs": attr.label_list(allow_files = True, mandatory = True),
+        "schema": attr.label(allow_single_file = True, mandatory = True),
+        "root": attr.string(mandatory = True),
+        "primary_key": attr.string(default = "id"),
+        "_codegen": attr.label(
+            executable = True,
+            allow_files = True,
+            cfg = "exec",
+            default = Label("@dflat//src/graphql:codegen"),
+        ),
+    },
+)

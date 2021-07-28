@@ -1,6 +1,6 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_unit_test")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
-load("@dflat//:dflat.bzl", "dflatc")
+load("@dflat//:dflat.bzl", "dflat_schema", "dflatc")
 
 filegroup(
     name = "GraphQL_Files",
@@ -34,6 +34,13 @@ dflatc(
     srcs = ["Character_generated.fbs"],
 )
 
+dflat_schema(
+    name = "Generated_schema",
+    srcs = [":GraphQL_Files"],
+    root = "Character",
+    schema = ":GraphQL_Schema",
+)
+
 swift_library(
     name = "Tests_lib",
     srcs = [
@@ -58,7 +65,7 @@ swift_test(
 
 ios_unit_test(
     name = "iOSTests",
-    minimum_os_version = "10.0",
+    minimum_os_version = "11.0",
     deps = [
         ":Tests_lib",
     ],
