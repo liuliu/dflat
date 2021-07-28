@@ -73,7 +73,7 @@ def _dflat_schema_impl(ctx):
         DflatSchemaInfo(schema = depset([flatbuffers]), swift = depset([swift]))
     ]
 
-dflat_schema = rule(
+_dflat_schema = rule(
     implementation = _dflat_schema_impl,
     attrs = {
         "srcs": attr.label_list(allow_files = True, mandatory = True),
@@ -92,7 +92,7 @@ dflat_schema = rule(
 def _dflat_schema_flatbuffers_impl(ctx):
     return DefaultInfo(files = ctx.attr.schema[DflatSchemaInfo].schema)
 
-dflat_schema_flatbuffers = rule(
+_dflat_schema_flatbuffers = rule(
     implementation = _dflat_schema_flatbuffers_impl,
     attrs = {
         "schema": attr.label(mandatory = True),
@@ -102,9 +102,21 @@ dflat_schema_flatbuffers = rule(
 def _dflat_schema_swift_impl(ctx):
     return DefaultInfo(files = ctx.attr.schema[DflatSchemaInfo].swift)
 
-dflat_schema_swift = rule(
+_dflat_schema_swift = rule(
     implementation = _dflat_schema_swift_impl,
     attrs = {
         "schema": attr.label(mandatory = True),
     }
 )
+
+def dflat_schema(name, flatbuffers_name, swift_name, srcs, schema, root, primary_key = "id", visibility=None):
+    _dflat_schema(
+        name = name,
+        srcs = srcs,
+        schema = schema,
+        root = root,
+        primary_key = primary_key,
+        visibility = visibility
+    )
+    _dflat_schema_flatbuffers(name = flatbuffers_name, schema = ":" + name)
+    _dflat_schema_swift(name = swift_name, schema = ":" + name)
