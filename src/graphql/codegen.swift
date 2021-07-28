@@ -472,12 +472,15 @@ func generateInterfaceInits(
   } else {
     inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   }
+  let subtype =
+    isRoot ? "\(rootType.name).Subtype" : "\(rootType.name).\(interfaceType.name)Subtype"
   switch primaryKeyPosition(objectType: interfaceType, selections: selections) {
   case .inField:
-    inits += "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: .init(obj))\n"
+    inits +=
+      "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
   case let .inFragmentSpread(name, _):
     inits +=
-      "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: .init(obj))\n"
+      "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
   case .noKey, .inInlineFragment(_):
     // fatalError("Shouldn't generate interface for no primary key entities")
     return ""
@@ -636,8 +639,9 @@ func generateObjectInits(
         "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "", type: field.type, optional: true))"
       )
     } else {
+      let typeName = namedType(field.type).name
       fieldAssignments.append(
-        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: ".init($0)", type: field.type, optional: true))"
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "\(rootType.name).\(typeName)($0)", type: field.type, optional: true))"
       )
     }
   }
