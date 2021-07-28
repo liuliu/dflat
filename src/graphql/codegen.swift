@@ -472,8 +472,7 @@ func generateInterfaceInits(
   } else {
     inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
   }
-  let primaryKeyPosition = primaryKeyPosition(objectType: interfaceType, selections: selections)
-  switch primaryKeyPosition {
+  switch primaryKeyPosition(objectType: interfaceType, selections: selections) {
   case .inField:
     inits += "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: .init(obj))\n"
   case let .inFragmentSpread(name, _):
@@ -768,15 +767,15 @@ func findEntityInits(
           marked: marked)
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
       } else if !isBaseType(field.type) && marked {  // This is pretty much only covers enum type, otherwise you need to have selectionSet.
-        let namedType = namedType(field.type)
+        let fieldType = namedType(field.type)
         if hasEntity && hasPrimaryKey {
           insertEntityInits(
-            &entityInits, entityType: namedType, rootType: entityType,
+            &entityInits, entityType: fieldType, rootType: entityType,
             fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
         }
         if let rootType = rootType {
           insertEntityInits(
-            &entityInits, entityType: namedType, rootType: rootType,
+            &entityInits, entityType: fieldType, rootType: rootType,
             fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
         }
       }
