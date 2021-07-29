@@ -1,6 +1,6 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_unit_test")
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
-load("@dflat//:dflat.bzl", "dflat_schema", "dflatc")
+load("@dflat//:dflat.bzl", "dflat_graphql", "dflatc")
 
 filegroup(
     name = "GraphQL_Files",
@@ -29,18 +29,11 @@ $(location //src/graphql/tests/apollo:cli) codegen:generate --target=swift --inc
     tools = ["//src/graphql/tests/apollo:cli"],
 )
 
-dflat_schema(
-    name = "Generated_schema",
+dflat_graphql(
+    name = "Character_Sources",
     srcs = [":GraphQL_Files"],
-    flatbuffers_name = "Generated_flatbuffers",
     root = "Character",
     schema = ":GraphQL_Schema",
-    swift_name = "Generated_swift",
-)
-
-dflatc(
-    name = "Character_generated_schema",
-    srcs = [":Generated_flatbuffers"],
 )
 
 swift_library(
@@ -48,8 +41,7 @@ swift_library(
     srcs = [
         "GraphQLTests.swift",
         "main.swift",
-        ":Character_generated_schema",
-        ":Generated_swift",
+        ":Character_Sources",
         ":StarWarsAPI_Sources",
     ],
     deps = [

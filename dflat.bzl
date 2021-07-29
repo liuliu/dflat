@@ -109,14 +109,16 @@ _dflat_schema_swift = rule(
     }
 )
 
-def dflat_schema(name, flatbuffers_name, swift_name, srcs, schema, root, primary_key = "id", visibility=None):
+def dflat_graphql(name, srcs, schema, root, primary_key = "id", visibility=None):
     _dflat_schema(
-        name = name,
+        name = name + "_graphql",
         srcs = srcs,
         schema = schema,
         root = root,
         primary_key = primary_key,
         visibility = visibility
     )
-    _dflat_schema_flatbuffers(name = flatbuffers_name, schema = ":" + name)
-    _dflat_schema_swift(name = swift_name, schema = ":" + name)
+    _dflat_schema_flatbuffers(name = name + "_graphql_flatbuffers", schema = ":" + name + "_graphql")
+    _dflat_schema_swift(name = name + "_graphql_swift", schema = ":" + name + "_graphql")
+    dflatc(name = name + "_graphql_dflatc", srcs = [":" + name + "_graphql_flatbuffers"])
+    native.filegroup(name = name, srcs = [":" + name + "_graphql_dflatc", ":" + name + "_graphql_swift"], visibility=visibility)
