@@ -37,6 +37,10 @@ final class SQLiteConnectionPool {
     for _ in 0..<capacity {
       flowControl.wait()
     }
+    // Balance the above waits.
+    for _ in 0..<capacity {
+      flowControl.signal()
+    }
   }
   func borrow() -> Borrowed {
     flowControl.wait()
