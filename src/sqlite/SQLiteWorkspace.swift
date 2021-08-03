@@ -214,11 +214,17 @@ public final class SQLiteWorkspace: Workspace {
   // MARK - Fetching
 
   class Snapshot {
-    let reader: SQLiteConnectionPool.Borrowed
+    private let reader: SQLiteConnectionPool.Borrowed
     let changesTimestamp: Int64
     init(reader: SQLiteConnectionPool.Borrowed, changesTimestamp: Int64) {
       self.reader = reader
       self.changesTimestamp = changesTimestamp
+    }
+    deinit {
+      reader.return()
+    }
+    func newReader() -> SQLiteConnectionPool.Borrowed {
+      return SQLiteConnectionPool.Borrowed(pointee: reader.pointee)
     }
   }
 
@@ -256,7 +262,7 @@ public final class SQLiteWorkspace: Workspace {
     }
     if let snapshot = Self.snapshot {
       return SQLiteQueryBuilder<Element>(
-        reader: snapshot.reader, workspace: self, transactionContext: nil,
+        reader: snapshot.newReader(), workspace: self, transactionContext: nil,
         changesTimestamp: snapshot.changesTimestamp)
     }
     let changesTimestamp: Int64 = withUnsafeMutablePointer(to: &state.changesTimestamp) {
