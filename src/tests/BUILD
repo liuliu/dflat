@@ -26,6 +26,7 @@ swift_library(
     name = "Tests_lib",
     srcs = [
         "ConcurrencyTests.swift",
+        "DictionaryTests.swift",
         "ExprTests.swift",
         "FetchTests.swift",
         "ObjectRepositoryTests.swift",

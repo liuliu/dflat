@@ -45,6 +45,10 @@ filegroup(
         "sqlite/SQLiteWorkspace.swift",
         "sqlite/SQLiteWorkspaceDictionary.swift",
         "sqlite/SQLiteWorkspaceState.swift",
+        "sqlite/dict/dict_data_model_generated.swift",
+        "sqlite/dict/dict_generated.swift",
+        "sqlite/dict/dict_mutating_generated.swift",
+        "sqlite/dict/dict_query_generated.swift",
     ],
     visibility = ["//:__pkg__"],
 )

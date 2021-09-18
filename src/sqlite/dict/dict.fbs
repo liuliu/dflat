@@ -1,0 +1,24 @@
+enum ValueType: byte {
+  BoolValue,
+  LongValue,
+  UnsignedLongValue,
+  FloatValue,
+  DoubleValue,
+  StringValue,
+  CodableValue,
+  FlatBuffersValue
+}
+
+table DictItem {
+  key: string (primary);
+  value_type: ValueType;
+  bool_value: bool;
+  long_value: long;
+  unsigned_long_value: ulong;
+  float_value: float;
+  double_value: double;
+  string_value: string;
+  codable: [ubyte];
+}
+
+root_type DictItem;

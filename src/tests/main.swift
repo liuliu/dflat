@@ -10,6 +10,7 @@
     testCase(SchemaUpgradeTests.allTests),
     testCase(SQLiteWorkspaceCRUDTests.allTests),
     testCase(SubscribeTests.allTests),
+    testCase(DictionaryTests.allTests),
   ])
 
 #endif

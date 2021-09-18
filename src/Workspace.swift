@@ -45,6 +45,11 @@ public protocol WorkspaceDictionary {
   subscript(_: String) -> String? { get set }
   /**
    * Force current thread to wait until everything has been written to disk.
+   * Note that this function forces wait to disk, but not synchronize across
+   * threads. You could have one thread called synchronize while another thread
+   * is still holding their own lock to update in-memory value. It doesn't guarantee
+   * the first thread will wait the second thread's dictionary[key] = value to finish.
+   * This method only guarantees all writes on current thread done.
    */
   func synchronize()
 }

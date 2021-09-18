@@ -90,6 +90,10 @@ let package = Package(
       dependencies: sqliteDflatDependencies,
       path: "src/sqlite",
       sources: [
+        "dict/dict_data_model_generated.swift",
+        "dict/dict_generated.swift",
+        "dict/dict_mutating_generated.swift",
+        "dict/dict_query_generated.swift",
         "SQLiteAtom.swift",
         "SQLiteConnection.swift",
         "SQLiteConnectionPool.swift",
@@ -115,6 +119,7 @@ let package = Package(
       path: "src/tests",
       sources: [
         "ConcurrencyTests.swift",
+        "DictionaryTests.swift",
         "ExprTests.swift",
         "FetchTests.swift",
         "namespace.swift",
