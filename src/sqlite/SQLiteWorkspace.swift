@@ -68,6 +68,10 @@ public final class SQLiteWorkspace: Workspace {
   private var writer: SQLiteConnection?
   private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
+  private let dictionaryStorage = SQLiteWorkspaceDictionary.Storage()
+  public var dictionary: WorkspaceDictionary {
+    SQLiteWorkspaceDictionary(workspace: self, storage: dictionaryStorage)
+  }
 
   /**
    * Return a SQLite backed Workspace instance.
@@ -99,7 +103,7 @@ public final class SQLiteWorkspace: Workspace {
         self.targetQueue = DispatchQueue(label: "dflat.workq", qos: .default)
       }
     }
-    self.readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
+    readerPool = SQLiteConnectionPool(capacity: 64, filePath: filePath)
   }
 
   // MARK - Management

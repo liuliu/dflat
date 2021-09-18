@@ -43,6 +43,7 @@ filegroup(
         "sqlite/SQLiteTransactionContext.swift",
         "sqlite/SQLiteValue.swift",
         "sqlite/SQLiteWorkspace.swift",
+        "sqlite/SQLiteWorkspaceDictionary.swift",
         "sqlite/SQLiteWorkspaceState.swift",
     ],
     visibility = ["//:__pkg__"],

@@ -105,6 +105,7 @@ let package = Package(
         "SQLiteTransactionContext.swift",
         "SQLiteValue.swift",
         "SQLiteWorkspace.swift",
+        "SQLiteWorkspaceDictionary.swift",
         "SQLiteWorkspaceState.swift",
         "OSShim.swift",
       ]),

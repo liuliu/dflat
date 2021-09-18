@@ -30,6 +30,25 @@ public enum SubscribedObject<Element: Atom> {
   case deleted
 }
 
+public protocol WorkspaceDictionary {
+  /**
+   * Get the latest value, whether it is in memory or from disk.
+   * Set the value, it will persist asynchronously.
+   */
+  subscript<T: Codable>(_: String) -> T? { get set }
+  subscript<T: FlatBuffersCodable>(_: String) -> T? { get set }
+  subscript(_: String) -> Bool? { get set }
+  subscript(_: String) -> Int? { get set }
+  subscript(_: String) -> UInt? { get set }
+  subscript(_: String) -> Float? { get set }
+  subscript(_: String) -> Double? { get set }
+  subscript(_: String) -> String? { get set }
+  /**
+   * Force current thread to wait until everything has been written to disk.
+   */
+  func synchronize()
+}
+
 public protocol Workspace: Queryable {
   // MARK - Management
   /**
@@ -60,6 +79,12 @@ public protocol Workspace: Queryable {
   func performChanges(
     _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler,
     completionHandler: CompletionHandler?)
+  /**
+   * A persisted, in-memory cached key-value storage backed by current Workspace.
+   * While writing data to disk is serialized under the hood, we don't wait the
+   * writes. This dictionary is an class object, it is always mutable.
+   */
+  var dictionary: WorkspaceDictionary { get }
   // MARK - Observations
   typealias Subscription = WorkspaceSubscription
   /**
@@ -119,6 +144,41 @@ public protocol Workspace: Queryable {
     func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
     where Element: Equatable
   #endif
+}
+
+extension WorkspaceDictionary {
+  /**
+   * Get the latest value, whether it is in memory or from disk.
+   * If the value is not available, use the default one. It won't
+   * persist the default value into memory or disk. Thus, if you
+   * call this method again with different default value (while
+   * the underlying kept nil), it will return that different default
+   * value.
+   */
+  public subscript<T: Codable>(key: String, default value: T) -> T {
+    get { self[key] ?? value }
+  }
+  public subscript<T: FlatBuffersCodable>(key: String, default value: T) -> T {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: Bool) -> Bool {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: Int) -> Int {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: UInt) -> UInt {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: Float) -> Float {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: Double) -> Double {
+    get { self[key] ?? value }
+  }
+  public subscript(key: String, default value: String) -> String {
+    get { self[key] ?? value }
+  }
 }
 
 extension Workspace {
