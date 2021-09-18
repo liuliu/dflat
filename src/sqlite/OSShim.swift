@@ -12,12 +12,12 @@ import _SQLiteDflatOSShim
     return lock
   }
 
-  func os_unfair_lock_lock(_ lock: inout os_unfair_lock_s) {
-    pthread_mutex_lock(&lock)
+  func os_unfair_lock_lock(_ lock: UnsafeMutablePointer<os_unfair_lock_s>) {
+    pthread_mutex_lock(lock)
   }
 
-  func os_unfair_lock_unlock(_ lock: inout os_unfair_lock_s) {
-    pthread_mutex_unlock(&lock)
+  func os_unfair_lock_unlock(_ lock: UnsafeMutablePointer<os_unfair_lock_s>) {
+    pthread_mutex_unlock(lock)
   }
 
 #endif
