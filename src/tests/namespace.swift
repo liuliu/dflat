@@ -3,4 +3,6 @@ public enum MyGame {
   }
   public enum SampleV2 {
   }
+  public enum SampleV3 {
+  }
 }

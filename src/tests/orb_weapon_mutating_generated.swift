@@ -14,8 +14,8 @@ extension MyGame.Sample.Color: SQLiteValue {
 
 // MARK - Serializer
 
-extension MyGame.Sample.Weapon {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension MyGame.Sample.Weapon: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let start = zzz_DflatGen_MyGame_Sample_Weapon.startWeapon(&flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Weapon.add(name: __name, &flatBufferBuilder)
@@ -30,8 +30,8 @@ extension Optional where Wrapped == MyGame.Sample.Weapon {
   }
 }
 
-extension MyGame.Sample.Orb {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension MyGame.Sample.Orb: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .red
     let start = zzz_DflatGen_MyGame_Sample_Orb.startOrb(&flatBufferBuilder)

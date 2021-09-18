@@ -456,7 +456,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
 }
 
 func GenStructDataModel(_ structDef: Struct, code: inout String) {
-  code += "\npublic struct \(structDef.name): Equatable {\n"
+  code += "\npublic struct \(structDef.name): Equatable, FlatBuffersDecodable {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
     code += "  public var \(field.name): \(GetFieldType(field))\n"
@@ -474,12 +474,23 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "  public init(_ obj: \(GetDflatGenFullyQualifiedName(structDef))) {\n"
   code += GetStructDeserializer(structDef)
   code += "  }\n"
+  code += "  public static func from(byteBuffer bb: ByteBuffer) -> Self {\n"
+  if structDef.fixed {
+    code += "    // Assuming this is the root\n"
+    code +=
+      "    Self(bb.read(def: \(GetDflatGenFullyQualifiedName(structDef)).self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))\n"
+    code += "  }\n"
+  } else {
+    code +=
+      "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
+    code += "  }\n"
+  }
   code += "}\n"
 }
 
 func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code +=
-    "\npublic final class \(structDef.name): Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {\n"
+    "\npublic final class \(structDef.name): Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {\n"
   code += "  public static func == (lhs: \(structDef.name), rhs: \(structDef.name)) -> Bool {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
@@ -511,6 +522,10 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code +=
     "      return Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
   code += "    }\n"
+  code += "  }\n"
+  code += "  public static func from(byteBuffer bb: ByteBuffer) -> Self {\n"
+  code +=
+    "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
   code += "  }\n"
   code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
   code +=
@@ -611,8 +626,8 @@ func GenEnumSQLiteValue(_ enumDef: Enum, code: inout String) {
 }
 
 func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
-  code += "\nextension \(GetFullyQualifiedName(enumDef)) {\n"
-  code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+  code += "\nextension \(GetFullyQualifiedName(enumDef)): FlatBuffersEncodable {\n"
+  code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
   code += "    switch self {\n"
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
@@ -655,12 +670,18 @@ func GenStructDataSerializer(_ structDef: Struct, code: inout String) {
 func GenStructSerializer(_ structDef: Struct, code: inout String) {
   let selfRef: String
   if structDef.fixed {
+    code += "\nextension \(GetFullyQualifiedName(structDef)): FlatBuffersEncodable {\n"
+    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    code +=
+      "    flatBufferBuilder.create(struct: \(GetDflatGenFullyQualifiedName(structDef))(self))\n"
+    code += "  }\n"
+    code += "}\n"
     code += "\nextension \(GetDflatGenFullyQualifiedName(structDef)) {\n"
     code += "  init(_ obj: \(GetFullyQualifiedName(structDef))) {\n"
     selfRef = "obj"
   } else {
-    code += "\nextension \(GetFullyQualifiedName(structDef)) {\n"
-    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    code += "\nextension \(GetFullyQualifiedName(structDef)): FlatBuffersEncodable {\n"
+    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
     selfRef = "self"
   }
   var parameters = [String]()

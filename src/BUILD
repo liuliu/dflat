@@ -14,6 +14,7 @@ filegroup(
         "ChangeRequest.swift",
         "Expr.swift",
         "FetchedResult.swift",
+        "FlatBuffersCodable.swift",
         "Publisher.swift",
         "QueryBuilder.swift",
         "SQLiteExpr.swift",

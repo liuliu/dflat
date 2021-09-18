@@ -14,8 +14,8 @@ extension ColorV2: SQLiteValue {
 
 // MARK - Serializer
 
-extension BenchDocV2 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension BenchDocV2: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __color = zzz_DflatGen_ColorV2(rawValue: self.color.rawValue) ?? .red
     let __title = flatBufferBuilder.create(string: self.title)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()

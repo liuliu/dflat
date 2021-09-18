@@ -18,7 +18,7 @@ public enum Content: Equatable {
   case imageContent(_: ImageContent)
 }
 
-public struct Vec3: Equatable {
+public struct Vec3: Equatable, FlatBuffersDecodable {
   public var x: Float32
   public var y: Float32
   public var z: Float32
@@ -32,9 +32,16 @@ public struct Vec3: Equatable {
     self.y = obj.y
     self.z = obj.z
   }
+  public static func from(byteBuffer bb: ByteBuffer) -> Self {
+    // Assuming this is the root
+    Self(
+      bb.read(
+        def: zzz_DflatGen_Vec3.self,
+        position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
+  }
 }
 
-public struct TextContent: Equatable {
+public struct TextContent: Equatable, FlatBuffersDecodable {
   public var text: String?
   public init(text: String? = nil) {
     self.text = text ?? nil
@@ -42,9 +49,12 @@ public struct TextContent: Equatable {
   public init(_ obj: zzz_DflatGen_TextContent) {
     self.text = obj.text
   }
+  public static func from(byteBuffer bb: ByteBuffer) -> Self {
+    Self(zzz_DflatGen_TextContent.getRootAsTextContent(bb: bb))
+  }
 }
 
-public struct ImageContent: Equatable {
+public struct ImageContent: Equatable, FlatBuffersDecodable {
   public var images: [String]
   public init(images: [String]? = []) {
     self.images = images ?? []
@@ -57,9 +67,12 @@ public struct ImageContent: Equatable {
     }
     self.images = __images
   }
+  public static func from(byteBuffer bb: ByteBuffer) -> Self {
+    Self(zzz_DflatGen_ImageContent.getRootAsImageContent(bb: bb))
+  }
 }
 
-public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
+public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {
   public static func == (lhs: BenchDoc, rhs: BenchDoc) -> Bool {
     guard lhs.pos == rhs.pos else { return false }
     guard lhs.color == rhs.color else { return false }
@@ -112,6 +125,9 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
         capacity: buffer.count)
       return Self(zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: bb))
     }
+  }
+  public static func from(byteBuffer bb: ByteBuffer) -> Self {
+    Self(zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: bb))
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: bb))

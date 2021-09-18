@@ -8,8 +8,8 @@ import SQLiteDflat
 
 // MARK - Serializer
 
-extension BenchDocV4 {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension BenchDocV4: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __title = flatBufferBuilder.create(string: self.title)
     let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()

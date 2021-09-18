@@ -13,7 +13,7 @@ public enum ColorV2: Int8, DflatFriendlyValue {
   }
 }
 
-public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
+public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {
   public static func == (lhs: BenchDocV2, rhs: BenchDocV2) -> Bool {
     guard lhs.color == rhs.color else { return false }
     guard lhs.title == rhs.title else { return false }
@@ -51,6 +51,9 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
         capacity: buffer.count)
       return Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
     }
+  }
+  public static func from(byteBuffer bb: ByteBuffer) -> Self {
+    Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))

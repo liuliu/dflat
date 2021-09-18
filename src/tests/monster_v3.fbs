@@ -1,0 +1,50 @@
+// Example IDL file for our monster's schema.
+
+namespace MyGame.SampleV3;
+
+enum Color:byte {
+  Red = 0,
+  Green,
+  Blue = 2
+}
+
+table Empty {
+}
+
+union Equipment {
+  Weapon,
+  Orb,
+  Empty
+}
+
+struct Vec3 {
+  x:float;
+  y:float;
+  z:float;
+}
+
+table Monster {
+  pos:Vec3;
+  mana:short = 150 (indexed);
+  hp:short = 100 (indexed);
+  name:string (primary);
+  color:Color = Blue (primary);
+  friendly:bool = false (deprecated);
+  inventory:[ubyte];
+  bag:[Equipment] (deprecated);
+  weapons:[Weapon];
+  equipped:Equipment (indexed);
+  colors:[Color];
+  path:[Vec3];
+  wear:Equipment;
+}
+
+table Weapon {
+  name:string;
+  damage:short;
+}
+
+table Orb {
+  name:string (unique);
+  color:Color;
+}

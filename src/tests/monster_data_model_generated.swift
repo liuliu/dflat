@@ -11,7 +11,7 @@ extension MyGame.Sample {
     case orb(_: Orb)
   }
 
-  public struct Vec3: Equatable {
+  public struct Vec3: Equatable, FlatBuffersDecodable {
     public var x: Float32
     public var y: Float32
     public var z: Float32
@@ -25,9 +25,16 @@ extension MyGame.Sample {
       self.y = obj.y
       self.z = obj.z
     }
+    public static func from(byteBuffer bb: ByteBuffer) -> Self {
+      // Assuming this is the root
+      Self(
+        bb.read(
+          def: zzz_DflatGen_MyGame_Sample_Vec3.self,
+          position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
+    }
   }
 
-  public struct Profile: Equatable {
+  public struct Profile: Equatable, FlatBuffersDecodable {
     public var url: String?
     public init(url: String? = nil) {
       self.url = url ?? nil
@@ -35,9 +42,12 @@ extension MyGame.Sample {
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Profile) {
       self.url = obj.url
     }
+    public static func from(byteBuffer bb: ByteBuffer) -> Self {
+      Self(zzz_DflatGen_MyGame_Sample_Profile.getRootAsProfile(bb: bb))
+    }
   }
 
-  public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, Equatable {
+  public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {
     public static func == (lhs: Monster, rhs: Monster) -> Bool {
       guard lhs.pos == rhs.pos else { return false }
       guard lhs.mana == rhs.mana else { return false }
@@ -158,6 +168,9 @@ extension MyGame.Sample {
           capacity: buffer.count)
         return Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))
       }
+    }
+    public static func from(byteBuffer bb: ByteBuffer) -> Self {
+      Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))
     }
     override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))

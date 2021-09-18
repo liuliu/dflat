@@ -7,6 +7,18 @@ import XCTest
 
 class ObjectRepositoryTests: XCTestCase {
 
+  func testSerializeStructs() {
+    let vec3 = MyGame.Sample.Vec3(x: 10, y: 5, z: -5)
+    var fbb = FlatBufferBuilder()
+    fbb.clear()
+    let offset = vec3.to(flatBufferBuilder: &fbb)
+    fbb.finish(offset: offset)
+    let data = fbb.data
+    let bb = ByteBuffer(data: data)
+    let deserializedVec3 = MyGame.Sample.Vec3.from(byteBuffer: bb)
+    XCTAssertEqual(deserializedVec3, vec3)
+  }
+
   func testSerializeObjects() {
     let monster1 = MyGame.Sample.Monster(
       name: "name1", color: .red, pos: MyGame.Sample.Vec3(), inventory: [], weapons: [],
@@ -113,6 +125,7 @@ class ObjectRepositoryTests: XCTestCase {
   }
 
   static let allTests = [
+    ("testSerializeStructs", testSerializeStructs),
     ("testSerializeObjects", testSerializeObjects),
     ("testSetUpdatedObjects", testSetUpdatedObjects),
     ("testSetFetchedObjects", testSetFetchedObjects),

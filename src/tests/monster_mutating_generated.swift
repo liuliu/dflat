@@ -8,8 +8,8 @@ import SQLiteDflat
 
 // MARK - Serializer
 
-extension MyGame.Sample.Equipment {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension MyGame.Sample.Equipment: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     switch self {
     case .weapon(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
@@ -36,6 +36,12 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
   }
 }
 
+extension MyGame.Sample.Vec3: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    flatBufferBuilder.create(struct: zzz_DflatGen_MyGame_Sample_Vec3(self))
+  }
+}
+
 extension zzz_DflatGen_MyGame_Sample_Vec3 {
   init(_ obj: MyGame.Sample.Vec3) {
     self.init(x: obj.x, y: obj.y, z: obj.z)
@@ -46,8 +52,8 @@ extension zzz_DflatGen_MyGame_Sample_Vec3 {
   }
 }
 
-extension MyGame.Sample.Profile {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension MyGame.Sample.Profile: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __url = self.url.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let start = zzz_DflatGen_MyGame_Sample_Profile.startProfile(&flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Profile.add(url: __url, &flatBufferBuilder)
@@ -61,8 +67,8 @@ extension Optional where Wrapped == MyGame.Sample.Profile {
   }
 }
 
-extension MyGame.Sample.Monster {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension MyGame.Sample.Monster: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __name = flatBufferBuilder.create(string: self.name)
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .blue
     let __vector_inventory = flatBufferBuilder.createVector(self.inventory)

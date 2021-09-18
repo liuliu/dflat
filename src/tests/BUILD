@@ -12,6 +12,7 @@ dflatc(
     srcs = [
         "monster.fbs",
         "monster_v2.fbs",
+        "monster_v3.fbs",
     ],
     includes = [":OrbWeapon_Sources"],
 )

@@ -14,8 +14,8 @@ extension Color: SQLiteValue {
 
 // MARK - Serializer
 
-extension Content {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension Content: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     switch self {
     case .textContent(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
@@ -42,6 +42,12 @@ extension Optional where Wrapped == Content {
   }
 }
 
+extension Vec3: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+    flatBufferBuilder.create(struct: zzz_DflatGen_Vec3(self))
+  }
+}
+
 extension zzz_DflatGen_Vec3 {
   init(_ obj: Vec3) {
     self.init(x: obj.x, y: obj.y, z: obj.z)
@@ -52,8 +58,8 @@ extension zzz_DflatGen_Vec3 {
   }
 }
 
-extension TextContent {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension TextContent: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let start = zzz_DflatGen_TextContent.startTextContent(&flatBufferBuilder)
     zzz_DflatGen_TextContent.add(text: __text, &flatBufferBuilder)
@@ -67,8 +73,8 @@ extension Optional where Wrapped == TextContent {
   }
 }
 
-extension ImageContent {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension ImageContent: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     var __images = [Offset<String>]()
     for i in images {
       __images.append(flatBufferBuilder.create(string: i))
@@ -86,8 +92,8 @@ extension Optional where Wrapped == ImageContent {
   }
 }
 
-extension BenchDoc {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+extension BenchDoc: FlatBuffersEncodable {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __color = zzz_DflatGen_Color(rawValue: self.color.rawValue) ?? .red
     let __title = flatBufferBuilder.create(string: self.title)
     let __contentType = self.content._type
