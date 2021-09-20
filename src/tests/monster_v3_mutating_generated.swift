@@ -77,7 +77,7 @@ extension Optional where Wrapped == MyGame.SampleV3.Empty {
 
 extension MyGame.SampleV3.Monster: FlatBuffersEncodable {
   public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = flatBufferBuilder.create(string: self.name)
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __color = zzz_DflatGen_MyGame_SampleV3_Color(rawValue: self.color.rawValue) ?? .blue
     let __vector_inventory = flatBufferBuilder.createVector(self.inventory)
     var __weapons = [Offset<UOffset>]()

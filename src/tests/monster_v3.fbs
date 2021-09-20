@@ -27,8 +27,8 @@ table Monster {
   pos:Vec3;
   mana:short = 150 (indexed);
   hp:short = 100 (indexed);
-  name:string (primary);
-  color:Color = Blue (primary);
+  name:string;
+  color:Color = Blue;
   friendly:bool = false (deprecated);
   inventory:[ubyte];
   bag:[Equipment] (deprecated);

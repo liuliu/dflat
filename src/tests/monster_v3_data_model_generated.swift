@@ -58,7 +58,7 @@ extension MyGame.SampleV3 {
     public var pos: MyGame.SampleV3.Vec3?
     public var mana: Int16
     public var hp: Int16
-    public var name: String
+    public var name: String?
     public var color: MyGame.SampleV3.Color
     public var inventory: [UInt8]
     public var weapons: [MyGame.SampleV3.Weapon]
@@ -67,8 +67,8 @@ extension MyGame.SampleV3 {
     public var path: [MyGame.SampleV3.Vec3]
     public var wear: MyGame.SampleV3.Equipment?
     public init(
-      name: String, color: MyGame.SampleV3.Color, pos: MyGame.SampleV3.Vec3? = nil,
-      mana: Int16? = 150, hp: Int16? = 100, inventory: [UInt8]? = [],
+      pos: MyGame.SampleV3.Vec3? = nil, mana: Int16? = 150, hp: Int16? = 100, name: String? = nil,
+      color: MyGame.SampleV3.Color? = .blue, inventory: [UInt8]? = [],
       weapons: [MyGame.SampleV3.Weapon]? = [], equipped: MyGame.SampleV3.Equipment? = nil,
       colors: [MyGame.SampleV3.Color]? = [], path: [MyGame.SampleV3.Vec3]? = [],
       wear: MyGame.SampleV3.Equipment? = nil
@@ -76,8 +76,8 @@ extension MyGame.SampleV3 {
       self.pos = pos ?? nil
       self.mana = mana ?? 150
       self.hp = hp ?? 100
-      self.name = name
-      self.color = color
+      self.name = name ?? nil
+      self.color = color ?? .blue
       self.inventory = inventory ?? []
       self.weapons = weapons ?? []
       self.equipped = equipped ?? nil
@@ -89,7 +89,7 @@ extension MyGame.SampleV3 {
       self.pos = obj.pos.map { MyGame.SampleV3.Vec3($0) }
       self.mana = obj.mana
       self.hp = obj.hp
-      self.name = obj.name!
+      self.name = obj.name
       self.color = MyGame.SampleV3.Color(rawValue: obj.color.rawValue) ?? .blue
       self.inventory = obj.inventory
       var __weapons = [MyGame.SampleV3.Weapon]()

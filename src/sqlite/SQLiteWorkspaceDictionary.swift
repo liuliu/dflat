@@ -62,6 +62,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is T))
       guard (oldValue as? T) != newValue else {
         storage.unlock(hashValue)
         return
@@ -120,6 +121,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is T))
       guard (oldValue as? T) != newValue else {
         storage.unlock(hashValue)
         return
@@ -168,6 +170,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is Bool))
       guard (oldValue as? Bool) != newValue else {
         storage.unlock(hashValue)
         return
@@ -211,6 +214,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is Int))
       guard (oldValue as? Int) != newValue else {
         storage.unlock(hashValue)
         return
@@ -255,6 +259,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is UInt))
       guard (oldValue as? UInt) != newValue else {
         storage.unlock(hashValue)
         return
@@ -300,6 +305,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is Float))
       guard (oldValue as? Float) != newValue else {
         storage.unlock(hashValue)
         return
@@ -344,6 +350,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is Double))
       guard (oldValue as? Double) != newValue else {
         storage.unlock(hashValue)
         return
@@ -388,6 +395,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     set {
       let (oldValue, hashValue) = storage.setAndLock(
         key, value: newValue ?? None.none)
+      assert((oldValue == nil) || (oldValue is None) || (oldValue is String))
       guard (oldValue as? String) != newValue else {
         storage.unlock(hashValue)
         return

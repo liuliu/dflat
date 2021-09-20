@@ -8,5 +8,4 @@ public protocol FlatBuffersEncodable {
   func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>
 }
 
-public protocol FlatBuffersCodable: FlatBuffersDecodable & FlatBuffersEncodable {
-}
+public typealias FlatBuffersCodable = FlatBuffersDecodable & FlatBuffersEncodable
