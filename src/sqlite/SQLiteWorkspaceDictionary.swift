@@ -22,7 +22,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
   }
   let workspace: SQLiteWorkspace
   let storage: Storage
-  subscript<T: Codable>(key: String) -> T? {
+  subscript<T: Codable & Equatable>(key: String) -> T? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -45,7 +45,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: object ?? SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: object ?? None.none)
         }
         storage.unlock(tuple.1)
         return object
@@ -53,15 +53,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
       }
       return nil
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? T) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         // Encode on current thread. Codable can be customized, hence, there is no guarantee it is thread-safe.
         let encoder = PropertyListEncoder()
@@ -79,7 +83,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript<T: FlatBuffersCodable>(key: String) -> T? {
+  subscript<T: FlatBuffersCodable & Equatable>(key: String) -> T? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -99,7 +103,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: object ?? SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: object ?? None.none)
         }
         storage.unlock(tuple.1)
         return object
@@ -107,15 +111,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? T) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(workspace) {
           var fbb = FlatBufferBuilder()
@@ -151,15 +159,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? Bool) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(workspace, item: DictItem(key: key, valueType: .boolValue, boolValue: value))
       } else {
@@ -190,15 +202,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? Int) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(
           workspace, item: DictItem(key: key, valueType: .longValue, longValue: Int64(value)))
@@ -230,15 +246,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? UInt) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(
           workspace,
@@ -271,15 +291,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? Float) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(
           workspace, item: DictItem(key: key, valueType: .floatValue, floatValue: value))
@@ -311,15 +335,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? Double) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(
           workspace, item: DictItem(key: key, valueType: .doubleValue, doubleValue: value))
@@ -343,7 +371,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: object ?? SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: object ?? None.none)
         }
         storage.unlock(tuple.1)
         return object
@@ -351,15 +379,19 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
         if storage.get(key, hashValue: tuple.1) == nil {
-          storage.set(key, hashValue: tuple.1, value: SQLiteWorkspaceDictionary.None.none)
+          storage.set(key, hashValue: tuple.1, value: None.none)
         }
         storage.unlock(tuple.1)
         return nil
       }
     }
     set {
-      let hashValue = storage.setAndLock(
-        key, value: newValue ?? SQLiteWorkspaceDictionary.None.none)
+      let (oldValue, hashValue) = storage.setAndLock(
+        key, value: newValue ?? None.none)
+      guard (oldValue as? String) != newValue else {
+        storage.unlock(hashValue)
+        return
+      }
       if let value = newValue {
         storage.upsert(
           workspace, item: DictItem(key: key, valueType: .stringValue, stringValue: value))
@@ -391,13 +423,13 @@ extension SQLiteWorkspaceDictionary.Storage {
     return (dictionaries[hashValue][key], hashValue)
   }
   @inline(__always)
-  func setAndLock(_ key: String, value: Any) -> Int {
+  func setAndLock(_ key: String, value: Any) -> (Any?, Int) {
     var hasher = Hasher()
     key.hash(into: &hasher)
     let hashValue = Int(UInt(bitPattern: hasher.finalize()) % UInt(Self.size))
     os_unfair_lock_lock(locks + hashValue)
-    dictionaries[hashValue][key] = value
-    return hashValue
+    let oldValue = dictionaries[hashValue].updateValue(value, forKey: key)
+    return (oldValue, hashValue)
   }
   @inline(__always)
   func get(_ key: String, hashValue: Int) -> Any? {

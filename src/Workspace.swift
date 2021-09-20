@@ -35,8 +35,8 @@ public protocol WorkspaceDictionary {
    * Get the latest value, whether it is in memory or from disk.
    * Set the value, it will persist asynchronously.
    */
-  subscript<T: Codable>(_: String) -> T? { get set }
-  subscript<T: FlatBuffersCodable>(_: String) -> T? { get set }
+  subscript<T: Codable & Equatable>(_: String) -> T? { get set }
+  subscript<T: FlatBuffersCodable & Equatable>(_: String) -> T? { get set }
   subscript(_: String) -> Bool? { get set }
   subscript(_: String) -> Int? { get set }
   subscript(_: String) -> UInt? { get set }
@@ -160,10 +160,10 @@ extension WorkspaceDictionary {
    * the underlying kept nil), it will return that different default
    * value.
    */
-  public subscript<T: Codable>(key: String, default value: T) -> T {
+  public subscript<T: Codable & Equatable>(key: String, default value: T) -> T {
     get { self[key] ?? value }
   }
-  public subscript<T: FlatBuffersCodable>(key: String, default value: T) -> T {
+  public subscript<T: FlatBuffersCodable & Equatable>(key: String, default value: T) -> T {
     get { self[key] ?? value }
   }
   public subscript(key: String, default value: Bool) -> Bool {
