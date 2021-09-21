@@ -16,12 +16,14 @@ extension ValueType: SQLiteValue {
 extension DictItem: FlatBuffersEncodable {
   public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
     let __key = flatBufferBuilder.create(string: self.key)
+    let __namespace = flatBufferBuilder.create(string: self.namespace)
     let __valueType = zzz_DflatGen_ValueType(rawValue: self.valueType.rawValue) ?? .boolvalue
     let __stringValue =
       self.stringValue.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
     let __vector_codable = flatBufferBuilder.createVector(self.codable)
     let start = zzz_DflatGen_DictItem.startDictItem(&flatBufferBuilder)
     zzz_DflatGen_DictItem.add(key: __key, &flatBufferBuilder)
+    zzz_DflatGen_DictItem.add(namespace: __namespace, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(valueType: __valueType, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(boolValue: self.boolValue, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(longValue: self.longValue, &flatBufferBuilder)
@@ -57,6 +59,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
   public var _type: ChangeRequestType
   public var _rowid: Int64
   public var key: String
+  public var namespace: String
   public var valueType: ValueType
   public var boolValue: Bool
   public var longValue: Int64
@@ -70,6 +73,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
     self._type = _type
     _rowid = -1
     key = ""
+    namespace = ""
     valueType = .boolValue
     boolValue = false
     longValue = 0
@@ -84,6 +88,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
     self._type = _type
     _rowid = _o._rowid
     key = _o.key
+    namespace = _o.namespace
     valueType = _o.valueType
     boolValue = _o.boolValue
     longValue = _o.longValue
@@ -95,14 +100,14 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
   }
   public static func changeRequest(_ o: DictItem) -> DictItemChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
-    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key])
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key, o.namespace])
     let u = transactionContext.objectRepository.object(
       transactionContext.connection, ofType: DictItem.self, for: key)
     return u.map { DictItemChangeRequest(type: .update, $0) }
   }
   public static func upsertRequest(_ o: DictItem) -> DictItemChangeRequest {
     let transactionContext = SQLiteTransactionContext.current!
-    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key])
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key, o.namespace])
     guard
       let u = transactionContext.objectRepository.object(
         transactionContext.connection, ofType: DictItem.self, for: key)
@@ -124,16 +129,16 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
   }
   public static func deletionRequest(_ o: DictItem) -> DictItemChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
-    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key])
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.key, o.namespace])
     let u = transactionContext.objectRepository.object(
       transactionContext.connection, ofType: DictItem.self, for: key)
     return u.map { DictItemChangeRequest(type: .deletion, $0) }
   }
   var _atom: DictItem {
     let atom = DictItem(
-      key: key, valueType: valueType, boolValue: boolValue, longValue: longValue,
-      unsignedLongValue: unsignedLongValue, floatValue: floatValue, doubleValue: doubleValue,
-      stringValue: stringValue, codable: codable)
+      key: key, namespace: namespace, valueType: valueType, boolValue: boolValue,
+      longValue: longValue, unsignedLongValue: unsignedLongValue, floatValue: floatValue,
+      doubleValue: doubleValue, stringValue: stringValue, codable: codable)
     atom._rowid = _rowid
     return atom
   }
@@ -143,9 +148,10 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
     case .creation:
       guard
         let insert = toolbox.connection.prepareStaticStatement(
-          "INSERT INTO dictitem (__pk0, p) VALUES (?1, ?2)")
+          "INSERT INTO dictitem_v_dflat_internal__ (__pk0, __pk1, p) VALUES (?1, ?2, ?3)")
       else { return nil }
       key.bindSQLite(insert, parameterId: 1)
+      namespace.bindSQLite(insert, parameterId: 2)
       let atom = self._atom
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
@@ -154,7 +160,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
       let SQLITE_STATIC = unsafeBitCast(
         OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-      sqlite3_bind_blob(insert, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
+      sqlite3_bind_blob(insert, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
       _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
       _type = .none
@@ -169,9 +175,11 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
       }
       guard
         let update = toolbox.connection.prepareStaticStatement(
-          "REPLACE INTO dictitem (__pk0, p, rowid) VALUES (?1, ?2, ?3)")
+          "REPLACE INTO dictitem_v_dflat_internal__ (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)"
+        )
       else { return nil }
       key.bindSQLite(update, parameterId: 1)
+      namespace.bindSQLite(update, parameterId: 2)
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
       toolbox.flatBufferBuilder.finish(offset: offset)
@@ -179,15 +187,15 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
       let SQLITE_STATIC = unsafeBitCast(
         OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-      sqlite3_bind_blob(update, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
-      _rowid.bindSQLite(update, parameterId: 3)
+      sqlite3_bind_blob(update, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
+      _rowid.bindSQLite(update, parameterId: 4)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       _type = .none
       return .updated(atom)
     case .deletion:
       guard
         let deletion = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM dictitem WHERE rowid=?1")
+          "DELETE FROM dictitem_v_dflat_internal__ WHERE rowid=?1")
       else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }

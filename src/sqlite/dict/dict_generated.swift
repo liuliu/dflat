@@ -39,14 +39,15 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject {
 
   private enum VTOFFSET: VOffset {
     case key = 4
-    case valueType = 6
-    case boolValue = 8
-    case longValue = 10
-    case unsignedLongValue = 12
-    case floatValue = 14
-    case doubleValue = 16
-    case stringValue = 18
-    case codable = 20
+    case namespace = 6
+    case valueType = 8
+    case boolValue = 10
+    case longValue = 12
+    case unsignedLongValue = 14
+    case floatValue = 16
+    case doubleValue = 18
+    case stringValue = 20
+    case codable = 22
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
@@ -56,6 +57,13 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject {
     return o == 0 ? nil : _accessor.string(at: o)
   }
   public var keySegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.key.v) }
+  public var namespace: String? {
+    let o = _accessor.offset(VTOFFSET.namespace.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
+  public var namespaceSegmentArray: [UInt8]? {
+    return _accessor.getVector(at: VTOFFSET.namespace.v)
+  }
   public var valueType: zzz_DflatGen_ValueType {
     let o = _accessor.offset(VTOFFSET.valueType.v)
     return o == 0
@@ -100,10 +108,13 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject {
   }
   public var codable: [UInt8] { return _accessor.getVector(at: VTOFFSET.codable.v) ?? [] }
   public static func startDictItem(_ fbb: inout FlatBufferBuilder) -> UOffset {
-    fbb.startTable(with: 9)
+    fbb.startTable(with: 10)
   }
   public static func add(key: Offset<String>, _ fbb: inout FlatBufferBuilder) {
     fbb.add(offset: key, at: VTOFFSET.key.p)
+  }
+  public static func add(namespace: Offset<String>, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: namespace, at: VTOFFSET.namespace.p)
   }
   public static func add(valueType: zzz_DflatGen_ValueType, _ fbb: inout FlatBufferBuilder) {
     fbb.add(element: valueType.rawValue, def: 0, at: VTOFFSET.valueType.p)
@@ -139,6 +150,7 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject {
   public static func createDictItem(
     _ fbb: inout FlatBufferBuilder,
     keyOffset key: Offset<String> = Offset(),
+    namespaceOffset namespace: Offset<String> = Offset(),
     valueType: zzz_DflatGen_ValueType = .boolvalue,
     boolValue: Bool = false,
     longValue: Int64 = 0,
@@ -150,6 +162,7 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject {
   ) -> Offset<UOffset> {
     let __start = zzz_DflatGen_DictItem.startDictItem(&fbb)
     zzz_DflatGen_DictItem.add(key: key, &fbb)
+    zzz_DflatGen_DictItem.add(namespace: namespace, &fbb)
     zzz_DflatGen_DictItem.add(valueType: valueType, &fbb)
     zzz_DflatGen_DictItem.add(boolValue: boolValue, &fbb)
     zzz_DflatGen_DictItem.add(longValue: longValue, &fbb)

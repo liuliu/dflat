@@ -9,9 +9,11 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
   }
   final class Storage {
     static let size = 8
+    let namespace: String
     var locks: UnsafeMutablePointer<os_unfair_lock_s>
     var dictionaries: [[String: Any]]
-    init() {
+    init(namespace: String) {
+      self.namespace = namespace
       locks = UnsafeMutablePointer.allocate(capacity: Self.size)
       locks.assign(repeating: os_unfair_lock(), count: Self.size)
       dictionaries = Array(repeating: [String: Any](), count: Self.size)
@@ -30,7 +32,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! T)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .codableValue)
         let object: T? = value.codable.withUnsafeBytes {
           guard let baseAddress = $0.baseAddress else { return nil }
@@ -74,7 +78,10 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         do {
           let data = try encoder.encode(value)
           storage.upsert(
-            workspace, item: DictItem(key: key, valueType: .codableValue, codable: Array(data)))
+            workspace,
+            item: DictItem(
+              key: key, namespace: storage.namespace, valueType: .codableValue, codable: Array(data)
+            ))
         } catch {
           // TODO: Log the error.
         }
@@ -92,7 +99,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! T)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .flatBuffersValue)
         let object: T? = value.codable.withUnsafeBytes {
           guard let baseAddress = $0.baseAddress else { return nil }
@@ -127,11 +136,14 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return
       }
       if let value = newValue {
+        let namespace = storage.namespace
         storage.upsert(workspace) {
           var fbb = FlatBufferBuilder()
           let offset = value.to(flatBufferBuilder: &fbb)
           fbb.finish(offset: offset)
-          return DictItem(key: key, valueType: .flatBuffersValue, codable: fbb.sizedByteArray)
+          return DictItem(
+            key: key, namespace: namespace, valueType: .flatBuffersValue,
+            codable: fbb.sizedByteArray)
         }
       } else {
         storage.remove(workspace, key: key)
@@ -147,7 +159,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Bool)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .boolValue)
         let object = value.boolValue
         storage.lock(tuple.1)
@@ -176,7 +190,10 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return
       }
       if let value = newValue {
-        storage.upsert(workspace, item: DictItem(key: key, valueType: .boolValue, boolValue: value))
+        storage.upsert(
+          workspace,
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .boolValue, boolValue: value))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -191,7 +208,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Int)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .longValue)
         let object = Int(value.longValue)
         storage.lock(tuple.1)
@@ -221,7 +240,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       }
       if let value = newValue {
         storage.upsert(
-          workspace, item: DictItem(key: key, valueType: .longValue, longValue: Int64(value)))
+          workspace,
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .longValue, longValue: Int64(value)))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -236,7 +257,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! UInt)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .unsignedLongValue)
         let object = UInt(value.unsignedLongValue)
         storage.lock(tuple.1)
@@ -267,7 +290,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       if let value = newValue {
         storage.upsert(
           workspace,
-          item: DictItem(key: key, valueType: .unsignedLongValue, unsignedLongValue: UInt64(value)))
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .unsignedLongValue,
+            unsignedLongValue: UInt64(value)))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -282,7 +307,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Float)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .floatValue)
         let object = value.floatValue
         storage.lock(tuple.1)
@@ -312,7 +339,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       }
       if let value = newValue {
         storage.upsert(
-          workspace, item: DictItem(key: key, valueType: .floatValue, floatValue: value))
+          workspace,
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .floatValue, floatValue: value))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -327,7 +356,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Double)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .doubleValue)
         let object = value.doubleValue
         storage.lock(tuple.1)
@@ -357,7 +388,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       }
       if let value = newValue {
         storage.upsert(
-          workspace, item: DictItem(key: key, valueType: .doubleValue, doubleValue: value))
+          workspace,
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .doubleValue, doubleValue: value))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -372,7 +405,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! String)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
-      if let value = workspace.fetch(for: DictItem.self).where(DictItem.key == key).first {
+      if let value = workspace.fetch(for: DictItem.self).where(
+        DictItem.key == key && DictItem.namespace == storage.namespace
+      ).first {
         assert(value.valueType == .stringValue)
         let object = value.stringValue
         storage.lock(tuple.1)
@@ -402,7 +437,9 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       }
       if let value = newValue {
         storage.upsert(
-          workspace, item: DictItem(key: key, valueType: .stringValue, stringValue: value))
+          workspace,
+          item: DictItem(
+            key: key, namespace: storage.namespace, valueType: .stringValue, stringValue: value))
       } else {
         storage.remove(workspace, key: key)
       }
@@ -463,8 +500,11 @@ extension SQLiteWorkspaceDictionary.Storage {
   }
   @inline(__always)
   func remove(_ workspace: SQLiteWorkspace, key: String) {
+    let namespace = namespace
     workspace.performChanges([DictItem.self]) {
-      if let deletionRequest = DictItemChangeRequest.deletionRequest(DictItem(key: key)) {
+      if let deletionRequest = DictItemChangeRequest.deletionRequest(
+        DictItem(key: key, namespace: namespace))
+      {
         $0.try(submit: deletionRequest)
       }
     }

@@ -68,7 +68,7 @@ public final class SQLiteWorkspace: Workspace {
   private var writer: SQLiteConnection?
   private var tableSpaces = [ObjectIdentifier: SQLiteTableSpace]()
   private let state = SQLiteWorkspaceState()
-  private let dictionaryStorage = SQLiteWorkspaceDictionary.Storage()
+  private let dictionaryStorage = SQLiteWorkspaceDictionary.Storage(namespace: "")
   public var dictionary: WorkspaceDictionary {
     SQLiteWorkspaceDictionary(workspace: self, storage: dictionaryStorage)
   }

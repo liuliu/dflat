@@ -20,6 +20,7 @@ public enum ValueType: Int8, DflatFriendlyValue {
 public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {
   public static func == (lhs: DictItem, rhs: DictItem) -> Bool {
     guard lhs.key == rhs.key else { return false }
+    guard lhs.namespace == rhs.namespace else { return false }
     guard lhs.valueType == rhs.valueType else { return false }
     guard lhs.boolValue == rhs.boolValue else { return false }
     guard lhs.longValue == rhs.longValue else { return false }
@@ -31,6 +32,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     return true
   }
   public let key: String
+  public let namespace: String
   public let valueType: ValueType
   public let boolValue: Bool
   public let longValue: Int64
@@ -40,11 +42,12 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public let stringValue: String?
   public let codable: [UInt8]
   public init(
-    key: String, valueType: ValueType? = .boolValue, boolValue: Bool? = false,
+    key: String, namespace: String, valueType: ValueType? = .boolValue, boolValue: Bool? = false,
     longValue: Int64? = 0, unsignedLongValue: UInt64? = 0, floatValue: Float32? = 0.0,
     doubleValue: Double? = 0.0, stringValue: String? = nil, codable: [UInt8]? = []
   ) {
     self.key = key
+    self.namespace = namespace
     self.valueType = valueType ?? .boolValue
     self.boolValue = boolValue ?? false
     self.longValue = longValue ?? 0
@@ -56,6 +59,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   }
   public init(_ obj: zzz_DflatGen_DictItem) {
     self.key = obj.key!
+    self.namespace = obj.namespace!
     self.valueType = ValueType(rawValue: obj.valueType.rawValue) ?? .boolValue
     self.boolValue = obj.boolValue
     self.longValue = obj.longValue
@@ -79,7 +83,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_DictItem.getRootAsDictItem(bb: bb))
   }
-  public static var table: String { "dictitem" }
+  public static var table: String { "dictitem_v_dflat_internal__" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
     guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else {
@@ -87,7 +91,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     }
     sqlite3_exec(
       sqlite.sqlite,
-      "CREATE TABLE IF NOT EXISTS dictitem (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))",
+      "CREATE TABLE IF NOT EXISTS dictitem_v_dflat_internal__ (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 TEXT, p BLOB, UNIQUE(__pk0, __pk1))",
       nil, nil, nil)
   }
   public static func insertIndex(
