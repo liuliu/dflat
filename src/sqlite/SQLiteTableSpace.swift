@@ -8,12 +8,17 @@ protocol SQLiteTableSpace: AnyObject {
   func connect(_ closure: () -> SQLiteConnection?) -> SQLiteConnection?
   func lock()
   func unlock()
+  func enter()
+  func leave()
+  func wait(for: DispatchQueue)
+  func notify(work: DispatchWorkItem)
 }
 
 final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
   let queue: DispatchQueue
   let state = SQLiteTableState()
   var resultPublisher: ResultPublisher? = nil
+  private let group = DispatchGroup()
   private var connection: SQLiteConnection? = nil
   private var _shutdown: Bool = false
   private var _lock: os_unfair_lock_s = os_unfair_lock()
@@ -37,6 +42,18 @@ final class ConcurrentSQLiteTableSpace: SQLiteTableSpace {
   func unlock() {
     os_unfair_lock_unlock(&_lock)
   }
+  func enter() {
+    group.enter()
+  }
+  func leave() {
+    group.leave()
+  }
+  func wait(for: DispatchQueue) {
+    queue.async(group: group, execute: DispatchWorkItem(flags: .enforceQoS) {})
+  }
+  func notify(work: DispatchWorkItem) {
+    group.notify(queue: queue, work: work)
+  }
 }
 
 final class SerialSQLiteTableSpace: SQLiteTableSpace {
@@ -59,4 +76,10 @@ final class SerialSQLiteTableSpace: SQLiteTableSpace {
   }
   func lock() {}
   func unlock() {}
+  func enter() {}
+  func leave() {}
+  func wait(for: DispatchQueue) {}
+  func notify(work: DispatchWorkItem) {
+    queue.async(execute: work)
+  }
 }
