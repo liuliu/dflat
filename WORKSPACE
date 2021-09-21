@@ -116,17 +116,17 @@ new_git_repository(
 new_git_repository(
     name = "SwiftSyntax",
     build_file = "swift-syntax.BUILD",
-    commit = "d81b6a6dc2698a93dcc04304fb15a5446b5278a4",
+    commit = "593d01f4017cf8b71ec28689629f7b9a6739df0b",
     remote = "https://github.com/apple/swift-syntax.git",
-    shallow_since = "1619981602 -0700",
+    shallow_since = "1626726674 -0700",
 )
 
 new_git_repository(
     name = "SwiftFormat",
     build_file = "swift-format.BUILD",
-    commit = "9c15831b798d767c9af0927a931de5d557004936",
+    commit = "aaed43cdaa3c12d3382f069ddcad09f052839e2a",
     remote = "https://github.com/apple/swift-format.git",
-    shallow_since = "1619649132 -0700",
+    shallow_since = "1629916966 -0700",
 )
 
 # buildifier is written in Go and hence needs rules_go to be built.
