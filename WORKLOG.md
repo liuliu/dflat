@@ -1,3 +1,21 @@
+2021-09-21
+----------
+
+Strict serializable bugs require more tests than we currently have. Right now, it doesn't impose significant penalties because in real world, few people cared about `performChanges([A.self, B.self]` `performChanges([B.self]` and which change block should be executed first in simple apps. These updates can be interleaved and still yield correct result. At the end of the day, if you really care about that, you should use the completion handler. However, having this done correctly can avoid subtle bugs people don't aware previously.
+
+Yesterday, while pondering what can I do to support transactions with dictionary, I looked at our performChanges and found more strict serializable bugs. It comes down to how `DispatchQueue` and `DispatchGroup` may not be the best abstraction to express stream operations, and now I appreciate more CUDA's event / stream model.
+
+What I want to achieve, is to schedule my work on to queues such that when there is a dependency on previous items on the queue, it can be expressed. With DispatchQueue / DispatchGroup, it is possible, but to do that, requires to track every item dispatch to the queue and either use `DispatchWorkItem.notify` or `DispatchGroup.notify`. These are not compatible with `DispatchQueue.async` in the sense that `DispatchGroup.notify(queue: queue` will be dispatched after `queue.async` if the group currently is blocked. To put it simply, there is no API to allow us to manipulate items on the queue. This is in contrast with CUDA's stream / event API, where `EventSignal(stream`, `StreamWait(event` will tap into exactly the point where the work items queued up at that point in time, or any items dispatched after will wait for that particular event. There is no such API on Dispatch side. I am currently end up with a what I believe *correct* but cumbersome way to do this, the good part is if you do this with no cross-table transactions, there is no penality, otherwise, it looks like this:
+
+ 1. Pick the primary queue (by sorting the transaction-table identifier), for other queues, we will dispatch async with a new group, and inside that, we will suspend these queues;
+
+ 2. DispatchQueue.async on the primary queue, and explicitly wait that group inside the block. This makes sure any blocks dispatched on this queue or any other queues won't get executed until the current block is done;
+
+ 3. At the end of the current block, resume other queues.
+
+It is pretty heavy-handed, but it guarantees the correctness in the strict-serializable sense.
+
+
 2021-09-20
 ----------
 

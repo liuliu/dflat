@@ -176,64 +176,83 @@ public final class SQLiteWorkspace: Workspace {
           tableSpaces.append(tableSpace)
         }
       }
-      // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
-      // Without this, if we have thread 1:
-      // performChanges([A.self, B.self], ...)
-      // performChanges([B.self], ...)
-      // because the first line uses A's queue while the second line uses B's queue, there is no guarantee that the
-      // changeHandler in the second line will be executed after the first line. It would be surprising and violates strictly
-      // serializable guarantee. By using DispatchGroup to enter / leave, we makes sure B's queue will wait for its signal
-      // before proceed.
-      if tableSpaces.count > 1 {
-        for tableSpace in tableSpaces.suffix(from: 1) {
-          tableSpace.enter()
-        }
-      }
     }
-    tableSpaces[0].notify(
-      work: DispatchWorkItem(flags: .enforceQoS) { [weak self] in
-        guard let self = self else {
-          completionHandler?(false)
-          return
-        }
-        guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
-          completionHandler?(false)
-          return
-        }
-        // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
-        tableSpaces[0].lock()
-        if tableSpaces.count > 1 {
-          // Similar to above, this is explicitly to handle the case where we have:
-          // performChanges([B.self], ...)
-          // performChanges([A.self, B.self], ...)
-          // In this case, B will enter without waiting for any other groups and A will enter without waiting for any other groups.
-          // But at this point, the second line will wait until B finishes before proceed.
-          for tableSpace in tableSpaces.suffix(from: 1) {
-            tableSpace.queue.sync {
-              tableSpace.lock()
+    // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
+    // Without this, if we have thread 1:
+    // performChanges([A.self, B.self], ...)
+    // performChanges([B.self], ...)
+    // because the first line uses A's queue while the second line uses B's queue, there is no guarantee that the
+    // changeHandler in the second line will be executed after the first line. It would be surprising and violates strictly
+    // serializable guarantee. By using DispatchGroup to enter / leave, we makes sure B's queue will wait for its signal
+    // before proceed.
+    if tableSpaces.count > 1 {
+      let group = DispatchGroup()
+      for tableSpace in tableSpaces.suffix(from: 1) {
+        // This will suspend these queues upon entering the group.
+        tableSpace.enterAndSuspend(group)
+      }
+      tableSpaces[0].queue.async(
+        execute: DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+          guard let self = self else {
+            completionHandler?(false)
+            return
+          }
+          // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+          guard let connection = tableSpaces[0].connect({ self.newConnection() }) else {
+            completionHandler?(false)
+            return
+          }
+          group.wait()  // Force to sync with other queues, and then acquiring locks. The order doesn't matter because at this point, all other queues are suspended.
+          for tableSpace in tableSpaces {
+            tableSpace.lock()
+          }
+          // We need to fetch the resultPublisher only after acquired the lock.
+          var resultPublishers = [ObjectIdentifier: ResultPublisher]()
+          for (i, tableSpace) in tableSpaces.enumerated() {
+            resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
+          }
+          let succeed = self.invokeChangesHandler(
+            transactionalObjectIdentifiers, connection: connection,
+            resultPublishers: resultPublishers, tableState: tableSpaces[0].state,
+            changesHandler: changesHandler)
+          for tableSpace in tableSpaces.reversed() {
+            tableSpace.unlock()
+          }
+          if tableSpaces.count > 1 {
+            // Resume all previous suspended queues.
+            for tableSpace in tableSpaces.suffix(from: 1) {
+              tableSpace.resume()
             }
           }
+          completionHandler?(succeed)
         }
-        // We need to fetch the resultPublisher only after acquired the lock.
-        var resultPublishers = [ObjectIdentifier: ResultPublisher]()
-        for (i, tableSpace) in tableSpaces.enumerated() {
-          resultPublishers[transactionalObjectIdentifiers[i]] = tableSpace.resultPublisher
-        }
-        let succeed = self.invokeChangesHandler(
-          transactionalObjectIdentifiers, connection: connection,
-          resultPublishers: resultPublishers, tableState: tableSpaces[0].state,
-          changesHandler: changesHandler)
-        for tableSpace in tableSpaces.reversed() {
-          tableSpace.unlock()
-        }
-        if tableSpaces.count > 1 {
-          for tableSpace in tableSpaces.suffix(from: 1) {
-            tableSpace.leave()
+      )
+    } else {
+      let tableSpace = tableSpaces[0]
+      tableSpace.queue.async(
+        execute: DispatchWorkItem(flags: .enforceQoS) { [weak self] in
+          guard let self = self else {
+            completionHandler?(false)
+            return
           }
+          // It is OK to create connection etc before acquiring the lock as long as we don't do mutation (because we already on its queue, and we only create connection on its own queue).
+          guard let connection = tableSpace.connect({ self.newConnection() }) else {
+            completionHandler?(false)
+            return
+          }
+          // We need to fetch the resultPublisher only after acquired the lock.
+          tableSpace.lock()
+          var resultPublishers = [ObjectIdentifier: ResultPublisher]()
+          resultPublishers[transactionalObjectIdentifiers[0]] = tableSpace.resultPublisher
+          let succeed = self.invokeChangesHandler(
+            transactionalObjectIdentifiers, connection: connection,
+            resultPublishers: resultPublishers, tableState: tableSpace.state,
+            changesHandler: changesHandler)
+          tableSpace.unlock()
+          completionHandler?(succeed)
         }
-        completionHandler?(succeed)
-      }
-    )
+      )
+    }
   }
 
   // MARK - Fetching
