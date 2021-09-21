@@ -193,6 +193,12 @@ public final class SQLiteWorkspace: Workspace {
           if tableSpaces.count > 1 {
             for tableSpace in tableSpaces.suffix(from: 1) {
               // sync on that particular queue, in this way, we ensures that our operation is done strictly serialize after that one.
+              // Without this, if we have thread 1:
+              // performChanges([A.self, B.self], ...)
+              // performChanges([B.self], ...)
+              // because the first line uses A's queue while the second line uses B's queue, there is no guarantee that the
+              // changeHandler in the second line will be executed after the first line. It would be surprising and violates strictly
+              // serializable guarantee.
               tableSpace.queue.sync {
                 tableSpace.lock()
               }

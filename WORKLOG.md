@@ -1,3 +1,23 @@
+2021-09-20
+----------
+
+Started to add a key-value store into Dflat. It is a nice, quite useful thing to replace UserDefaults. The implementation uses Dflat as the backing store. The API is really just Dictionary API and supports to persist both Codable and FlatBuffersCodable. FlatBuffersCodable is a new protocol I recently added that all Dflat generated objects conform to. It allows using FlatBuffers format, rather than PlistBinary format (which is the default for Codable we use).
+
+On implementation side, since it is a persisted, thread-safe dictionary, we first partitioned the key space into 8 to avoid lock contentions (if there is any). It is optimistic, thus, we assumes Dflat always succeed in persisting. This allows us to do aggressive caching in-memory. In fact, this thread-safe dictionary never evicts any objects.
+
+One thing I remember is problematic with UserDefaults, is that on first load, it loads the whole world. Our key-value store only loads object by first access. After that, it is served from memory.
+
+This kind of implementation requires closer benchmark to be useful. There are a lot of benchmarks need to make it production-ready.
+
+There are some more considerations:
+
+ 1. The current implementation allows to further partition by namespace. This seems to be useful. I've seen people use prefixes for similar thing so that they can group some keys together and remove them together. To support that use case, I also need to add support for .keys.
+
+ 2. This is harder. Currently the dictionary doesn't fall into the same transaction context. Thus, if you have perform changes -> updates some other entities, updates the dictionary -> fail the transaction, the updates dictionary part still succeed. This may not be desirable if these data want to be updated together. Potentially, I can make this in one transaction. However, because dictionary have a in-memory cache part, it also means I somehow need to make sure the in-memory part updated properly according to SQLite. This is possible. To some extents, FetchedResult observation already maintains consistency in-memory.
+
+For now, I will address the first while still pondering the second.
+
+
 2021-04-19
 ----------
 
