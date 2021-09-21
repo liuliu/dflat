@@ -500,7 +500,7 @@ extension SQLiteWorkspaceDictionary.Storage {
   }
   @inline(__always)
   func remove(_ workspace: SQLiteWorkspace, key: String) {
-    let namespace = namespace
+    let namespace = self.namespace
     workspace.performChanges([DictItem.self]) {
       if let deletionRequest = DictItemChangeRequest.deletionRequest(
         DictItem(key: key, namespace: namespace))
