@@ -18,8 +18,8 @@ def dflat_deps():
         new_git_repository,
         name = "flatbuffers",
         remote = "https://github.com/google/flatbuffers.git",
-        commit = "b5da526e6d44dfab9b03398af229eebbe835cc1e",
-        shallow_since = "1613851668 +0300",
+        commit = "354d97f6da18cbbdeddfcdd2d5aebf1bcc57a092",
+        shallow_since = "1632261689 -0700",
         build_file = "@dflat//:external/flatbuffers.BUILD",
     )
 
@@ -27,8 +27,8 @@ def dflat_deps():
         new_git_repository,
         name = "swift-atomics",
         remote = "https://github.com/apple/swift-atomics.git",
-        commit = "ccce007d5d5462860cf0cb7839a233307424c61c",
-        shallow_since = "1603395818 -0700",
+        commit = "2eb6b8d3ce4e18a9ad10caff4e9c9b99b9ab4899",
+        shallow_since = "1631646447 -0700",
         build_file = "@dflat//:external/swift-atomics.BUILD",
     )
 

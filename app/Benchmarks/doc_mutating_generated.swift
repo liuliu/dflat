@@ -1,8 +1,8 @@
 import Dflat
+import SQLiteDflat
+import SQLite3
 import FlatBuffers
 import Foundation
-import SQLite3
-import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
@@ -15,7 +15,7 @@ extension Color: SQLiteValue {
 // MARK - Serializer
 
 extension Content: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     switch self {
     case .textContent(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
@@ -34,7 +34,7 @@ extension Content: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == Content {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
   var _type: zzz_DflatGen_Content {
@@ -43,7 +43,7 @@ extension Optional where Wrapped == Content {
 }
 
 extension Vec3: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     flatBufferBuilder.create(struct: zzz_DflatGen_Vec3(self))
   }
 }
@@ -59,8 +59,8 @@ extension zzz_DflatGen_Vec3 {
 }
 
 extension TextContent: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __text = self.text.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let start = zzz_DflatGen_TextContent.startTextContent(&flatBufferBuilder)
     zzz_DflatGen_TextContent.add(text: __text, &flatBufferBuilder)
     return zzz_DflatGen_TextContent.endTextContent(&flatBufferBuilder, start: start)
@@ -68,14 +68,14 @@ extension TextContent: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == TextContent {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension ImageContent: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    var __images = [Offset<String>]()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    var __images = [Offset]()
     for i in images {
       __images.append(flatBufferBuilder.create(string: i))
     }
@@ -87,18 +87,18 @@ extension ImageContent: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == ImageContent {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension BenchDoc: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     let __color = zzz_DflatGen_Color(rawValue: self.color.rawValue) ?? .red
     let __title = flatBufferBuilder.create(string: self.title)
     let __contentType = self.content._type
     let __content = self.content.to(flatBufferBuilder: &flatBufferBuilder)
-    let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+    let __tag = self.tag.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let start = zzz_DflatGen_BenchDoc.startBenchDoc(&flatBufferBuilder)
     let __pos = zzz_DflatGen_Vec3(self.pos)
     zzz_DflatGen_BenchDoc.add(pos: __pos, &flatBufferBuilder)
@@ -113,7 +113,7 @@ extension BenchDoc: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == BenchDoc {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
@@ -165,17 +165,13 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
   public static func changeRequest(_ o: BenchDoc) -> BenchDocChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
-    let u = transactionContext.objectRepository.object(
-      transactionContext.connection, ofType: BenchDoc.self, for: key)
+    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: BenchDoc.self, for: key)
     return u.map { BenchDocChangeRequest(type: .update, $0) }
   }
   public static func upsertRequest(_ o: BenchDoc) -> BenchDocChangeRequest {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
-    guard
-      let u = transactionContext.objectRepository.object(
-        transactionContext.connection, ofType: BenchDoc.self, for: key)
-    else {
+    guard let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: BenchDoc.self, for: key) else {
       return Self.creationRequest(o)
     }
     let changeRequest = BenchDocChangeRequest(type: .update, o)
@@ -194,13 +190,11 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
   public static func deletionRequest(_ o: BenchDoc) -> BenchDocChangeRequest? {
     let transactionContext = SQLiteTransactionContext.current!
     let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.title])
-    let u = transactionContext.objectRepository.object(
-      transactionContext.connection, ofType: BenchDoc.self, for: key)
+    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: BenchDoc.self, for: key)
     return u.map { BenchDocChangeRequest(type: .deletion, $0) }
   }
   var _atom: BenchDoc {
-    let atom = BenchDoc(
-      title: title, pos: pos, color: color, content: content, tag: tag, priority: priority)
+    let atom = BenchDoc(title: title, pos: pos, color: color, content: content, tag: tag, priority: priority)
     atom._rowid = _rowid
     return atom
   }
@@ -208,10 +202,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
     guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
     switch _type {
     case .creation:
-      guard
-        let insert = toolbox.connection.prepareStaticStatement(
-          "INSERT INTO benchdoc (__pk0, p) VALUES (?1, ?2)")
-      else { return nil }
+      guard let insert = toolbox.connection.prepareStaticStatement("INSERT INTO benchdoc (__pk0, p) VALUES (?1, ?2)") else { return nil }
       title.bindSQLite(insert, parameterId: 1)
       let atom = self._atom
       toolbox.flatBufferBuilder.clear()
@@ -219,8 +210,7 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
       toolbox.flatBufferBuilder.finish(offset: offset)
       let byteBuffer = toolbox.flatBufferBuilder.buffer
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-      let SQLITE_STATIC = unsafeBitCast(
-        OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
       sqlite3_bind_blob(insert, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
       _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
@@ -234,28 +224,21 @@ public final class BenchDocChangeRequest: Dflat.ChangeRequest {
         _type = .none
         return .identity(atom)
       }
-      guard
-        let update = toolbox.connection.prepareStaticStatement(
-          "REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)")
-      else { return nil }
+      guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO benchdoc (__pk0, p, rowid) VALUES (?1, ?2, ?3)") else { return nil }
       title.bindSQLite(update, parameterId: 1)
       toolbox.flatBufferBuilder.clear()
       let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
       toolbox.flatBufferBuilder.finish(offset: offset)
       let byteBuffer = toolbox.flatBufferBuilder.buffer
       let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-      let SQLITE_STATIC = unsafeBitCast(
-        OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
       sqlite3_bind_blob(update, 2, memory, Int32(byteBuffer.size), SQLITE_STATIC)
       _rowid.bindSQLite(update, parameterId: 3)
       guard SQLITE_DONE == sqlite3_step(update) else { return nil }
       _type = .none
       return .updated(atom)
     case .deletion:
-      guard
-        let deletion = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM benchdoc WHERE rowid=?1")
-      else { return nil }
+      guard let deletion = toolbox.connection.prepareStaticStatement("DELETE FROM benchdoc WHERE rowid=?1") else { return nil }
       _rowid.bindSQLite(deletion, parameterId: 1)
       guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
       _type = .none

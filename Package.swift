@@ -6,8 +6,8 @@ import PackageDescription
 #if os(Linux)
   let dependencies: [Package.Dependency] = [
     .package(
-      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "1.0.0"),
-    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
     .package(
       name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0"),
   ]
@@ -15,8 +15,8 @@ import PackageDescription
 #else
   let dependencies: [Package.Dependency] = [
     .package(
-      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", from: "1.0.0"),
-    .package(url: "https://github.com/apple/swift-atomics.git", from: "0.0.2"),
+      name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
+    .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]
 #endif
@@ -140,6 +140,7 @@ let package = Package(
         "monster_v3_query_generated.swift",
         "ObjectRepositoryTests.swift",
         "SchemaUpgradeTests.swift",
+        "SerialTests.swift",
         "SQLiteWorkspaceCRUDTests.swift",
         "SubscribeTests.swift",
       ]),

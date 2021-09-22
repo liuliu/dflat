@@ -32,6 +32,7 @@ swift_library(
         "ObjectRepositoryTests.swift",
         "SQLiteWorkspaceCRUDTests.swift",
         "SchemaUpgradeTests.swift",
+        "SerialTests.swift",
         "SubscribeTests.swift",
         "main.swift",
         "namespace.swift",

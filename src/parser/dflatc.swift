@@ -627,7 +627,7 @@ func GenEnumSQLiteValue(_ enumDef: Enum, code: inout String) {
 
 func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "\nextension \(GetFullyQualifiedName(enumDef)): FlatBuffersEncodable {\n"
-  code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+  code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {\n"
   code += "    switch self {\n"
   for enumVal in enumDef.fields {
     guard enumVal.name != "NONE" else { continue }
@@ -647,7 +647,7 @@ func GenUnionSerializer(_ enumDef: Enum, code: inout String) {
   code += "  }\n"
   code += "}\n"
   code += "\nextension Optional where Wrapped == \(GetFullyQualifiedName(enumDef)) {\n"
-  code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+  code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {\n"
   code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()\n"
   code += "  }\n"
   code += "  var _type: \(GetDflatGenFullyQualifiedName(enumDef)) {\n"
@@ -671,7 +671,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
   let selfRef: String
   if structDef.fixed {
     code += "\nextension \(GetFullyQualifiedName(structDef)): FlatBuffersEncodable {\n"
-    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {\n"
     code +=
       "    flatBufferBuilder.create(struct: \(GetDflatGenFullyQualifiedName(structDef))(self))\n"
     code += "  }\n"
@@ -681,7 +681,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     selfRef = "obj"
   } else {
     code += "\nextension \(GetFullyQualifiedName(structDef)): FlatBuffersEncodable {\n"
-    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    code += "  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {\n"
     selfRef = "self"
   }
   var parameters = [String]()
@@ -722,7 +722,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           }
           fallthrough
         case .union:
-          code += "    var __\(field.name) = [Offset<UOffset>]()\n"
+          code += "    var __\(field.name) = [Offset]()\n"
           code += "    for i in \(selfRef).\(field.name) {\n"
           code += "      __\(field.name).append(i.to(flatBufferBuilder: &flatBufferBuilder))\n"
           code += "    }\n"
@@ -741,7 +741,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
             "vectorOf\(fieldName.prefix(1).uppercased() + fieldName.dropFirst()): __vector_\(fieldName)"
           )
         case .string:
-          code += "    var __\(field.name) = [Offset<String>]()\n"
+          code += "    var __\(field.name) = [Offset]()\n"
           code += "    for i in \(field.name) {\n"
           code += "      __\(field.name).append(flatBufferBuilder.create(string: i))\n"
           code += "    }\n"
@@ -777,7 +777,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
           "    let __\(field.name) = flatBufferBuilder.create(string: \(selfRef).\(field.name))\n"
       } else {
         code +=
-          "    let __\(field.name) = \(selfRef).\(field.name).map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()\n"
+          "    let __\(field.name) = \(selfRef).\(field.name).map { flatBufferBuilder.create(string: $0) } ?? Offset()\n"
       }
       parameters.append("offsetOf\(field.name.firstUppercased()): __\(field.name)")
     default:
@@ -824,7 +824,7 @@ func GenStructSerializer(_ structDef: Struct, code: inout String) {
     code += "  }\n"
     code += "}\n"
     code += "\nextension Optional where Wrapped == \(GetFullyQualifiedName(structDef)) {\n"
-    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {\n"
+    code += "  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {\n"
     code += "    self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()\n"
     code += "  }\n"
     code += "}\n"

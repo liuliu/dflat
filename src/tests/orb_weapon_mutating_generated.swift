@@ -1,8 +1,8 @@
 import Dflat
+import SQLiteDflat
+import SQLite3
 import FlatBuffers
 import Foundation
-import SQLite3
-import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
@@ -15,8 +15,8 @@ extension MyGame.Sample.Color: SQLiteValue {
 // MARK - Serializer
 
 extension MyGame.Sample.Weapon: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let start = zzz_DflatGen_MyGame_Sample_Weapon.startWeapon(&flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Weapon.add(name: __name, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Weapon.add(damage: self.damage, &flatBufferBuilder)
@@ -25,14 +25,14 @@ extension MyGame.Sample.Weapon: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.Sample.Weapon {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension MyGame.Sample.Orb: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .red
     let start = zzz_DflatGen_MyGame_Sample_Orb.startOrb(&flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Orb.add(name: __name, &flatBufferBuilder)
@@ -42,7 +42,7 @@ extension MyGame.Sample.Orb: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.Sample.Orb {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }

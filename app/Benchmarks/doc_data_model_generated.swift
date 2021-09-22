@@ -1,8 +1,8 @@
 import Dflat
 import FlatBuffers
 import Foundation
-import SQLite3
 import SQLiteDflat
+import SQLite3
 
 public enum Color: Int8, DflatFriendlyValue {
   case red = 0
@@ -34,10 +34,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     // Assuming this is the root
-    Self(
-      bb.read(
-        def: zzz_DflatGen_Vec3.self,
-        position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
+    Self(bb.read(def: zzz_DflatGen_Vec3.self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
 }
 
@@ -88,10 +85,7 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public let content: Content?
   public let tag: String?
   public let priority: Int32
-  public init(
-    title: String, pos: Vec3? = nil, color: Color? = .red, content: Content? = nil,
-    tag: String? = nil, priority: Int32? = 0
-  ) {
+  public init(title: String, pos: Vec3? = nil, color: Color? = .red, content: Content? = nil, tag: String? = nil, priority: Int32? = 0) {
     self.pos = pos ?? nil
     self.color = color ?? .red
     self.title = title
@@ -107,22 +101,16 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     case .none_:
       self.content = nil
     case .textcontent:
-      self.content = obj.content(type: zzz_DflatGen_TextContent.self).map {
-        .textContent(TextContent($0))
-      }
+      self.content = obj.content(type: zzz_DflatGen_TextContent.self).map { .textContent(TextContent($0)) }
     case .imagecontent:
-      self.content = obj.content(type: zzz_DflatGen_ImageContent.self).map {
-        .imageContent(ImageContent($0))
-      }
+      self.content = obj.content(type: zzz_DflatGen_ImageContent.self).map { .imageContent(ImageContent($0)) }
     }
     self.tag = obj.tag
     self.priority = obj.priority
   }
   public static func from(data: Data) -> Self {
     return data.withUnsafeBytes { buffer in
-      let bb = ByteBuffer(
-        assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
-        capacity: buffer.count)
+      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!), capacity: buffer.count)
       return Self(zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: bb))
     }
   }
@@ -135,17 +123,10 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public static var table: String { "benchdoc" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else {
-      return
-    }
-    sqlite3_exec(
-      sqlite.sqlite,
-      "CREATE TABLE IF NOT EXISTS benchdoc (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))",
-      nil, nil, nil)
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdoc (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
   }
-  public static func insertIndex(
-    _ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer
-  ) -> Bool {
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
     return true
   }
 }

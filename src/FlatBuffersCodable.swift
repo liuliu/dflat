@@ -5,7 +5,7 @@ public protocol FlatBuffersDecodable {
 }
 
 public protocol FlatBuffersEncodable {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset>
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset
 }
 
 public typealias FlatBuffersCodable = FlatBuffersDecodable & FlatBuffersEncodable

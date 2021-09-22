@@ -1,15 +1,15 @@
 import Dflat
+import SQLiteDflat
+import SQLite3
 import FlatBuffers
 import Foundation
-import SQLite3
-import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
 // MARK - Serializer
 
 extension MyGame.Sample.Equipment: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     switch self {
     case .weapon(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
@@ -28,7 +28,7 @@ extension MyGame.Sample.Equipment: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.Sample.Equipment {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
   var _type: zzz_DflatGen_MyGame_Sample_Equipment {
@@ -37,7 +37,7 @@ extension Optional where Wrapped == MyGame.Sample.Equipment {
 }
 
 extension MyGame.Sample.Vec3: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     flatBufferBuilder.create(struct: zzz_DflatGen_MyGame_Sample_Vec3(self))
   }
 }
@@ -53,8 +53,8 @@ extension zzz_DflatGen_MyGame_Sample_Vec3 {
 }
 
 extension MyGame.Sample.Profile: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __url = self.url.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __url = self.url.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let start = zzz_DflatGen_MyGame_Sample_Profile.startProfile(&flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Profile.add(url: __url, &flatBufferBuilder)
     return zzz_DflatGen_MyGame_Sample_Profile.endProfile(&flatBufferBuilder, start: start)
@@ -62,13 +62,13 @@ extension MyGame.Sample.Profile: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.Sample.Profile {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension MyGame.Sample.Monster: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     let __name = flatBufferBuilder.create(string: self.name)
     let __color = zzz_DflatGen_MyGame_Sample_Color(rawValue: self.color.rawValue) ?? .blue
     let __vector_inventory = flatBufferBuilder.createVector(self.inventory)
@@ -77,12 +77,12 @@ extension MyGame.Sample.Monster: FlatBuffersEncodable {
       __bagType.append(i._type)
     }
     let __vector_bagType = flatBufferBuilder.createVector(__bagType)
-    var __bag = [Offset<UOffset>]()
+    var __bag = [Offset]()
     for i in self.bag {
       __bag.append(i.to(flatBufferBuilder: &flatBufferBuilder))
     }
     let __vector_bag = flatBufferBuilder.createVector(ofOffsets: __bag)
-    var __weapons = [Offset<UOffset>]()
+    var __weapons = [Offset]()
     for i in self.weapons {
       __weapons.append(i.to(flatBufferBuilder: &flatBufferBuilder))
     }
@@ -107,8 +107,7 @@ extension MyGame.Sample.Monster: FlatBuffersEncodable {
     zzz_DflatGen_MyGame_Sample_Monster.add(hp: self.hp, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(name: __name, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.add(color: __color, &flatBufferBuilder)
-    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(
-      inventory: __vector_inventory, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(inventory: __vector_inventory, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(bagType: __vector_bagType, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(bag: __vector_bag, &flatBufferBuilder)
     zzz_DflatGen_MyGame_Sample_Monster.addVectorOf(weapons: __vector_weapons, &flatBufferBuilder)
@@ -125,7 +124,7 @@ extension MyGame.Sample.Monster: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.Sample.Monster {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
@@ -143,292 +142,240 @@ extension MyGame.Sample.Monster {
 
 extension MyGame.Sample {
 
-  public final class MonsterChangeRequest: Dflat.ChangeRequest {
-    private var _o: Monster?
-    public static var atomType: Any.Type { Monster.self }
-    public var _type: ChangeRequestType
-    public var _rowid: Int64
-    public var pos: MyGame.Sample.Vec3?
-    public var mana: Int16
-    public var hp: Int16
-    public var name: String
-    public var color: MyGame.Sample.Color
-    public var inventory: [UInt8]
-    public var bag: [MyGame.Sample.Equipment]
-    public var weapons: [MyGame.Sample.Weapon]
-    public var equipped: MyGame.Sample.Equipment?
-    public var colors: [MyGame.Sample.Color]
-    public var path: [MyGame.Sample.Vec3]
-    public var hpOld: Int16
-    public var profile: MyGame.Sample.Profile?
-    public var type: Bool
-    public var truth: Bool
-    private init(type _type: ChangeRequestType) {
-      _o = nil
-      self._type = _type
-      _rowid = -1
-      pos = nil
-      mana = 150
-      hp = 100
-      name = ""
-      color = .blue
-      inventory = []
-      bag = []
-      weapons = []
-      equipped = nil
-      colors = []
-      path = []
-      hpOld = 200
-      profile = nil
-      type = false
-      truth = true
+public final class MonsterChangeRequest: Dflat.ChangeRequest {
+  private var _o: Monster?
+  public static var atomType: Any.Type { Monster.self }
+  public var _type: ChangeRequestType
+  public var _rowid: Int64
+  public var pos: MyGame.Sample.Vec3?
+  public var mana: Int16
+  public var hp: Int16
+  public var name: String
+  public var color: MyGame.Sample.Color
+  public var inventory: [UInt8]
+  public var bag: [MyGame.Sample.Equipment]
+  public var weapons: [MyGame.Sample.Weapon]
+  public var equipped: MyGame.Sample.Equipment?
+  public var colors: [MyGame.Sample.Color]
+  public var path: [MyGame.Sample.Vec3]
+  public var hpOld: Int16
+  public var profile: MyGame.Sample.Profile?
+  public var type: Bool
+  public var truth: Bool
+  private init(type _type: ChangeRequestType) {
+    _o = nil
+    self._type = _type
+    _rowid = -1
+    pos = nil
+    mana = 150
+    hp = 100
+    name = ""
+    color = .blue
+    inventory = []
+    bag = []
+    weapons = []
+    equipped = nil
+    colors = []
+    path = []
+    hpOld = 200
+    profile = nil
+    type = false
+    truth = true
+  }
+  private init(type _type: ChangeRequestType, _ _o: Monster) {
+    self._o = _o
+    self._type = _type
+    _rowid = _o._rowid
+    pos = _o.pos
+    mana = _o.mana
+    hp = _o.hp
+    name = _o.name
+    color = _o.color
+    inventory = _o.inventory
+    bag = _o.bag
+    weapons = _o.weapons
+    equipped = _o.equipped
+    colors = _o.colors
+    path = _o.path
+    hpOld = _o.hpOld
+    profile = _o.profile
+    type = _o.type
+    truth = _o.truth
+  }
+  public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
+    let transactionContext = SQLiteTransactionContext.current!
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
+    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: Monster.self, for: key)
+    return u.map { MonsterChangeRequest(type: .update, $0) }
+  }
+  public static func upsertRequest(_ o: Monster) -> MonsterChangeRequest {
+    let transactionContext = SQLiteTransactionContext.current!
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
+    guard let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: Monster.self, for: key) else {
+      return Self.creationRequest(o)
     }
-    private init(type _type: ChangeRequestType, _ _o: Monster) {
-      self._o = _o
-      self._type = _type
-      _rowid = _o._rowid
-      pos = _o.pos
-      mana = _o.mana
-      hp = _o.hp
-      name = _o.name
-      color = _o.color
-      inventory = _o.inventory
-      bag = _o.bag
-      weapons = _o.weapons
-      equipped = _o.equipped
-      colors = _o.colors
-      path = _o.path
-      hpOld = _o.hpOld
-      profile = _o.profile
-      type = _o.type
-      truth = _o.truth
-    }
-    public static func changeRequest(_ o: Monster) -> MonsterChangeRequest? {
-      let transactionContext = SQLiteTransactionContext.current!
-      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
-      let u = transactionContext.objectRepository.object(
-        transactionContext.connection, ofType: Monster.self, for: key)
-      return u.map { MonsterChangeRequest(type: .update, $0) }
-    }
-    public static func upsertRequest(_ o: Monster) -> MonsterChangeRequest {
-      let transactionContext = SQLiteTransactionContext.current!
-      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
-      guard
-        let u = transactionContext.objectRepository.object(
-          transactionContext.connection, ofType: Monster.self, for: key)
-      else {
-        return Self.creationRequest(o)
+    let changeRequest = MonsterChangeRequest(type: .update, o)
+    changeRequest._o = u
+    changeRequest._rowid = u._rowid
+    return changeRequest
+  }
+  public static func creationRequest(_ o: Monster) -> MonsterChangeRequest {
+    let creationRequest = MonsterChangeRequest(type: .creation, o)
+    creationRequest._rowid = -1
+    return creationRequest
+  }
+  public static func creationRequest() -> MonsterChangeRequest {
+    return MonsterChangeRequest(type: .creation)
+  }
+  public static func deletionRequest(_ o: Monster) -> MonsterChangeRequest? {
+    let transactionContext = SQLiteTransactionContext.current!
+    let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
+    let u = transactionContext.objectRepository.object(transactionContext.connection, ofType: Monster.self, for: key)
+    return u.map { MonsterChangeRequest(type: .deletion, $0) }
+  }
+  var _atom: Monster {
+    let atom = Monster(name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag, weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld, profile: profile, type: type, truth: truth)
+    atom._rowid = _rowid
+    return atom
+  }
+  public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
+    guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
+    switch _type {
+    case .creation:
+      let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
+      guard let insert = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p) VALUES (?1, ?2, ?3)") else { return nil }
+      name.bindSQLite(insert, parameterId: 1)
+      color.bindSQLite(insert, parameterId: 2)
+      let atom = self._atom
+      toolbox.flatBufferBuilder.clear()
+      let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
+      toolbox.flatBufferBuilder.finish(offset: offset)
+      let byteBuffer = toolbox.flatBufferBuilder.buffer
+      let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
+      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      sqlite3_bind_blob(insert, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
+      guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
+      _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
+      if indexSurvey.full.contains("f6") {
+        guard let i0 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(i0, parameterId: 1)
+        if let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom)) {
+          r0.bindSQLite(i0, parameterId: 2)
+        } else {
+          sqlite3_bind_null(i0, 2)
+        }
+        guard SQLITE_DONE == sqlite3_step(i0) else { return nil }
       }
-      let changeRequest = MonsterChangeRequest(type: .update, o)
-      changeRequest._o = u
-      changeRequest._rowid = u._rowid
-      return changeRequest
-    }
-    public static func creationRequest(_ o: Monster) -> MonsterChangeRequest {
-      let creationRequest = MonsterChangeRequest(type: .creation, o)
-      creationRequest._rowid = -1
-      return creationRequest
-    }
-    public static func creationRequest() -> MonsterChangeRequest {
-      return MonsterChangeRequest(type: .creation)
-    }
-    public static func deletionRequest(_ o: Monster) -> MonsterChangeRequest? {
-      let transactionContext = SQLiteTransactionContext.current!
-      let key: SQLiteObjectKey = o._rowid >= 0 ? .rowid(o._rowid) : .primaryKey([o.name, o.color])
-      let u = transactionContext.objectRepository.object(
-        transactionContext.connection, ofType: Monster.self, for: key)
-      return u.map { MonsterChangeRequest(type: .deletion, $0) }
-    }
-    var _atom: Monster {
-      let atom = Monster(
-        name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory, bag: bag,
-        weapons: weapons, equipped: equipped, colors: colors, path: path, hpOld: hpOld,
-        profile: profile, type: type, truth: truth)
+      if indexSurvey.full.contains("f26__type") {
+        guard let i1 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(i1, parameterId: 1)
+        if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom)) {
+          r1.bindSQLite(i1, parameterId: 2)
+        } else {
+          sqlite3_bind_null(i1, 2)
+        }
+        guard SQLITE_DONE == sqlite3_step(i1) else { return nil }
+      }
+      if indexSurvey.full.contains("f26__u2__f4") {
+        guard let i2 = toolbox.connection.prepareStaticStatement("INSERT INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return nil }
+        _rowid.bindSQLite(i2, parameterId: 1)
+        if let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom)) {
+          r2.bindSQLite(i2, parameterId: 2)
+        } else {
+          sqlite3_bind_null(i2, 2)
+        }
+        guard SQLITE_DONE == sqlite3_step(i2) else { return nil }
+      }
+      _type = .none
       atom._rowid = _rowid
-      return atom
-    }
-    public func commit(_ toolbox: PersistenceToolbox) -> UpdatedObject? {
-      guard let toolbox = toolbox as? SQLitePersistenceToolbox else { return nil }
-      switch _type {
-      case .creation:
-        let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
-        guard
-          let insert = toolbox.connection.prepareStaticStatement(
-            "INSERT INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p) VALUES (?1, ?2, ?3)")
-        else { return nil }
-        name.bindSQLite(insert, parameterId: 1)
-        color.bindSQLite(insert, parameterId: 2)
-        let atom = self._atom
-        toolbox.flatBufferBuilder.clear()
-        let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
-        toolbox.flatBufferBuilder.finish(offset: offset)
-        let byteBuffer = toolbox.flatBufferBuilder.buffer
-        let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-        let SQLITE_STATIC = unsafeBitCast(
-          OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-        sqlite3_bind_blob(insert, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
-        guard SQLITE_DONE == sqlite3_step(insert) else { return nil }
-        _rowid = sqlite3_last_insert_rowid(toolbox.connection.sqlite)
-        if indexSurvey.full.contains("f6") {
-          guard
-            let i0 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
-          else { return nil }
-          _rowid.bindSQLite(i0, parameterId: 1)
-          if let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom)) {
-            r0.bindSQLite(i0, parameterId: 2)
-          } else {
-            sqlite3_bind_null(i0, 2)
-          }
-          guard SQLITE_DONE == sqlite3_step(i0) else { return nil }
-        }
-        if indexSurvey.full.contains("f26__type") {
-          guard
-            let i1 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)"
-            )
-          else { return nil }
-          _rowid.bindSQLite(i1, parameterId: 1)
-          if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom)) {
-            r1.bindSQLite(i1, parameterId: 2)
-          } else {
-            sqlite3_bind_null(i1, 2)
-          }
-          guard SQLITE_DONE == sqlite3_step(i1) else { return nil }
-        }
-        if indexSurvey.full.contains("f26__u2__f4") {
-          guard
-            let i2 = toolbox.connection.prepareStaticStatement(
-              "INSERT INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
-            )
-          else { return nil }
-          _rowid.bindSQLite(i2, parameterId: 1)
-          if let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(atom))
-          {
-            r2.bindSQLite(i2, parameterId: 2)
-          } else {
-            sqlite3_bind_null(i2, 2)
-          }
-          guard SQLITE_DONE == sqlite3_step(i2) else { return nil }
-        }
+      return .inserted(atom)
+    case .update:
+      guard let o = _o else { return nil }
+      let atom = self._atom
+      guard atom != o else {
         _type = .none
-        atom._rowid = _rowid
-        return .inserted(atom)
-      case .update:
-        guard let o = _o else { return nil }
-        let atom = self._atom
-        guard atom != o else {
-          _type = .none
-          return .identity(atom)
-        }
-        let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
-        guard
-          let update = toolbox.connection.prepareStaticStatement(
-            "REPLACE INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)"
-          )
-        else { return nil }
-        name.bindSQLite(update, parameterId: 1)
-        color.bindSQLite(update, parameterId: 2)
-        toolbox.flatBufferBuilder.clear()
-        let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
-        toolbox.flatBufferBuilder.finish(offset: offset)
-        let byteBuffer = toolbox.flatBufferBuilder.buffer
-        let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
-        let SQLITE_STATIC = unsafeBitCast(
-          OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
-        sqlite3_bind_blob(update, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
-        _rowid.bindSQLite(update, parameterId: 4)
-        guard SQLITE_DONE == sqlite3_step(update) else { return nil }
-        if indexSurvey.full.contains("f6") {
-          let or0 = MyGame.Sample.Monster.mana.evaluate(object: .object(o))
-          let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
-          if or0 != r0 {
-            guard
-              let u0 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
-            else { return nil }
-            _rowid.bindSQLite(u0, parameterId: 1)
-            if let ur0 = r0 {
-              ur0.bindSQLite(u0, parameterId: 2)
-            } else {
-              sqlite3_bind_null(u0, 2)
-            }
-            guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
-          }
-        }
-        if indexSurvey.full.contains("f26__type") {
-          let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(o))
-          let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
-          if or1 != r1 {
-            guard
-              let u1 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)"
-              )
-            else { return nil }
-            _rowid.bindSQLite(u1, parameterId: 1)
-            if let ur1 = r1 {
-              ur1.bindSQLite(u1, parameterId: 2)
-            } else {
-              sqlite3_bind_null(u1, 2)
-            }
-            guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
-          }
-        }
-        if indexSurvey.full.contains("f26__u2__f4") {
-          let or2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(o))
-          let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(atom))
-          if or2 != r2 {
-            guard
-              let u2 = toolbox.connection.prepareStaticStatement(
-                "REPLACE INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)"
-              )
-            else { return nil }
-            _rowid.bindSQLite(u2, parameterId: 1)
-            if let ur2 = r2 {
-              ur2.bindSQLite(u2, parameterId: 2)
-            } else {
-              sqlite3_bind_null(u2, 2)
-            }
-            guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
-          }
-        }
-        _type = .none
-        return .updated(atom)
-      case .deletion:
-        guard
-          let deletion = toolbox.connection.prepareStaticStatement(
-            "DELETE FROM mygame__sample__monster_v1_1 WHERE rowid=?1")
-        else { return nil }
-        _rowid.bindSQLite(deletion, parameterId: 1)
-        guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
-        if let d0 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster_v1_1__f6 WHERE rowid=?1")
-        {
-          _rowid.bindSQLite(d0, parameterId: 1)
-          sqlite3_step(d0)
-        }
-        if let d1 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster_v1_1__f26__type WHERE rowid=?1")
-        {
-          _rowid.bindSQLite(d1, parameterId: 1)
-          sqlite3_step(d1)
-        }
-        if let d2 = toolbox.connection.prepareStaticStatement(
-          "DELETE FROM mygame__sample__monster_v1_1__f26__u2__f4 WHERE rowid=?1")
-        {
-          _rowid.bindSQLite(d2, parameterId: 1)
-          sqlite3_step(d2)
-        }
-        _type = .none
-        return .deleted(_rowid)
-      case .none:
-        preconditionFailure()
+        return .identity(atom)
       }
+      let indexSurvey = toolbox.connection.indexSurvey(Monster.indexFields, table: Monster.table)
+      guard let update = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster_v1_1 (__pk0, __pk1, p, rowid) VALUES (?1, ?2, ?3, ?4)") else { return nil }
+      name.bindSQLite(update, parameterId: 1)
+      color.bindSQLite(update, parameterId: 2)
+      toolbox.flatBufferBuilder.clear()
+      let offset = atom.to(flatBufferBuilder: &toolbox.flatBufferBuilder)
+      toolbox.flatBufferBuilder.finish(offset: offset)
+      let byteBuffer = toolbox.flatBufferBuilder.buffer
+      let memory = byteBuffer.memory.advanced(by: byteBuffer.reader)
+      let SQLITE_STATIC = unsafeBitCast(OpaquePointer(bitPattern: 0), to: sqlite3_destructor_type.self)
+      sqlite3_bind_blob(update, 3, memory, Int32(byteBuffer.size), SQLITE_STATIC)
+      _rowid.bindSQLite(update, parameterId: 4)
+      guard SQLITE_DONE == sqlite3_step(update) else { return nil }
+      if indexSurvey.full.contains("f6") {
+        let or0 = MyGame.Sample.Monster.mana.evaluate(object: .object(o))
+        let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
+        if or0 != r0 {
+          guard let u0 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u0, parameterId: 1)
+          if let ur0 = r0 {
+            ur0.bindSQLite(u0, parameterId: 2)
+          } else {
+            sqlite3_bind_null(u0, 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u0) else { return nil }
+        }
+      }
+      if indexSurvey.full.contains("f26__type") {
+        let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(o))
+        let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
+        if or1 != r1 {
+          guard let u1 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster_v1_1__f26__type (rowid, f26__type) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u1, parameterId: 1)
+          if let ur1 = r1 {
+            ur1.bindSQLite(u1, parameterId: 2)
+          } else {
+            sqlite3_bind_null(u1, 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u1) else { return nil }
+        }
+      }
+      if indexSurvey.full.contains("f26__u2__f4") {
+        let or2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(o))
+        let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(object: .object(atom))
+        if or2 != r2 {
+          guard let u2 = toolbox.connection.prepareStaticStatement("REPLACE INTO mygame__sample__monster_v1_1__f26__u2__f4 (rowid, f26__u2__f4) VALUES (?1, ?2)") else { return nil }
+          _rowid.bindSQLite(u2, parameterId: 1)
+          if let ur2 = r2 {
+            ur2.bindSQLite(u2, parameterId: 2)
+          } else {
+            sqlite3_bind_null(u2, 2)
+          }
+          guard SQLITE_DONE == sqlite3_step(u2) else { return nil }
+        }
+      }
+      _type = .none
+      return .updated(atom)
+    case .deletion:
+      guard let deletion = toolbox.connection.prepareStaticStatement("DELETE FROM mygame__sample__monster_v1_1 WHERE rowid=?1") else { return nil }
+      _rowid.bindSQLite(deletion, parameterId: 1)
+      guard SQLITE_DONE == sqlite3_step(deletion) else { return nil }
+      if let d0 = toolbox.connection.prepareStaticStatement("DELETE FROM mygame__sample__monster_v1_1__f6 WHERE rowid=?1") {
+        _rowid.bindSQLite(d0, parameterId: 1)
+        sqlite3_step(d0)
+      }
+      if let d1 = toolbox.connection.prepareStaticStatement("DELETE FROM mygame__sample__monster_v1_1__f26__type WHERE rowid=?1") {
+        _rowid.bindSQLite(d1, parameterId: 1)
+        sqlite3_step(d1)
+      }
+      if let d2 = toolbox.connection.prepareStaticStatement("DELETE FROM mygame__sample__monster_v1_1__f26__u2__f4 WHERE rowid=?1") {
+        _rowid.bindSQLite(d2, parameterId: 1)
+        sqlite3_step(d2)
+      }
+      _type = .none
+      return .deleted(_rowid)
+    case .none:
+      preconditionFailure()
     }
   }
+}
 
 }
 

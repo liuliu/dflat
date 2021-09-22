@@ -1,8 +1,8 @@
 import Dflat
 import FlatBuffers
 import Foundation
-import SQLite3
 import SQLiteDflat
+import SQLite3
 
 public final class BenchDocV4: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {
   public static func == (lhs: BenchDocV4, rhs: BenchDocV4) -> Bool {
@@ -30,9 +30,7 @@ public final class BenchDocV4: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   }
   public static func from(data: Data) -> Self {
     return data.withUnsafeBytes { buffer in
-      let bb = ByteBuffer(
-        assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
-        capacity: buffer.count)
+      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!), capacity: buffer.count)
       return Self(zzz_DflatGen_BenchDocV4.getRootAsBenchDocV4(bb: bb))
     }
   }
@@ -45,17 +43,10 @@ public final class BenchDocV4: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   public static var table: String { "benchdocv4" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else {
-      return
-    }
-    sqlite3_exec(
-      sqlite.sqlite,
-      "CREATE TABLE IF NOT EXISTS benchdocv4 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))",
-      nil, nil, nil)
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdocv4 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
   }
-  public static func insertIndex(
-    _ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer
-  ) -> Bool {
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
     return true
   }
 }

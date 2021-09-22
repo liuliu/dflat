@@ -41,11 +41,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public let doubleValue: Double
   public let stringValue: String?
   public let codable: [UInt8]
-  public init(
-    key: String, namespace: String, valueType: ValueType? = .boolValue, boolValue: Bool? = false,
-    longValue: Int64? = 0, unsignedLongValue: UInt64? = 0, floatValue: Float32? = 0.0,
-    doubleValue: Double? = 0.0, stringValue: String? = nil, codable: [UInt8]? = []
-  ) {
+  public init(key: String, namespace: String, valueType: ValueType? = .boolValue, boolValue: Bool? = false, longValue: Int64? = 0, unsignedLongValue: UInt64? = 0, floatValue: Float32? = 0.0, doubleValue: Double? = 0.0, stringValue: String? = nil, codable: [UInt8]? = []) {
     self.key = key
     self.namespace = namespace
     self.valueType = valueType ?? .boolValue
@@ -71,9 +67,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   }
   public static func from(data: Data) -> Self {
     return data.withUnsafeBytes { buffer in
-      let bb = ByteBuffer(
-        assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
-        capacity: buffer.count)
+      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!), capacity: buffer.count)
       return Self(zzz_DflatGen_DictItem.getRootAsDictItem(bb: bb))
     }
   }
@@ -86,17 +80,10 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public static var table: String { "dictitem_v_dflat_internal__" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else {
-      return
-    }
-    sqlite3_exec(
-      sqlite.sqlite,
-      "CREATE TABLE IF NOT EXISTS dictitem_v_dflat_internal__ (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 TEXT, p BLOB, UNIQUE(__pk0, __pk1))",
-      nil, nil, nil)
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
+    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS dictitem_v_dflat_internal__ (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, __pk1 TEXT, p BLOB, UNIQUE(__pk0, __pk1))", nil, nil, nil)
   }
-  public static func insertIndex(
-    _ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer
-  ) -> Bool {
+  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
     return true
   }
 }

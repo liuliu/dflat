@@ -5,25 +5,25 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file"
 
 git_repository(
     name = "build_bazel_rules_apple",
-    commit = "8562971108c11931618a220731c335e9fab9fb49",
+    commit = "3baff5b829177f8007619d1f16971761d68a64e1",
     remote = "https://github.com/bazelbuild/rules_apple.git",
-    shallow_since = "1610631418 -0600",
+    shallow_since = "1624407933 +0900",
 )
 
 new_git_repository(
     name = "flatbuffers",
     build_file = "flatbuffers.BUILD",
-    commit = "b5da526e6d44dfab9b03398af229eebbe835cc1e",
+    commit = "354d97f6da18cbbdeddfcdd2d5aebf1bcc57a092",
     remote = "https://github.com/google/flatbuffers.git",
-    shallow_since = "1613851668 +0300",
+    shallow_since = "1632261689 -0700",
 )
 
 new_git_repository(
     name = "swift-atomics",
     build_file = "swift-atomics.BUILD",
-    commit = "ccce007d5d5462860cf0cb7839a233307424c61c",
+    commit = "2eb6b8d3ce4e18a9ad10caff4e9c9b99b9ab4899",
     remote = "https://github.com/apple/swift-atomics.git",
-    shallow_since = "1603395818 -0700",
+    shallow_since = "1631646447 -0700",
 )
 
 load(
@@ -39,6 +39,13 @@ load(
 )
 
 swift_rules_dependencies()
+
+load(
+    "@build_bazel_rules_swift//swift:extras.bzl",
+    "swift_rules_extra_dependencies",
+)
+
+swift_rules_extra_dependencies()
 
 load(
     "@build_bazel_apple_support//lib:repositories.bzl",

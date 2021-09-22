@@ -1,8 +1,8 @@
 import Dflat
+import SQLiteDflat
+import SQLite3
 import FlatBuffers
 import Foundation
-import SQLite3
-import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
@@ -15,7 +15,7 @@ extension MyGame.SampleV3.Color: SQLiteValue {
 // MARK - Serializer
 
 extension MyGame.SampleV3.Equipment: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     switch self {
     case .weapon(let o):
       return o.to(flatBufferBuilder: &flatBufferBuilder)
@@ -38,7 +38,7 @@ extension MyGame.SampleV3.Equipment: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.SampleV3.Equipment {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
   var _type: zzz_DflatGen_MyGame_SampleV3_Equipment {
@@ -47,7 +47,7 @@ extension Optional where Wrapped == MyGame.SampleV3.Equipment {
 }
 
 extension MyGame.SampleV3.Vec3: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     flatBufferBuilder.create(struct: zzz_DflatGen_MyGame_SampleV3_Vec3(self))
   }
 }
@@ -63,24 +63,24 @@ extension zzz_DflatGen_MyGame_SampleV3_Vec3 {
 }
 
 extension MyGame.SampleV3.Empty: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     let start = zzz_DflatGen_MyGame_SampleV3_Empty.startEmpty(&flatBufferBuilder)
     return zzz_DflatGen_MyGame_SampleV3_Empty.endEmpty(&flatBufferBuilder, start: start)
   }
 }
 
 extension Optional where Wrapped == MyGame.SampleV3.Empty {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension MyGame.SampleV3.Monster: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let __color = zzz_DflatGen_MyGame_SampleV3_Color(rawValue: self.color.rawValue) ?? .blue
     let __vector_inventory = flatBufferBuilder.createVector(self.inventory)
-    var __weapons = [Offset<UOffset>]()
+    var __weapons = [Offset]()
     for i in self.weapons {
       __weapons.append(i.to(flatBufferBuilder: &flatBufferBuilder))
     }
@@ -106,8 +106,7 @@ extension MyGame.SampleV3.Monster: FlatBuffersEncodable {
     zzz_DflatGen_MyGame_SampleV3_Monster.add(hp: self.hp, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(name: __name, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(color: __color, &flatBufferBuilder)
-    zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(
-      inventory: __vector_inventory, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(inventory: __vector_inventory, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(weapons: __vector_weapons, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(equippedType: __equippedType, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(equipped: __equipped, &flatBufferBuilder)
@@ -120,14 +119,14 @@ extension MyGame.SampleV3.Monster: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.SampleV3.Monster {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension MyGame.SampleV3.Weapon: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let start = zzz_DflatGen_MyGame_SampleV3_Weapon.startWeapon(&flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Weapon.add(name: __name, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Weapon.add(damage: self.damage, &flatBufferBuilder)
@@ -136,14 +135,14 @@ extension MyGame.SampleV3.Weapon: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.SampleV3.Weapon {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
 
 extension MyGame.SampleV3.Orb: FlatBuffersEncodable {
-  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
-    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset<String>()
+  public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
+    let __name = self.name.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let __color = zzz_DflatGen_MyGame_SampleV3_Color(rawValue: self.color.rawValue) ?? .red
     let start = zzz_DflatGen_MyGame_SampleV3_Orb.startOrb(&flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Orb.add(name: __name, &flatBufferBuilder)
@@ -153,7 +152,7 @@ extension MyGame.SampleV3.Orb: FlatBuffersEncodable {
 }
 
 extension Optional where Wrapped == MyGame.SampleV3.Orb {
-  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset<UOffset> {
+  func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     self.map { $0.to(flatBufferBuilder: &flatBufferBuilder) } ?? Offset()
   }
 }
