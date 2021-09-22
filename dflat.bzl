@@ -62,10 +62,13 @@ def _dflat_schema_impl(ctx):
     flatbuffers = ctx.actions.declare_file(ctx.attr.root + "_generated.fbs")
     swift = ctx.actions.declare_file(ctx.attr.root + "_inits_generated.swift")
     outputs = [flatbuffers, swift]
+    primary_key_args = []
+    if len(ctx.attr.primary_key) > 0:
+        primary_key_args = ["--primary-key", ctx.attr.primary_key]
     ctx.actions.run(
         inputs = [ctx.file.schema] + ctx.files.srcs,
         outputs = outputs,
-        arguments = [ctx.file.schema.path] + [x.path for x in ctx.files.srcs] + ["--entity", ctx.attr.root, "--primary-key", ctx.attr.primary_key, "-o", outputs[0].dirname],
+        arguments = [ctx.file.schema.path] + [x.path for x in ctx.files.srcs] + ["--entity", ctx.attr.root] + primary_key_args + ["--primary-key-type", ctx.attr.primary_key_type, "-o", outputs[0].dirname],
         executable = ctx.executable._codegen,
     )
     return [
@@ -79,7 +82,8 @@ _dflat_schema = rule(
         "srcs": attr.label_list(allow_files = True, mandatory = True),
         "schema": attr.label(allow_single_file = True, mandatory = True),
         "root": attr.string(mandatory = True),
-        "primary_key": attr.string(default = "id"),
+        "primary_key": attr.string(default = ""),
+        "primary_key_type": attr.string(default = "String"),
         "_codegen": attr.label(
             executable = True,
             allow_files = True,
@@ -109,13 +113,14 @@ _dflat_schema_swift = rule(
     }
 )
 
-def dflat_graphql(name, srcs, schema, root, primary_key = "id", visibility=None):
+def dflat_graphql(name, srcs, schema, root, primary_key = "", primary_key_type = "String", visibility=None):
     _dflat_schema(
         name = name + "_graphql",
         srcs = srcs,
         schema = schema,
         root = root,
         primary_key = primary_key,
+        primary_key_type = primary_key_type,
         visibility = visibility
     )
     _dflat_schema_flatbuffers(name = name + "_graphql_flatbuffers", schema = ":" + name + "_graphql")

@@ -32,7 +32,15 @@ $(location //src/graphql/tests/apollo:cli) codegen:generate --target=swift --inc
 dflat_graphql(
     name = "Character_Sources",
     srcs = [":GraphQL_Files"],
+    primary_key = "id",
     root = "Character",
+    schema = ":GraphQL_Schema",
+)
+
+dflat_graphql(
+    name = "Review_Sources",
+    srcs = [":GraphQL_Files"],
+    root = "Review",
     schema = ":GraphQL_Schema",
 )
 

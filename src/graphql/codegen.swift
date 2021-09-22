@@ -39,16 +39,33 @@ if let resourceUrl = bundle.resourceURL,
 
 let codegenFrontend = try ApolloCodegenFrontend()
 
+var FlatBuffersFromSwiftType: [String: String] = [
+  "Bool": "bool",
+  "Int8": "byte",
+  "UInt8": "ubyte",
+  "Int16": "short",
+  "UInt16": "ushort",
+  "Int32": "int",
+  "UInt32": "uint",
+  "Int64": "long",
+  "UInt64": "ulong",
+  "Float32": "float",
+  "Double": "double",
+  "String" : "string",
+]
+
 let schemaPath = CommandLine.arguments[1]
 var documentPaths = [String]()
 var entities = [String]()
 var outputDir: String? = nil
-var primaryKey: String = "id"
+var primaryKey: String = ""
+var primaryKeyType: String = "String"
 enum CommandOptions {
   case document
   case entity
   case output
   case primaryKey
+  case primaryKeyType
 }
 var options = CommandOptions.document
 for argument in CommandLine.arguments[2...] {
@@ -58,6 +75,8 @@ for argument in CommandLine.arguments[2...] {
     options = .output
   } else if argument == "--primary-key" {
     options = .primaryKey
+  } else if argument == "--primary-key-type" {
+    options = .primaryKeyType
   } else {
     switch options {
     case .document:
@@ -68,6 +87,9 @@ for argument in CommandLine.arguments[2...] {
       outputDir = argument
     case .primaryKey:
       primaryKey = argument
+    case .primaryKeyType:
+      primaryKeyType = argument
+      precondition(FlatBuffersFromSwiftType[primaryKeyType] != nil)
     }
   }
 }
@@ -198,16 +220,23 @@ func generateObjectType(
     fbs += "table \(objectType.name) {\n"
   }
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
+  var emitPrimaryKey = false
+  var restOfFields = ""
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
     guard field.name != primaryKey else {
+      emitPrimaryKey = true
       if isRoot {
-        fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
+        restOfFields += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
       }
       continue
     }
-    fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
+    restOfFields += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
   }
+  if !emitPrimaryKey && primaryKey.count > 0 && isRoot {
+    fbs += "  \(primaryKey): \(FlatBuffersFromSwiftType[primaryKeyType]!) (primary);\n"
+  }
+  fbs += restOfFields
   fbs += "}\n"
   return fbs
 }
@@ -221,10 +250,12 @@ func generateObjectDigest(
   }
   let isRoot = rootType == objectType
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
+  var emitPrimaryKey = false
   var raw = [String]()
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
     guard field.name != primaryKey else {
+      emitPrimaryKey = true
       if isRoot {
         raw.append("\(field.name):\(field.type)")
       }
@@ -232,6 +263,9 @@ func generateObjectDigest(
     }
     raw.append(
       "\(field.name):\(digestType(field.type, rootType: rootType, typeDigests: typeDigests))")
+  }
+  if !emitPrimaryKey && primaryKey.count > 0 && isRoot {
+    raw.insert("\(primaryKey):\(FlatBuffersFromSwiftType[primaryKeyType]!)", at: 0)
   }
   return raw.joined(separator: ",").digest()
 }
@@ -262,21 +296,30 @@ func generateInterfaceType(
   } else {
     fbs += "table \(interfaceType.name) {\n"
   }
-  if implementations.objects.count > 0 {
-    fbs +=
-      isRoot
-      ? "  subtype: \(interfaceType.name).Subtype;\n" : "  subtype: \(interfaceType.name)Subtype;\n"
-  }
   let fields = interfaceType.fields.values.sorted(by: { $0.name < $1.name })
   let existingFields = objectFields[interfaceType.name]!
+  var emitPrimaryKey = false
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
     guard field.name == primaryKey else { continue }
+    emitPrimaryKey = true
     if isRoot {
       fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType)) (primary);\n"
     } else {
       fbs += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
     }
+  }
+  if !emitPrimaryKey && primaryKey.count > 0 {
+    if isRoot {
+      fbs += "  \(primaryKey): \(FlatBuffersFromSwiftType[primaryKeyType]!) (primary);\n"
+    } else {
+      fbs += "  \(primaryKey): \(FlatBuffersFromSwiftType[primaryKeyType]!);\n"
+    }
+  }
+  if implementations.objects.count > 0 {
+    fbs +=
+      isRoot
+      ? "  subtype: \(interfaceType.name).Subtype;\n" : "  subtype: \(interfaceType.name)Subtype;\n"
   }
   fbs += "}\n"
   return fbs
@@ -293,10 +336,15 @@ func generateInterfaceDigest(
   }
   let fields = interfaceType.fields.values.sorted(by: { $0.name < $1.name })
   let existingFields = objectFields[interfaceType.name]!
+  var emitPrimaryKey = false
   for field in fields {
     guard existingFields.contains(field.name) else { continue }
     guard field.name == primaryKey else { continue }
+    emitPrimaryKey = true
     raw += "{\(field.name):\(flatbuffersType(field.type, rootType: rootType))}"
+  }
+  if !emitPrimaryKey && primaryKey.count > 0 {
+      raw += "{\(primaryKey): \(FlatBuffersFromSwiftType[primaryKeyType]!)}"
   }
   return raw.digest()
 }
@@ -384,7 +432,10 @@ func generateFlatbuffers(_ rootType: GraphQLNamedType) -> String {
   } else {
     fatalError("Cannot generate flatbuffers schema for root enum type")
   }
-  fbs += "root_type \(rootType.name);\n"
+  // If we have primary key, this can be a root type, otherwise this cannot be one.
+  if primaryKey.count > 0 {
+    fbs += "root_type \(rootType.name);\n"
+  }
   return fbs
 }
 
@@ -467,14 +518,30 @@ func generateInterfaceInits(
   var inits =
     !isRoot
     ? "extension \(rootType.name).\(interfaceType.name) {\n" : "extension \(interfaceType.name) {\n"
-  if isRoot {
-    inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+  let keyPosition = primaryKeyPosition(objectType: interfaceType, selections: selections)
+  let noKey: Bool
+  switch keyPosition {
+  case .noKey, .inInlineFragment(_):
+    noKey = true
+  default:
+    noKey = false
+  }
+  if primaryKey.count > 0 && noKey {
+    if isRoot {
+      inits += "  public convenience init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    } else {
+      inits += "  public init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    }
   } else {
-    inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    if isRoot {
+      inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    } else {
+      inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    }
   }
   let subtype =
     isRoot ? "\(rootType.name).Subtype" : "\(rootType.name).\(interfaceType.name)Subtype"
-  switch primaryKeyPosition(objectType: interfaceType, selections: selections) {
+  switch keyPosition {
   case .inField:
     inits +=
       "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
@@ -482,8 +549,13 @@ func generateInterfaceInits(
     inits +=
       "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
   case .noKey, .inInlineFragment(_):
-    // fatalError("Shouldn't generate interface for no primary key entities")
-    return ""
+    if primaryKey.count > 0 {
+      inits +=
+        "    self.init(\(primaryKey): \(primaryKey), subtype: \(subtype)(obj))\n"
+    } else {
+      inits +=
+        "    self.init(subtype: \(subtype)(obj))\n"
+    }
   }
   inits += "  }\n"
   inits += "}\n"
@@ -542,14 +614,6 @@ func generateObjectInits(
   selections: [CompilationResult.Selection]
 ) -> String {
   let isRoot = rootType == objectType
-  var inits =
-    !isRoot
-    ? "extension \(rootType.name).\(objectType.name) {\n" : "extension \(objectType.name) {\n"
-  if isRoot {
-    inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
-  } else {
-    inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
-  }
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
   var existingFields = objectFields[objectType.name]!
   for interfaceType in objectType.interfaces {
@@ -596,6 +660,7 @@ func generateObjectInits(
       }
     }
   }
+  var emitPrimaryKey = false
   var fieldAssignments = [String]()
   for field in fields {
     guard existingFields.contains(field.name),
@@ -613,6 +678,7 @@ func generateObjectInits(
       prefix = ".fragments.\(name.camelCase())\(optional ? "?" : "")"
     }
     guard field.name != primaryKey else {
+      emitPrimaryKey = true
       if isRoot {
         fieldAssignments.append("\(field.name): obj.\(field.name.camelCase())")
       }
@@ -643,6 +709,23 @@ func generateObjectInits(
       fieldAssignments.append(
         "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "\(rootType.name).\(typeName)($0)", type: field.type, optional: true))"
       )
+    }
+  }
+  var inits =
+    !isRoot
+    ? "extension \(rootType.name).\(objectType.name) {\n" : "extension \(objectType.name) {\n"
+  if !emitPrimaryKey && primaryKey.count > 0 && isRoot {
+    fieldAssignments.insert("\(primaryKey): \(primaryKey)", at: 0)
+    if isRoot {
+      inits += "  public convenience init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    } else {
+      inits += "  public init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    }
+  } else {
+    if isRoot {
+      inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
+    } else {
+      inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
     }
   }
   inits += "    self.init(\(fieldAssignments.joined(separator: ", ")))\n"
@@ -736,25 +819,14 @@ func findEntityInits(
 ) -> [String: [String: [[String]: EntityInit]]] {
   let entityName = selectionSet.parentType.name
   let hasEntity = entities.contains(entityName)
-  let hasPrimaryKey: Bool
-  switch primaryKeyPosition(
-    objectType: selectionSet.parentType, selections: selectionSet.selections)
-  {
-  case .noKey, .inInlineFragment(_):  // Cannot be a primary key if it only exists in inlineFragment (which requires optional).
-    hasPrimaryKey = false
-  case .inField:
-    hasPrimaryKey = true
-  case .inFragmentSpread(_, let optional):
-    hasPrimaryKey = !optional  // Only treat this as primary key if it is not optional from the fragment.
-  }
   var entityInits = [String: [String: [[String]: EntityInit]]]()
-  let marked = marked || (hasEntity && hasPrimaryKey)
+  let marked = marked || hasEntity
   guard let entityType = try? schema.getType(named: entityName) else { return entityInits }
   for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
       if let selectionSet = field.selectionSet {
-        if hasEntity && hasPrimaryKey {
+        if hasEntity {
           let newEntityInits = findEntityInits(
             entities: entities, rootType: entityType,
             fullyQualifiedName: fullyQualifiedName + [field.name.singularized().pascalCase()],
@@ -772,7 +844,7 @@ func findEntityInits(
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
       } else if !isBaseType(field.type) && marked {  // This is pretty much only covers enum type, otherwise you need to have selectionSet.
         let fieldType = namedType(field.type)
-        if hasEntity && hasPrimaryKey {
+        if hasEntity {
           insertEntityInits(
             &entityInits, entityType: fieldType, rootType: entityType,
             fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
@@ -784,7 +856,7 @@ func findEntityInits(
         }
       }
     case let .inlineFragment(inlineFragment):
-      if hasEntity && hasPrimaryKey {
+      if hasEntity {
         let newEntityInits = findEntityInits(
           entities: entities, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
           selectionSet: inlineFragment.selectionSet,
@@ -797,7 +869,7 @@ func findEntityInits(
         marked: marked)
       entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
     case let .fragmentSpread(fragmentSpread):
-      if hasEntity && hasPrimaryKey {
+      if hasEntity {
         let newEntityInits = findEntityInits(
           entities: entities, rootType: entityType,
           fullyQualifiedName: [fragmentSpread.fragment.name.pascalCase()],
@@ -814,7 +886,7 @@ func findEntityInits(
     }
   }
   guard marked else { return entityInits }
-  if hasEntity && hasPrimaryKey {
+  if hasEntity {
     insertEntityInits(
       &entityInits, entityType: entityType, rootType: entityType,
       fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
