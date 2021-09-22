@@ -4,10 +4,10 @@ package(
 
 cc_library(
     name = "SQLite3",
-    srcs = ["sqlite-amalgamation-3330000/sqlite3.c"],
+    srcs = ["sqlite-amalgamation-3360000/sqlite3.c"],
     hdrs = [
-        "sqlite-amalgamation-3330000/sqlite3.h",
-        "sqlite-amalgamation-3330000/sqlite3ext.h",
+        "sqlite-amalgamation-3360000/sqlite3.h",
+        "sqlite-amalgamation-3360000/sqlite3ext.h",
     ],
     copts = ["-fPIC"],
     defines = [
@@ -28,6 +28,7 @@ cc_library(
         "SQLITE_ENABLE_FTS4",
         "SQLITE_ENABLE_FTS5",
         "SQLITE_ENABLE_JSON1",
+        "SQLITE_ENABLE_MATH_FUNCTIONS",
         "SQLITE_ENABLE_PREUPDATE_HOOK",
         "SQLITE_ENABLE_RTREE",
         "SQLITE_ENABLE_SESSION",
@@ -49,6 +50,6 @@ cc_library(
         "SQLITE_THREADSAFE=2",
         "SQLITE_USE_URI",
     ],
-    includes = ["sqlite-amalgamation-3330000"],
+    includes = ["sqlite-amalgamation-3360000"],
     tags = ["swift_module=SQLite3"],
 )

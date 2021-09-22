@@ -35,7 +35,7 @@ def dflat_deps():
     _maybe(
         http_archive,
         name = "sqlite3",
-        sha256 = "b34f4c0c0eefad9a7e515c030c18702e477f4ef7d8ade6142bdab8011b487ac6",
-        urls = ["https://www.sqlite.org/2020/sqlite-amalgamation-3330000.zip"],
+        sha256 = "999826fe4c871f18919fdb8ed7ec9dd8217180854dd1fe21eea96aed36186729",
+        urls = ["https://www.sqlite.org/2021/sqlite-amalgamation-3360000.zip"],
         build_file = "@dflat//:external/sqlite3.BUILD",
     )

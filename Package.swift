@@ -9,7 +9,7 @@ import PackageDescription
       name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git", .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
     .package(
-      name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.33.0"),
+      name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.36.0"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
 #else
