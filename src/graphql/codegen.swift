@@ -463,9 +463,10 @@ func isIDType(_ graphQLType: GraphQLType) -> Bool {
 
 enum FieldKeyPosition: Equatable {
   case noKey
-  case inField
-  case inInlineFragment(String)
+  case inField(String?)
+  case inInlineFragment(String, String?)
   case inFragmentSpread(String, Bool)
+  case inFragmentSpreadInlineFragment(String, Bool, String, String?)
 }
 
 func isOptionalFragments(fragmentType: GraphQLCompositeType, objectType: GraphQLCompositeType)
@@ -476,20 +477,20 @@ func isOptionalFragments(fragmentType: GraphQLCompositeType, objectType: GraphQL
   return !(fragmentType is GraphQLInterfaceType) && (objectType is GraphQLInterfaceType)
 }
 
-func primaryKeyPosition(objectType: GraphQLCompositeType, selections: [CompilationResult.Selection])
+func primaryKeyPosition(objectType: GraphQLCompositeType, selectionSet: CompilationResult.SelectionSet)
   -> FieldKeyPosition
 {
-  for selection in selections {
+  for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
       if field.name == primaryKey && isIDType(field.type) {
-        return .inField
+        return .inField(field.alias)
       }
     case .inlineFragment(_), .fragmentSpread(_):
       break
     }
   }
-  for selection in selections {
+  for selection in selectionSet.selections {
     switch selection {
     case .field(_), .inlineFragment(_):
       break
@@ -500,7 +501,7 @@ func primaryKeyPosition(objectType: GraphQLCompositeType, selections: [Compilati
           if field.name == primaryKey && isIDType(field.type) {
             return .inFragmentSpread(
               fragmentSpread.fragment.name.pascalCase(),
-              isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
+              isOptionalFragments(fragmentType: fragmentType, objectType: selectionSet.parentType))
           }
         }
       }
@@ -512,17 +513,19 @@ func primaryKeyPosition(objectType: GraphQLCompositeType, selections: [Compilati
 func generateInterfaceInits(
   _ interfaceType: GraphQLInterfaceType,
   rootType: GraphQLNamedType, fullyQualifiedName: [String],
-  selections: [CompilationResult.Selection]
+  selectionSet: CompilationResult.SelectionSet
 ) -> String {
   let isRoot = rootType == interfaceType
   var inits =
     !isRoot
     ? "extension \(rootType.name).\(interfaceType.name) {\n" : "extension \(interfaceType.name) {\n"
-  let keyPosition = primaryKeyPosition(objectType: interfaceType, selections: selections)
+  let keyPosition = primaryKeyPosition(objectType: interfaceType, selectionSet: selectionSet)
   let noKey: Bool
   switch keyPosition {
-  case .noKey, .inInlineFragment(_):
+  case .noKey, .inInlineFragment(_, _), .inFragmentSpreadInlineFragment(_, _, _, _):
     noKey = true
+  case let .inFragmentSpread(_, optional):
+    noKey = optional
   default:
     noKey = false
   }
@@ -542,13 +545,24 @@ func generateInterfaceInits(
   let subtype =
     isRoot ? "\(rootType.name).Subtype" : "\(rootType.name).\(interfaceType.name)Subtype"
   switch keyPosition {
-  case .inField:
+  case .inField(let alias):
+    let aliasedName = alias ?? primaryKey
     inits +=
-      "    self.init(\(primaryKey): obj.\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
-  case let .inFragmentSpread(name, _):
-    inits +=
-      "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
-  case .noKey, .inInlineFragment(_):
+      "    self.init(\(primaryKey): obj.\(aliasedName.camelCase()), subtype: \(subtype)(obj))\n"
+  case let .inFragmentSpread(name, optional):
+    if optional {
+      if primaryKey.count > 0 {
+        inits +=
+          "    self.init(\(primaryKey): \(primaryKey), subtype: \(subtype)(obj))\n"
+      } else {
+        inits +=
+          "    self.init(subtype: \(subtype)(obj))\n"
+      }
+    } else {
+      inits +=
+        "    self.init(\(primaryKey): obj.fragments.\(name.camelCase()).\(primaryKey.camelCase()), subtype: \(subtype)(obj))\n"
+    }
+  case .noKey, .inInlineFragment(_, _), .inFragmentSpreadInlineFragment(_, _, _, _):
     if primaryKey.count > 0 {
       inits +=
         "    self.init(\(primaryKey): \(primaryKey), subtype: \(subtype)(obj))\n"
@@ -611,7 +625,7 @@ func unwrapType(prefix: String, inner: String, type: GraphQLType, optional: Bool
 func generateObjectInits(
   _ objectType: GraphQLObjectType,
   rootType: GraphQLNamedType, fullyQualifiedName: [String],
-  selections: [CompilationResult.Selection]
+  selectionSet: CompilationResult.SelectionSet
 ) -> String {
   let isRoot = rootType == objectType
   let fields = objectType.fields.values.sorted(by: { $0.name < $1.name })
@@ -621,40 +635,55 @@ func generateObjectInits(
   }
   var existingSelections = [String: FieldKeyPosition]()
   var fieldPrimaryKeyPosition = [String: FieldKeyPosition]()
-  for selection in selections {
+  for selection in selectionSet.selections {
     switch selection {
     case let .field(field):
       // Always replace it to inField
-      existingSelections[field.name] = .inField
-      if let selectionSet = field.selectionSet {
+      existingSelections[field.name] = .inField(field.alias)
+      if let fieldSelectionSet = field.selectionSet {
         fieldPrimaryKeyPosition[field.name] = primaryKeyPosition(
-          objectType: selectionSet.parentType, selections: selectionSet.selections)
+          objectType: fieldSelectionSet.parentType, selectionSet: fieldSelectionSet)
       }
     case let .inlineFragment(inlineFragment):
       let inlineFragmentType = inlineFragment.selectionSet.parentType
       guard inlineFragmentType == objectType else {
         continue
       }
-      let selectionSet = inlineFragment.selectionSet
-      for selection in selectionSet.selections {
+      for selection in inlineFragment.selectionSet.selections {
         switch selection {
         case let .field(field):
-          existingSelections[field.name] = .inInlineFragment(inlineFragmentType.name)
+          existingSelections[field.name] = .inInlineFragment(inlineFragmentType.name, field.alias)
         case .inlineFragment(_), .fragmentSpread(_):
           break
         }
       }
     case let .fragmentSpread(fragmentSpread):
       let fragment = fragmentSpread.fragment
-      let selectionSet = fragment.selectionSet
-      let fragmentType = selectionSet.parentType
-      for selection in selectionSet.selections {
+      let fragmentType = fragment.selectionSet.parentType
+      let fragmentIsOptional = isOptionalFragments(fragmentType: fragmentType, objectType: selectionSet.parentType)
+      for selection in fragment.selectionSet.selections {
         switch selection {
         case let .field(field):
           existingSelections[field.name] = .inFragmentSpread(
             fragmentSpread.fragment.name.pascalCase(),
-            isOptionalFragments(fragmentType: fragmentType, objectType: objectType))
-        case .inlineFragment(_), .fragmentSpread(_):
+            fragmentIsOptional)
+        case let .inlineFragment(inlineFragment):
+          // Flatten this into .inInlineFragment.
+          let inlineFragmentType = inlineFragment.selectionSet.parentType
+          guard inlineFragmentType == objectType else {
+            continue
+          }
+          for selection in inlineFragment.selectionSet.selections {
+            switch selection {
+            case let .field(field):
+              if existingSelections[field.name] == nil {
+                existingSelections[field.name] = .inFragmentSpreadInlineFragment(fragmentSpread.fragment.name.pascalCase(), fragmentIsOptional, inlineFragmentType.name, field.alias)
+              }
+            case .inlineFragment(_), .fragmentSpread(_):
+              break
+            }
+          }
+        case .fragmentSpread(_):
           break
         }
       }
@@ -669,18 +698,32 @@ func generateObjectInits(
       continue
     }
     let prefix: String
+    var fieldAliasedName = field.name
     switch fieldKeyPosition {
-    case .inField, .noKey:
+    case .inField(let alias):
+      if let alias = alias {
+        fieldAliasedName = alias
+      }
       prefix = ""
-    case let .inInlineFragment(name):
-      prefix = ".as\(name)?"
+    case .noKey:
+      prefix = ""
+    case let .inInlineFragment(name, alias):
+      if let alias = alias {
+        fieldAliasedName = alias
+      }
+      prefix = ".as\(name.pascalCase())?"
     case let .inFragmentSpread(name, optional):
       prefix = ".fragments.\(name.camelCase())\(optional ? "?" : "")"
+    case let .inFragmentSpreadInlineFragment(fragmentName, optional, name, alias):
+      if let alias = alias {
+        fieldAliasedName = alias
+      }
+      prefix = ".fragments.\(fragmentName.camelCase())\(optional ? "?" : "").as\(name.pascalCase())?"
     }
     guard field.name != primaryKey else {
       emitPrimaryKey = true
       if isRoot {
-        fieldAssignments.append("\(field.name): obj.\(field.name.camelCase())")
+        fieldAssignments.append("\(field.name): obj.\(fieldAliasedName.camelCase())")
       }
       continue
     }
@@ -691,23 +734,23 @@ func generateObjectInits(
       switch field.type {
       case .named(_):
         fieldAssignments.append(
-          "\(field.name): obj\(prefix).\(field.name.camelCase())?.\(primaryKey.camelCase())")
+          "\(field.name): obj\(prefix).\(fieldAliasedName.camelCase())?.\(primaryKey.camelCase())")
       case .nonNull(_):
         fieldAssignments.append(
-          "\(field.name): obj\(prefix).\(field.name.camelCase()).\(primaryKey.camelCase())")
+          "\(field.name): obj\(prefix).\(fieldAliasedName.camelCase()).\(primaryKey.camelCase())")
       case .list(_):
         fieldAssignments.append(
-          "\(field.name): obj\(prefix).\(field.name.camelCase())?.compactMap { $0?.\(primaryKey.camelCase()) } ?? []"
+          "\(field.name): obj\(prefix).\(fieldAliasedName.camelCase())?.compactMap { $0?.\(primaryKey.camelCase()) } ?? []"
         )
       }
     } else if isBaseType(field.type) {
       fieldAssignments.append(
-        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "", type: field.type, optional: true))"
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(fieldAliasedName.camelCase())", inner: "", type: field.type, optional: true))"
       )
     } else {
       let typeName = namedType(field.type).name
       fieldAssignments.append(
-        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(field.name.camelCase())", inner: "\(rootType.name).\(typeName)($0)", type: field.type, optional: true))"
+        "\(field.name): \(unwrapType(prefix: "obj\(prefix).\(fieldAliasedName.camelCase())", inner: "\(rootType.name).\(typeName)($0)", type: field.type, optional: true))"
       )
     }
   }
@@ -761,16 +804,16 @@ func generateEnumInits(
 func generateInits(
   _ entityType: GraphQLNamedType,
   rootType: GraphQLNamedType, fullyQualifiedName: [String],
-  selections: [CompilationResult.Selection]
+  selectionSet: CompilationResult.SelectionSet
 ) -> String {
   if let interfaceType = entityType as? GraphQLInterfaceType {
     return generateInterfaceInits(
       interfaceType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-      selections: selections)
+      selectionSet: selectionSet)
   } else if let objectType = entityType as? GraphQLObjectType {
     return generateObjectInits(
       objectType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-      selections: selections)
+      selectionSet: selectionSet)
   } else if let enumType = entityType as? GraphQLEnumType {
     return generateEnumInits(enumType, rootType: rootType)
   } else {
@@ -782,32 +825,38 @@ struct EntityInit {
   var entityType: GraphQLNamedType
   var rootType: GraphQLNamedType
   var fullyQualifiedName: [String]
-  var selections: [CompilationResult.Selection]
+  var selectionSet: CompilationResult.SelectionSet
 }
 
 func insertEntityInits(
   _ entityInits: inout [String: [String: [[String]: EntityInit]]], entityType: GraphQLNamedType,
   rootType: GraphQLNamedType, fullyQualifiedName: [String],
-  selections: [CompilationResult.Selection]
+  selectionSet: CompilationResult.SelectionSet
 ) {
   if let _ = entityType as? GraphQLEnumType {
     // Remove fullyQualifiedName for enums.
     entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
       entityType.name, default: [[String]: EntityInit]()][[]] = EntityInit(
         entityType: entityType, rootType: rootType, fullyQualifiedName: [],
-        selections: selections)
+        selectionSet: selectionSet)
   } else {
     entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
       entityType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
         entityType: entityType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-        selections: selections)
+        selectionSet: selectionSet)
     for namedType in getImplementations(from: entityType) {
       entityInits[rootType.name, default: [String: [[String]: EntityInit]]()][
         namedType.name, default: [[String]: EntityInit]()][fullyQualifiedName] = EntityInit(
           entityType: namedType, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
-          selections: selections)
+          selectionSet: selectionSet)
     }
   }
+}
+
+func inlineDowncastRequired(rootType: GraphQLNamedType?, inlineFragment: CompilationResult.InlineFragment) -> Bool {
+  guard let rootType = rootType else { return false }
+  // Need to downcast when the root is an interface type while the inline fragment is not.
+  return (rootType is GraphQLInterfaceType) && !(inlineFragment.selectionSet.parentType is GraphQLInterfaceType)
 }
 
 func findEntityInits(
@@ -826,10 +875,11 @@ func findEntityInits(
     switch selection {
     case let .field(field):
       if let selectionSet = field.selectionSet {
+        let aliasedName = field.alias ?? field.name
         if hasEntity {
           let newEntityInits = findEntityInits(
             entities: entities, rootType: entityType,
-            fullyQualifiedName: fullyQualifiedName + [field.name.singularized().pascalCase()],
+            fullyQualifiedName: fullyQualifiedName + [aliasedName.singularized().pascalCase()],
             selectionSet: selectionSet,
             marked: marked)
           entityInits.merge(newEntityInits) {
@@ -838,7 +888,7 @@ func findEntityInits(
         }
         let newEntityInits = findEntityInits(
           entities: entities, rootType: rootType,
-          fullyQualifiedName: fullyQualifiedName + [field.name.singularized().pascalCase()],
+          fullyQualifiedName: fullyQualifiedName + [aliasedName.singularized().pascalCase()],
           selectionSet: selectionSet,
           marked: marked)
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
@@ -847,24 +897,25 @@ func findEntityInits(
         if hasEntity {
           insertEntityInits(
             &entityInits, entityType: fieldType, rootType: entityType,
-            fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
+            fullyQualifiedName: fullyQualifiedName, selectionSet: selectionSet)
         }
         if let rootType = rootType {
           insertEntityInits(
             &entityInits, entityType: fieldType, rootType: rootType,
-            fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
+            fullyQualifiedName: fullyQualifiedName, selectionSet: selectionSet)
         }
       }
     case let .inlineFragment(inlineFragment):
+      let additionalQualifiedName = inlineDowncastRequired(rootType: entityType, inlineFragment: inlineFragment) ? ["As\(inlineFragment.selectionSet.parentType.name.pascalCase())"] : []
       if hasEntity {
         let newEntityInits = findEntityInits(
-          entities: entities, rootType: entityType, fullyQualifiedName: fullyQualifiedName,
+          entities: entities, rootType: entityType, fullyQualifiedName: fullyQualifiedName + additionalQualifiedName,
           selectionSet: inlineFragment.selectionSet,
           marked: marked)
         entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
       }
       let newEntityInits = findEntityInits(
-        entities: entities, rootType: rootType, fullyQualifiedName: fullyQualifiedName,
+        entities: entities, rootType: rootType, fullyQualifiedName: fullyQualifiedName + additionalQualifiedName,
         selectionSet: inlineFragment.selectionSet,
         marked: marked)
       entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
@@ -889,12 +940,12 @@ func findEntityInits(
   if hasEntity {
     insertEntityInits(
       &entityInits, entityType: entityType, rootType: entityType,
-      fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
+      fullyQualifiedName: fullyQualifiedName, selectionSet: selectionSet)
   }
   if let rootType = rootType {
     insertEntityInits(
       &entityInits, entityType: entityType, rootType: rootType,
-      fullyQualifiedName: fullyQualifiedName, selections: selectionSet.selections)
+      fullyQualifiedName: fullyQualifiedName, selectionSet: selectionSet)
   }
   return entityInits
 }
@@ -954,7 +1005,7 @@ for entity in entities {
           $0
             + generateInits(
               $1.entityType, rootType: $1.rootType, fullyQualifiedName: $1.fullyQualifiedName,
-              selections: $1.selections)
+              selectionSet: $1.selectionSet)
         }
     }
     let outputPath = "\(outputDir!)/\(entity)_inits_generated.swift"
