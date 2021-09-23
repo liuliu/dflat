@@ -36,6 +36,16 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     // Assuming this is the root
     Self(bb.read(def: zzz_DflatGen_Vec3.self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_Vec3.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct TextContent: Equatable, FlatBuffersDecodable {
@@ -48,6 +58,16 @@ public struct TextContent: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_TextContent.getRootAsTextContent(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_TextContent.verify(&verifier, at: 0, of: zzz_DflatGen_TextContent.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -66,6 +86,16 @@ public struct ImageContent: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_ImageContent.getRootAsImageContent(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_ImageContent.verify(&verifier, at: 0, of: zzz_DflatGen_ImageContent.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -119,6 +149,16 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDoc.getRootAsBenchDoc(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_BenchDoc.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDoc.self)
+      return true
+    } catch {
+      return false
+    }
   }
   public static var table: String { "benchdoc" }
   public static var indexFields: [String] { [] }

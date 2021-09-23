@@ -39,6 +39,16 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     // Assuming this is the root
     Self(bb.read(def: zzz_DflatGen_MyGame_SampleV3_Vec3.self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV3_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Vec3.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Empty: Equatable, FlatBuffersDecodable {
@@ -48,6 +58,16 @@ public struct Empty: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV3_Empty.getRootAsEmpty(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV3_Empty.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Empty.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -125,6 +145,16 @@ public struct Monster: Equatable, FlatBuffersDecodable {
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV3_Monster.getRootAsMonster(bb: bb))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV3_Monster.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Monster.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Weapon: Equatable, FlatBuffersDecodable {
@@ -141,6 +171,16 @@ public struct Weapon: Equatable, FlatBuffersDecodable {
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV3_Weapon.getRootAsWeapon(bb: bb))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV3_Weapon.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Weapon.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Orb: Equatable, FlatBuffersDecodable {
@@ -156,6 +196,16 @@ public struct Orb: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV3_Orb.getRootAsOrb(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV3_Orb.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Orb.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 

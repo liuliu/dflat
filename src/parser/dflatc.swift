@@ -485,6 +485,16 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
       "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
     code += "  }\n"
   }
+  code += "  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {\n"
+  code += "    do {\n"
+  code += "      var bb = bb\n"
+  code += "      var verifier = try Verifier(buffer: &bb)\n"
+  code += "      try \(GetDflatGenFullyQualifiedName(structDef)).verify(&verifier, at: 0, of: \(GetDflatGenFullyQualifiedName(structDef)).self)\n"
+  code += "      return true\n"
+  code += "    } catch {\n"
+  code += "      return false\n"
+  code += "    }\n"
+  code += "  }\n"
   code += "}\n"
 }
 
@@ -530,6 +540,16 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
   code +=
     "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
+  code += "  }\n"
+  code += "  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {\n"
+  code += "    do {\n"
+  code += "      var bb = bb\n"
+  code += "      var verifier = try Verifier(buffer: &bb)\n"
+  code += "      try \(GetDflatGenFullyQualifiedName(structDef)).verify(&verifier, at: 0, of: \(GetDflatGenFullyQualifiedName(structDef)).self)\n"
+  code += "      return true\n"
+  code += "    } catch {\n"
+  code += "      return false\n"
+  code += "    }\n"
   code += "  }\n"
   let indexedFields = GetIndexedFields(structDef)
   let tableName = GetTableName(structDef)

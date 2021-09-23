@@ -29,6 +29,16 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     // Assuming this is the root
     Self(bb.read(def: zzz_DflatGen_MyGame_Sample_Vec3.self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_Sample_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Vec3.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Profile: Equatable, FlatBuffersDecodable {
@@ -41,6 +51,16 @@ public struct Profile: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_Sample_Profile.getRootAsProfile(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_Sample_Profile.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Profile.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -159,6 +179,16 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecod
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_Sample_Monster.getRootAsMonster(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_Sample_Monster.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Monster.self)
+      return true
+    } catch {
+      return false
+    }
   }
   public static var table: String { "mygame__sample__monster_v1_1" }
   public static var indexFields: [String] { ["f6", "f26__type", "f26__u2__f4"] }

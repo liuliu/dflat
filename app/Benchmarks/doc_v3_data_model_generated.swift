@@ -40,6 +40,16 @@ public final class BenchDocV3: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV3.getRootAsBenchDocV3(bb: bb))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_BenchDocV3.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDocV3.self)
+      return true
+    } catch {
+      return false
+    }
+  }
   public static var table: String { "benchdocv3" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {

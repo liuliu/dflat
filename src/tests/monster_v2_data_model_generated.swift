@@ -39,6 +39,16 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     // Assuming this is the root
     Self(bb.read(def: zzz_DflatGen_MyGame_SampleV2_Vec3.self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV2_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV2_Vec3.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Empty: Equatable, FlatBuffersDecodable {
@@ -48,6 +58,16 @@ public struct Empty: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV2_Empty.getRootAsEmpty(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV2_Empty.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV2_Empty.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -65,6 +85,16 @@ public struct Weapon: Equatable, FlatBuffersDecodable {
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV2_Weapon.getRootAsWeapon(bb: bb))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV2_Weapon.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV2_Weapon.self)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 public struct Orb: Equatable, FlatBuffersDecodable {
@@ -80,6 +110,16 @@ public struct Orb: Equatable, FlatBuffersDecodable {
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV2_Orb.getRootAsOrb(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV2_Orb.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV2_Orb.self)
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -179,6 +219,16 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecod
   }
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_MyGame_SampleV2_Monster.getRootAsMonster(bb: bb))
+  }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_MyGame_SampleV2_Monster.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV2_Monster.self)
+      return true
+    } catch {
+      return false
+    }
   }
   public static var table: String { "mygame__samplev2__monster_v1_1" }
   public static var indexFields: [String] { ["f6", "f8", "f26__type", "f26__u2__f4", "f34__u2__f4"] }

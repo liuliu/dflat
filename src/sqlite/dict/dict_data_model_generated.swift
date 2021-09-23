@@ -77,6 +77,16 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_DictItem.getRootAsDictItem(bb: bb))
   }
+  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
+    do {
+      var bb = bb
+      var verifier = try Verifier(buffer: &bb)
+      try zzz_DflatGen_DictItem.verify(&verifier, at: 0, of: zzz_DflatGen_DictItem.self)
+      return true
+    } catch {
+      return false
+    }
+  }
   public static var table: String { "dictitem_v_dflat_internal__" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
