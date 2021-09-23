@@ -870,6 +870,9 @@ func findEntityInits(
   let hasEntity = entities.contains(entityName)
   var entityInits = [String: [String: [[String]: EntityInit]]]()
   let marked = marked || hasEntity
+  let merging: (EntityInit, EntityInit) -> EntityInit = {
+    return $1.selectionSet.selections.count > $0.selectionSet.selections.count ? $1 : $0
+  }
   guard let entityType = try? schema.getType(named: entityName) else { return entityInits }
   for selection in selectionSet.selections {
     switch selection {
@@ -883,7 +886,7 @@ func findEntityInits(
             selectionSet: selectionSet,
             marked: marked)
           entityInits.merge(newEntityInits) {
-            $0.merging($1) { $0.merging($1) { data, _ in data } }
+            $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) }
           }
         }
         let newEntityInits = findEntityInits(
@@ -891,7 +894,7 @@ func findEntityInits(
           fullyQualifiedName: fullyQualifiedName + [aliasedName.singularized().pascalCase()],
           selectionSet: selectionSet,
           marked: marked)
-        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
       } else if !isBaseType(field.type) && marked {  // This is pretty much only covers enum type, otherwise you need to have selectionSet.
         let fieldType = namedType(field.type)
         if hasEntity {
@@ -912,13 +915,13 @@ func findEntityInits(
           entities: entities, rootType: entityType, fullyQualifiedName: fullyQualifiedName + additionalQualifiedName,
           selectionSet: inlineFragment.selectionSet,
           marked: marked)
-        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
       }
       let newEntityInits = findEntityInits(
         entities: entities, rootType: rootType, fullyQualifiedName: fullyQualifiedName + additionalQualifiedName,
         selectionSet: inlineFragment.selectionSet,
         marked: marked)
-      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
     case let .fragmentSpread(fragmentSpread):
       if hasEntity {
         let newEntityInits = findEntityInits(
@@ -926,14 +929,14 @@ func findEntityInits(
           fullyQualifiedName: [fragmentSpread.fragment.name.pascalCase()],
           selectionSet: fragmentSpread.fragment.selectionSet,
           marked: marked)
-        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+        entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
       }
       let newEntityInits = findEntityInits(
         entities: entities, rootType: rootType,
         fullyQualifiedName: [fragmentSpread.fragment.name.pascalCase()],
         selectionSet: fragmentSpread.fragment.selectionSet,
         marked: marked)
-      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+      entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
     }
   }
   guard marked else { return entityInits }
@@ -964,7 +967,10 @@ for operation in compilationResult.operations {
   let newEntityInits = findEntityInits(
     entities: Set(entities), rootType: nil, fullyQualifiedName: [firstName, "Data"],
     selectionSet: operation.selectionSet, marked: false)
-  entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1) { data, _ in data } } }
+  let merging: (EntityInit, EntityInit) -> EntityInit = {
+    return $1.selectionSet.selections.count > $0.selectionSet.selections.count ? $1 : $0
+  }
+  entityInits.merge(newEntityInits) { $0.merging($1) { $0.merging($1, uniquingKeysWith: merging) } }
 }
 
 for entity in entities {
