@@ -62,6 +62,26 @@ class DictionaryTests: XCTestCase {
       MyGame.SampleV3.Monster(name: "candy"))
   }
 
+  func testReadWriteReadDifferentVersionFlatBuffersObject() {
+    guard var dictionary = dflat?.dictionary else { return }
+    XCTAssertNil(dictionary["fbsValue"] as MyGame.SampleV3.Monster?)
+    dictionary["fbsValue"] = MyGame.SampleV3.Monster(mana: 100, name: "zonda")
+    let zonda = MyGame.SampleV3.Monster(mana: 100, name: "zonda")
+    let fbsValue = dictionary["fbsValue", default: MyGame.SampleV3.Monster(name: "candy")]
+    XCTAssertEqual(fbsValue, zonda)
+    dictionary.synchronize()
+    let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
+    var newDictionary = newDflat.dictionary
+    let candy = MyGame.SampleV2.Monster(name: "candy", color: .blue)
+    XCTAssertEqual(
+      newDictionary["fbsValue", default: MyGame.SampleV2.Monster(name: "candy", color: .blue)],
+      candy)
+    newDictionary["fbsValue"] = nil as MyGame.SampleV2.Monster?
+    let anotherDict = newDflat.dictionary
+    XCTAssertEqual(
+      anotherDict["fbsValue", default: MyGame.SampleV2.Monster(name: "candy", color: .blue)], candy)
+  }
+
   func testReadWriteReadBool() {
     guard var dictionary = dflat?.dictionary else { return }
     XCTAssertNil(dictionary["boolValue"] as Bool?)
@@ -155,6 +175,10 @@ class DictionaryTests: XCTestCase {
   static let allTests = [
     ("testReadWriteReadCodableObject", testReadWriteReadCodableObject),
     ("testReadWriteReadFlatBuffersObject", testReadWriteReadFlatBuffersObject),
+    (
+      "testReadWriteReadDifferentVersionFlatBuffersObject",
+      testReadWriteReadDifferentVersionFlatBuffersObject
+    ),
     ("testReadWriteReadBool", testReadWriteReadBool),
     ("testReadWriteReadInt", testReadWriteReadInt),
     ("testReadWriteReadUInt", testReadWriteReadUInt),
