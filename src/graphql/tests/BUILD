@@ -50,6 +50,7 @@ swift_library(
         "GraphQLTests.swift",
         "main.swift",
         ":Character_Sources",
+        ":Review_Sources",
         ":StarWarsAPI_Sources",
     ],
     deps = [

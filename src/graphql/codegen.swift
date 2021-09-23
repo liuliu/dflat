@@ -151,16 +151,16 @@ for operation in compilationResult.operations {
     marked: false)
 }
 
-func flatbuffersType(_ graphQLType: GraphQLType, rootType: GraphQLNamedType) -> String {
+func flatbuffersType(_ graphQLType: GraphQLType, rootType: GraphQLNamedType, withNamespace: Bool = false) -> String {
   let scalarTypes: [String: String] = [
-    "Int": "int", "Float": "double", "Boolean": "bool", "ID": "string", "String": "string",
+    "Int": "long", "Float": "double", "Boolean": "bool", "ID": "string", "String": "string",
   ]
   switch graphQLType {
   case .named(let namedType):
     if namedType == rootType {
       return "string"
     } else {
-      return scalarTypes[namedType.name] ?? namedType.name
+      return scalarTypes[namedType.name] ?? (withNamespace ? "\(rootType.name).\(namedType.name)" : namedType.name)
     }
   case .nonNull(let graphQLType):
     return flatbuffersType(graphQLType, rootType: rootType)
@@ -214,6 +214,10 @@ func generateObjectType(
   }
   var fbs = ""
   let isRoot = rootType == objectType
+  if isRoot {
+    // Remove the extra namespace.
+    fbs += "namespace;\n"
+  }
   if let v = v {
     fbs += "table \(objectType.name) (v: \"\(v)\") {\n"
   } else {
@@ -231,7 +235,7 @@ func generateObjectType(
       }
       continue
     }
-    restOfFields += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType));\n"
+    restOfFields += "  \(field.name): \(flatbuffersType(field.type, rootType: rootType, withNamespace: isRoot));\n"
   }
   if !emitPrimaryKey && primaryKey.count > 0 && isRoot {
     fbs += "  \(primaryKey): \(FlatBuffersFromSwiftType[primaryKeyType]!) (primary);\n"
@@ -450,6 +454,17 @@ func isBaseType(_ graphQLType: GraphQLType) -> Bool {
   }
 }
 
+func isIntType(_ graphQLType: GraphQLType) -> Bool {
+  switch graphQLType {
+  case .named(let type):
+    return ["Int"].contains(type.name)
+  case .nonNull(let ofType):
+    return isBaseType(ofType)
+  case .list(_):
+    return false
+  }
+}
+
 func isIDType(_ graphQLType: GraphQLType) -> Bool {
   switch graphQLType {
   case .named(let type):
@@ -536,7 +551,7 @@ func generateInterfaceInits(
       inits += "  public init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
     }
   } else {
-    if isRoot {
+    if isRoot && primaryKey.count > 0 {
       inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
     } else {
       inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
@@ -604,12 +619,20 @@ func getImplementations(from namedType: GraphQLNamedType) -> [GraphQLObjectType]
 func unwrapType(prefix: String, inner: String, type: GraphQLType, optional: Bool) -> String {
   switch type {
   case .named(_):
-    return inner == "" ? prefix : "\(prefix).flatMap { \(inner) }"
+    if isIntType(type) {
+      return "\(prefix).map { Int64($0) }"
+    } else {
+      return inner == "" ? prefix : "\(prefix).flatMap { \(inner) }"
+    }
   case .nonNull(let nonNullType):
     if case .list(_) = nonNullType {
       return unwrapType(prefix: prefix, inner: inner, type: nonNullType, optional: false)
     } else {
-      return inner == "" ? prefix : "\(prefix).map { \(inner) }"
+      if isIntType(nonNullType) {
+        return "Int64(\(prefix))"
+      } else {
+        return inner == "" ? prefix : "\(prefix).map { \(inner) }"
+      }
     }
   case .list(let listType):
     if optional {
@@ -765,7 +788,7 @@ func generateObjectInits(
       inits += "  public init(\(primaryKey): \(primaryKeyType), _ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
     }
   } else {
-    if isRoot {
+    if isRoot && primaryKey.count > 0 {
       inits += "  public convenience init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
     } else {
       inits += "  public init(_ obj: \(fullyQualifiedName.joined(separator: "."))) {\n"
