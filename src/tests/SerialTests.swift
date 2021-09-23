@@ -11,7 +11,8 @@ class SerialTests: XCTestCase {
   override func setUp() {
     let filePath = NSTemporaryDirectory().appending("\(UUID().uuidString).db")
     self.filePath = filePath
-    dflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection, writeConcurrency: .serial)
+    dflat = SQLiteWorkspace(
+      filePath: filePath, fileProtectionLevel: .noProtection, writeConcurrency: .serial)
   }
 
   override func tearDown() {
@@ -312,6 +313,6 @@ class SerialTests: XCTestCase {
   static let allTests = [
     ("testConcurrentUpdatesAAB", testConcurrentUpdatesAAB),
     ("testConcurrentUpdatesABB", testConcurrentUpdatesABB),
-    ("testConcurrentUpdatesABBAB", testConcurrentUpdatesABBAB)
+    ("testConcurrentUpdatesABBAB", testConcurrentUpdatesABBAB),
   ]
 }

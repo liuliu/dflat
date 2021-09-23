@@ -11,7 +11,7 @@ _GIT_INDEX_FILE=$GIT_INDEX_FILE
 unset GIT_INDEX_FILE
 
 # Prettify all selected files
-echo "$FILES" | xargs -I {} bazel run --compilation_mode=opt @SwiftFormat//:swift-format -- format --configuration "$GIT_ROOT/.swift-format.json" -i `realpath {}`
+echo "$FILES" | xargs -I {} bazel run --compilation_mode=opt --run_under='env DYLD_FALLBACK_LIBRARY_PATH=$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx' @SwiftFormat//:swift-format -- format --configuration "$GIT_ROOT/.swift-format.json" -i `realpath {}`
 
 export GIT_INDEX_FILE=$_GIT_INDEX_FILE
 

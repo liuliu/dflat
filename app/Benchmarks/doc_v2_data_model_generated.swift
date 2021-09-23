@@ -1,8 +1,8 @@
 import Dflat
 import FlatBuffers
 import Foundation
-import SQLiteDflat
 import SQLite3
+import SQLiteDflat
 
 public enum ColorV2: Int8, DflatFriendlyValue {
   case red = 0
@@ -27,7 +27,10 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   public let tag: String?
   public let priority: Int32
   public let text: String?
-  public init(title: String, color: ColorV2? = .red, tag: String? = nil, priority: Int32? = 0, text: String? = nil) {
+  public init(
+    title: String, color: ColorV2? = .red, tag: String? = nil, priority: Int32? = 0,
+    text: String? = nil
+  ) {
     self.color = color ?? .red
     self.title = title
     self.tag = tag ?? nil
@@ -43,7 +46,9 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   }
   public static func from(data: Data) -> Self {
     return data.withUnsafeBytes { buffer in
-      let bb = ByteBuffer(assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!), capacity: buffer.count)
+      let bb = ByteBuffer(
+        assumingMemoryBound: UnsafeMutableRawPointer(mutating: buffer.baseAddress!),
+        capacity: buffer.count)
       return Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
     }
   }
@@ -57,7 +62,8 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try ForwardOffset<zzz_DflatGen_BenchDocV2>.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDocV2.self)
+      try ForwardOffset<zzz_DflatGen_BenchDocV2>.verify(
+        &verifier, at: 0, of: zzz_DflatGen_BenchDocV2.self)
       return true
     } catch {
       return false
@@ -66,10 +72,17 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   public static var table: String { "benchdocv2" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {
-    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else { return }
-    sqlite3_exec(sqlite.sqlite, "CREATE TABLE IF NOT EXISTS benchdocv2 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))", nil, nil, nil)
+    guard let sqlite = ((toolbox as? SQLitePersistenceToolbox).map { $0.connection }) else {
+      return
+    }
+    sqlite3_exec(
+      sqlite.sqlite,
+      "CREATE TABLE IF NOT EXISTS benchdocv2 (rowid INTEGER PRIMARY KEY AUTOINCREMENT, __pk0 TEXT, p BLOB, UNIQUE(__pk0))",
+      nil, nil, nil)
   }
-  public static func insertIndex(_ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer) -> Bool {
+  public static func insertIndex(
+    _ toolbox: PersistenceToolbox, field: String, rowid: Int64, table: ByteBuffer
+  ) -> Bool {
     return true
   }
 }

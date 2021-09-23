@@ -22,7 +22,12 @@ public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsWeapon(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Weapon { return zzz_DflatGen_MyGame_Sample_Weapon(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsWeapon(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Weapon {
+    return zzz_DflatGen_MyGame_Sample_Weapon(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -34,13 +39,28 @@ public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var name: String? { let o = _accessor.offset(VTOFFSET.name.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var name: String? {
+    let o = _accessor.offset(VTOFFSET.name.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var nameSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.name.v) }
-  public var damage: Int16 { let o = _accessor.offset(VTOFFSET.damage.v); return o == 0 ? 0 : _accessor.readBuffer(of: Int16.self, at: o) }
-  public static func startWeapon(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
-  public static func add(name: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: name, at: VTOFFSET.name.p) }
-  public static func add(damage: Int16, _ fbb: inout FlatBufferBuilder) { fbb.add(element: damage, def: 0, at: VTOFFSET.damage.p) }
-  public static func endWeapon(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public var damage: Int16 {
+    let o = _accessor.offset(VTOFFSET.damage.v)
+    return o == 0 ? 0 : _accessor.readBuffer(of: Int16.self, at: o)
+  }
+  public static func startWeapon(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 2)
+  }
+  public static func add(name: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: name, at: VTOFFSET.name.p)
+  }
+  public static func add(damage: Int16, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: damage, def: 0, at: VTOFFSET.damage.p)
+  }
+  public static func endWeapon(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createWeapon(
     _ fbb: inout FlatBufferBuilder,
     nameOffset name: Offset = Offset(),
@@ -52,9 +72,11 @@ public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject, Verifiable {
     return zzz_DflatGen_MyGame_Sample_Weapon.endWeapon(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.name.p, fieldName: "name", required: false, type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.name.p, fieldName: "name", required: false, type: ForwardOffset<String>.self)
     try _v.visit(field: VTOFFSET.damage.p, fieldName: "damage", required: false, type: Int16.self)
     _v.finish()
   }
@@ -66,7 +88,12 @@ public struct zzz_DflatGen_MyGame_Sample_Orb: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsOrb(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Orb { return zzz_DflatGen_MyGame_Sample_Orb(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsOrb(bb: ByteBuffer) -> zzz_DflatGen_MyGame_Sample_Orb {
+    return zzz_DflatGen_MyGame_Sample_Orb(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -78,13 +105,29 @@ public struct zzz_DflatGen_MyGame_Sample_Orb: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var name: String? { let o = _accessor.offset(VTOFFSET.name.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var name: String? {
+    let o = _accessor.offset(VTOFFSET.name.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var nameSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.name.v) }
-  public var color: zzz_DflatGen_MyGame_Sample_Color { let o = _accessor.offset(VTOFFSET.color.v); return o == 0 ? .red : zzz_DflatGen_MyGame_Sample_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .red }
+  public var color: zzz_DflatGen_MyGame_Sample_Color {
+    let o = _accessor.offset(VTOFFSET.color.v)
+    return o == 0
+      ? .red
+      : zzz_DflatGen_MyGame_Sample_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o))
+        ?? .red
+  }
   public static func startOrb(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
-  public static func add(name: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: name, at: VTOFFSET.name.p) }
-  public static func add(color: zzz_DflatGen_MyGame_Sample_Color, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 0, at: VTOFFSET.color.p) }
-  public static func endOrb(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public static func add(name: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: name, at: VTOFFSET.name.p)
+  }
+  public static func add(color: zzz_DflatGen_MyGame_Sample_Color, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: color.rawValue, def: 0, at: VTOFFSET.color.p)
+  }
+  public static func endOrb(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createOrb(
     _ fbb: inout FlatBufferBuilder,
     nameOffset name: Offset = Offset(),
@@ -96,11 +139,14 @@ public struct zzz_DflatGen_MyGame_Sample_Orb: FlatBufferObject, Verifiable {
     return zzz_DflatGen_MyGame_Sample_Orb.endOrb(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.name.p, fieldName: "name", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(field: VTOFFSET.color.p, fieldName: "color", required: false, type: zzz_DflatGen_MyGame_Sample_Color.self)
+    try _v.visit(
+      field: VTOFFSET.name.p, fieldName: "name", required: false, type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.color.p, fieldName: "color", required: false,
+      type: zzz_DflatGen_MyGame_Sample_Color.self)
     _v.finish()
   }
 }
-

@@ -1,8 +1,8 @@
 import Dflat
-import SQLiteDflat
-import SQLite3
 import FlatBuffers
 import Foundation
+import SQLite3
+import SQLiteDflat
 
 // MARK - SQLiteValue for Enumerations
 
@@ -106,7 +106,8 @@ extension MyGame.SampleV3.Monster: FlatBuffersEncodable {
     zzz_DflatGen_MyGame_SampleV3_Monster.add(hp: self.hp, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(name: __name, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(color: __color, &flatBufferBuilder)
-    zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(inventory: __vector_inventory, &flatBufferBuilder)
+    zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(
+      inventory: __vector_inventory, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.addVectorOf(weapons: __vector_weapons, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(equippedType: __equippedType, &flatBufferBuilder)
     zzz_DflatGen_MyGame_SampleV3_Monster.add(equipped: __equipped, &flatBufferBuilder)

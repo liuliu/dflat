@@ -27,7 +27,12 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsDictItem(bb: ByteBuffer) -> zzz_DflatGen_DictItem { return zzz_DflatGen_DictItem(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsDictItem(bb: ByteBuffer) -> zzz_DflatGen_DictItem {
+    return zzz_DflatGen_DictItem(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -47,34 +52,100 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var key: String? { let o = _accessor.offset(VTOFFSET.key.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var key: String? {
+    let o = _accessor.offset(VTOFFSET.key.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var keySegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.key.v) }
-  public var namespace: String? { let o = _accessor.offset(VTOFFSET.namespace.v); return o == 0 ? nil : _accessor.string(at: o) }
-  public var namespaceSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.namespace.v) }
-  public var valueType: zzz_DflatGen_ValueType { let o = _accessor.offset(VTOFFSET.valueType.v); return o == 0 ? .boolvalue : zzz_DflatGen_ValueType(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .boolvalue }
-  public var boolValue: Bool { let o = _accessor.offset(VTOFFSET.boolValue.v); return o == 0 ? false : 0 != _accessor.readBuffer(of: Byte.self, at: o) }
-  public var longValue: Int64 { let o = _accessor.offset(VTOFFSET.longValue.v); return o == 0 ? 0 : _accessor.readBuffer(of: Int64.self, at: o) }
-  public var unsignedLongValue: UInt64 { let o = _accessor.offset(VTOFFSET.unsignedLongValue.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt64.self, at: o) }
-  public var floatValue: Float32 { let o = _accessor.offset(VTOFFSET.floatValue.v); return o == 0 ? 0.0 : _accessor.readBuffer(of: Float32.self, at: o) }
-  public var doubleValue: Double { let o = _accessor.offset(VTOFFSET.doubleValue.v); return o == 0 ? 0.0 : _accessor.readBuffer(of: Double.self, at: o) }
-  public var stringValue: String? { let o = _accessor.offset(VTOFFSET.stringValue.v); return o == 0 ? nil : _accessor.string(at: o) }
-  public var stringValueSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.stringValue.v) }
-  public var codableCount: Int32 { let o = _accessor.offset(VTOFFSET.codable.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-  public func codable(at index: Int32) -> UInt8 { let o = _accessor.offset(VTOFFSET.codable.v); return o == 0 ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1) }
+  public var namespace: String? {
+    let o = _accessor.offset(VTOFFSET.namespace.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
+  public var namespaceSegmentArray: [UInt8]? {
+    return _accessor.getVector(at: VTOFFSET.namespace.v)
+  }
+  public var valueType: zzz_DflatGen_ValueType {
+    let o = _accessor.offset(VTOFFSET.valueType.v)
+    return o == 0
+      ? .boolvalue
+      : zzz_DflatGen_ValueType(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .boolvalue
+  }
+  public var boolValue: Bool {
+    let o = _accessor.offset(VTOFFSET.boolValue.v)
+    return o == 0 ? false : 0 != _accessor.readBuffer(of: Byte.self, at: o)
+  }
+  public var longValue: Int64 {
+    let o = _accessor.offset(VTOFFSET.longValue.v)
+    return o == 0 ? 0 : _accessor.readBuffer(of: Int64.self, at: o)
+  }
+  public var unsignedLongValue: UInt64 {
+    let o = _accessor.offset(VTOFFSET.unsignedLongValue.v)
+    return o == 0 ? 0 : _accessor.readBuffer(of: UInt64.self, at: o)
+  }
+  public var floatValue: Float32 {
+    let o = _accessor.offset(VTOFFSET.floatValue.v)
+    return o == 0 ? 0.0 : _accessor.readBuffer(of: Float32.self, at: o)
+  }
+  public var doubleValue: Double {
+    let o = _accessor.offset(VTOFFSET.doubleValue.v)
+    return o == 0 ? 0.0 : _accessor.readBuffer(of: Double.self, at: o)
+  }
+  public var stringValue: String? {
+    let o = _accessor.offset(VTOFFSET.stringValue.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
+  public var stringValueSegmentArray: [UInt8]? {
+    return _accessor.getVector(at: VTOFFSET.stringValue.v)
+  }
+  public var codableCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.codable.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func codable(at index: Int32) -> UInt8 {
+    let o = _accessor.offset(VTOFFSET.codable.v)
+    return o == 0
+      ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)
+  }
   public var codable: [UInt8] { return _accessor.getVector(at: VTOFFSET.codable.v) ?? [] }
-  public static func startDictItem(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 10) }
-  public static func add(key: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: key, at: VTOFFSET.key.p) }
-  public static func add(namespace: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: namespace, at: VTOFFSET.namespace.p) }
-  public static func add(valueType: zzz_DflatGen_ValueType, _ fbb: inout FlatBufferBuilder) { fbb.add(element: valueType.rawValue, def: 0, at: VTOFFSET.valueType.p) }
-  public static func add(boolValue: Bool, _ fbb: inout FlatBufferBuilder) { fbb.add(element: boolValue, def: false,
-   at: VTOFFSET.boolValue.p) }
-  public static func add(longValue: Int64, _ fbb: inout FlatBufferBuilder) { fbb.add(element: longValue, def: 0, at: VTOFFSET.longValue.p) }
-  public static func add(unsignedLongValue: UInt64, _ fbb: inout FlatBufferBuilder) { fbb.add(element: unsignedLongValue, def: 0, at: VTOFFSET.unsignedLongValue.p) }
-  public static func add(floatValue: Float32, _ fbb: inout FlatBufferBuilder) { fbb.add(element: floatValue, def: 0.0, at: VTOFFSET.floatValue.p) }
-  public static func add(doubleValue: Double, _ fbb: inout FlatBufferBuilder) { fbb.add(element: doubleValue, def: 0.0, at: VTOFFSET.doubleValue.p) }
-  public static func add(stringValue: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: stringValue, at: VTOFFSET.stringValue.p) }
-  public static func addVectorOf(codable: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: codable, at: VTOFFSET.codable.p) }
-  public static func endDictItem(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public static func startDictItem(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 10)
+  }
+  public static func add(key: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: key, at: VTOFFSET.key.p)
+  }
+  public static func add(namespace: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: namespace, at: VTOFFSET.namespace.p)
+  }
+  public static func add(valueType: zzz_DflatGen_ValueType, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: valueType.rawValue, def: 0, at: VTOFFSET.valueType.p)
+  }
+  public static func add(boolValue: Bool, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(
+      element: boolValue, def: false,
+      at: VTOFFSET.boolValue.p)
+  }
+  public static func add(longValue: Int64, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: longValue, def: 0, at: VTOFFSET.longValue.p)
+  }
+  public static func add(unsignedLongValue: UInt64, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: unsignedLongValue, def: 0, at: VTOFFSET.unsignedLongValue.p)
+  }
+  public static func add(floatValue: Float32, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: floatValue, def: 0.0, at: VTOFFSET.floatValue.p)
+  }
+  public static func add(doubleValue: Double, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: doubleValue, def: 0.0, at: VTOFFSET.doubleValue.p)
+  }
+  public static func add(stringValue: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: stringValue, at: VTOFFSET.stringValue.p)
+  }
+  public static func addVectorOf(codable: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: codable, at: VTOFFSET.codable.p)
+  }
+  public static func endDictItem(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createDictItem(
     _ fbb: inout FlatBufferBuilder,
     keyOffset key: Offset = Offset(),
@@ -102,19 +173,34 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject, Verifiable {
     return zzz_DflatGen_DictItem.endDictItem(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.key.p, fieldName: "key", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(field: VTOFFSET.namespace.p, fieldName: "namespace", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(field: VTOFFSET.valueType.p, fieldName: "valueType", required: false, type: zzz_DflatGen_ValueType.self)
-    try _v.visit(field: VTOFFSET.boolValue.p, fieldName: "boolValue", required: false, type: Bool.self)
-    try _v.visit(field: VTOFFSET.longValue.p, fieldName: "longValue", required: false, type: Int64.self)
-    try _v.visit(field: VTOFFSET.unsignedLongValue.p, fieldName: "unsignedLongValue", required: false, type: UInt64.self)
-    try _v.visit(field: VTOFFSET.floatValue.p, fieldName: "floatValue", required: false, type: Float32.self)
-    try _v.visit(field: VTOFFSET.doubleValue.p, fieldName: "doubleValue", required: false, type: Double.self)
-    try _v.visit(field: VTOFFSET.stringValue.p, fieldName: "stringValue", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(field: VTOFFSET.codable.p, fieldName: "codable", required: false, type: ForwardOffset<Vector<UInt8, UInt8>>.self)
+    try _v.visit(
+      field: VTOFFSET.key.p, fieldName: "key", required: false, type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.namespace.p, fieldName: "namespace", required: false,
+      type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.valueType.p, fieldName: "valueType", required: false,
+      type: zzz_DflatGen_ValueType.self)
+    try _v.visit(
+      field: VTOFFSET.boolValue.p, fieldName: "boolValue", required: false, type: Bool.self)
+    try _v.visit(
+      field: VTOFFSET.longValue.p, fieldName: "longValue", required: false, type: Int64.self)
+    try _v.visit(
+      field: VTOFFSET.unsignedLongValue.p, fieldName: "unsignedLongValue", required: false,
+      type: UInt64.self)
+    try _v.visit(
+      field: VTOFFSET.floatValue.p, fieldName: "floatValue", required: false, type: Float32.self)
+    try _v.visit(
+      field: VTOFFSET.doubleValue.p, fieldName: "doubleValue", required: false, type: Double.self)
+    try _v.visit(
+      field: VTOFFSET.stringValue.p, fieldName: "stringValue", required: false,
+      type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.codable.p, fieldName: "codable", required: false,
+      type: ForwardOffset<Vector<UInt8, UInt8>>.self)
     _v.finish()
   }
 }
-

@@ -57,7 +57,8 @@ public struct zzz_DflatGen_Vec3: NativeStruct, Verifiable {
   public var y: Float32 { _y }
   public var z: Float32 { _z }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     try verifier.inBuffer(position: position, of: zzz_DflatGen_Vec3.self)
   }
 }
@@ -81,7 +82,12 @@ public struct zzz_DflatGen_TextContent: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsTextContent(bb: ByteBuffer) -> zzz_DflatGen_TextContent { return zzz_DflatGen_TextContent(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsTextContent(bb: ByteBuffer) -> zzz_DflatGen_TextContent {
+    return zzz_DflatGen_TextContent(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -92,11 +98,21 @@ public struct zzz_DflatGen_TextContent: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var text: String? { let o = _accessor.offset(VTOFFSET.text.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var text: String? {
+    let o = _accessor.offset(VTOFFSET.text.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var textSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.text.v) }
-  public static func startTextContent(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
-  public static func add(text: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: text, at: VTOFFSET.text.p) }
-  public static func endTextContent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public static func startTextContent(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 1)
+  }
+  public static func add(text: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: text, at: VTOFFSET.text.p)
+  }
+  public static func endTextContent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createTextContent(
     _ fbb: inout FlatBufferBuilder,
     textOffset text: Offset = Offset()
@@ -106,9 +122,11 @@ public struct zzz_DflatGen_TextContent: FlatBufferObject, Verifiable {
     return zzz_DflatGen_TextContent.endTextContent(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.text.p, fieldName: "text", required: false, type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.text.p, fieldName: "text", required: false, type: ForwardOffset<String>.self)
     _v.finish()
   }
 }
@@ -119,7 +137,12 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsImageContent(bb: ByteBuffer) -> zzz_DflatGen_ImageContent { return zzz_DflatGen_ImageContent(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsImageContent(bb: ByteBuffer) -> zzz_DflatGen_ImageContent {
+    return zzz_DflatGen_ImageContent(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -130,11 +153,24 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var imagesCount: Int32 { let o = _accessor.offset(VTOFFSET.images.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-  public func images(at index: Int32) -> String? { let o = _accessor.offset(VTOFFSET.images.v); return o == 0 ? nil : _accessor.directString(at: _accessor.vector(at: o) + index * 4) }
-  public static func startImageContent(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
-  public static func addVectorOf(images: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: images, at: VTOFFSET.images.p) }
-  public static func endImageContent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public var imagesCount: Int32 {
+    let o = _accessor.offset(VTOFFSET.images.v)
+    return o == 0 ? 0 : _accessor.vector(count: o)
+  }
+  public func images(at index: Int32) -> String? {
+    let o = _accessor.offset(VTOFFSET.images.v)
+    return o == 0 ? nil : _accessor.directString(at: _accessor.vector(at: o) + index * 4)
+  }
+  public static func startImageContent(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 1)
+  }
+  public static func addVectorOf(images: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: images, at: VTOFFSET.images.p)
+  }
+  public static func endImageContent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createImageContent(
     _ fbb: inout FlatBufferBuilder,
     imagesVectorOffset images: Offset = Offset()
@@ -144,9 +180,12 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
     return zzz_DflatGen_ImageContent.endImageContent(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.images.p, fieldName: "images", required: false, type: ForwardOffset<Vector<ForwardOffset<String>, String>>.self)
+    try _v.visit(
+      field: VTOFFSET.images.p, fieldName: "images", required: false,
+      type: ForwardOffset<Vector<ForwardOffset<String>, String>>.self)
     _v.finish()
   }
 }
@@ -157,7 +196,12 @@ public struct zzz_DflatGen_BenchDoc: FlatBufferObject, Verifiable {
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
-  public static func getRootAsBenchDoc(bb: ByteBuffer) -> zzz_DflatGen_BenchDoc { return zzz_DflatGen_BenchDoc(Table(bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))) }
+  public static func getRootAsBenchDoc(bb: ByteBuffer) -> zzz_DflatGen_BenchDoc {
+    return zzz_DflatGen_BenchDoc(
+      Table(
+        bb: bb, position: Int32(bb.read(def: UOffset.self, position: bb.reader)) + Int32(bb.reader))
+    )
+  }
 
   private init(_ t: Table) { _accessor = t }
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
@@ -174,25 +218,72 @@ public struct zzz_DflatGen_BenchDoc: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var pos: zzz_DflatGen_Vec3? { let o = _accessor.offset(VTOFFSET.pos.v); return o == 0 ? nil : _accessor.readBuffer(of: zzz_DflatGen_Vec3.self, at: o) }
-  public var mutablePos: zzz_DflatGen_Vec3_Mutable? { let o = _accessor.offset(VTOFFSET.pos.v); return o == 0 ? nil : zzz_DflatGen_Vec3_Mutable(_accessor.bb, o: o + _accessor.postion) }
-  public var color: zzz_DflatGen_Color { let o = _accessor.offset(VTOFFSET.color.v); return o == 0 ? .red : zzz_DflatGen_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .red }
-  public var title: String? { let o = _accessor.offset(VTOFFSET.title.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var pos: zzz_DflatGen_Vec3? {
+    let o = _accessor.offset(VTOFFSET.pos.v)
+    return o == 0 ? nil : _accessor.readBuffer(of: zzz_DflatGen_Vec3.self, at: o)
+  }
+  public var mutablePos: zzz_DflatGen_Vec3_Mutable? {
+    let o = _accessor.offset(VTOFFSET.pos.v)
+    return o == 0 ? nil : zzz_DflatGen_Vec3_Mutable(_accessor.bb, o: o + _accessor.postion)
+  }
+  public var color: zzz_DflatGen_Color {
+    let o = _accessor.offset(VTOFFSET.color.v)
+    return o == 0
+      ? .red : zzz_DflatGen_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o)) ?? .red
+  }
+  public var title: String? {
+    let o = _accessor.offset(VTOFFSET.title.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var titleSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.title.v) }
-  public var contentType: zzz_DflatGen_Content { let o = _accessor.offset(VTOFFSET.contentType.v); return o == 0 ? .none_ : zzz_DflatGen_Content(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
-  public func content<T: FlatbuffersInitializable>(type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.content.v); return o == 0 ? nil : _accessor.union(o) }
-  public var tag: String? { let o = _accessor.offset(VTOFFSET.tag.v); return o == 0 ? nil : _accessor.string(at: o) }
+  public var contentType: zzz_DflatGen_Content {
+    let o = _accessor.offset(VTOFFSET.contentType.v)
+    return o == 0
+      ? .none_
+      : zzz_DflatGen_Content(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_
+  }
+  public func content<T: FlatbuffersInitializable>(type: T.Type) -> T? {
+    let o = _accessor.offset(VTOFFSET.content.v)
+    return o == 0 ? nil : _accessor.union(o)
+  }
+  public var tag: String? {
+    let o = _accessor.offset(VTOFFSET.tag.v)
+    return o == 0 ? nil : _accessor.string(at: o)
+  }
   public var tagSegmentArray: [UInt8]? { return _accessor.getVector(at: VTOFFSET.tag.v) }
-  public var priority: Int32 { let o = _accessor.offset(VTOFFSET.priority.v); return o == 0 ? 0 : _accessor.readBuffer(of: Int32.self, at: o) }
-  public static func startBenchDoc(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 7) }
-  public static func add(pos: zzz_DflatGen_Vec3?, _ fbb: inout FlatBufferBuilder) { guard let pos = pos else { return }; fbb.create(struct: pos, position: VTOFFSET.pos.p) }
-  public static func add(color: zzz_DflatGen_Color, _ fbb: inout FlatBufferBuilder) { fbb.add(element: color.rawValue, def: 0, at: VTOFFSET.color.p) }
-  public static func add(title: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: title, at: VTOFFSET.title.p) }
-  public static func add(contentType: zzz_DflatGen_Content, _ fbb: inout FlatBufferBuilder) { fbb.add(element: contentType.rawValue, def: 0, at: VTOFFSET.contentType.p) }
-  public static func add(content: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: content, at: VTOFFSET.content.p) }
-  public static func add(tag: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: tag, at: VTOFFSET.tag.p) }
-  public static func add(priority: Int32, _ fbb: inout FlatBufferBuilder) { fbb.add(element: priority, def: 0, at: VTOFFSET.priority.p) }
-  public static func endBenchDoc(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public var priority: Int32 {
+    let o = _accessor.offset(VTOFFSET.priority.v)
+    return o == 0 ? 0 : _accessor.readBuffer(of: Int32.self, at: o)
+  }
+  public static func startBenchDoc(_ fbb: inout FlatBufferBuilder) -> UOffset {
+    fbb.startTable(with: 7)
+  }
+  public static func add(pos: zzz_DflatGen_Vec3?, _ fbb: inout FlatBufferBuilder) {
+    guard let pos = pos else { return }
+    fbb.create(struct: pos, position: VTOFFSET.pos.p)
+  }
+  public static func add(color: zzz_DflatGen_Color, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: color.rawValue, def: 0, at: VTOFFSET.color.p)
+  }
+  public static func add(title: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: title, at: VTOFFSET.title.p)
+  }
+  public static func add(contentType: zzz_DflatGen_Content, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: contentType.rawValue, def: 0, at: VTOFFSET.contentType.p)
+  }
+  public static func add(content: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: content, at: VTOFFSET.content.p)
+  }
+  public static func add(tag: Offset, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(offset: tag, at: VTOFFSET.tag.p)
+  }
+  public static func add(priority: Int32, _ fbb: inout FlatBufferBuilder) {
+    fbb.add(element: priority, def: 0, at: VTOFFSET.priority.p)
+  }
+  public static func endBenchDoc(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset {
+    let end = Offset(offset: fbb.endTable(at: start))
+    return end
+  }
   public static func createBenchDoc(
     _ fbb: inout FlatBufferBuilder,
     pos: zzz_DflatGen_Vec3? = nil,
@@ -214,24 +305,35 @@ public struct zzz_DflatGen_BenchDoc: FlatBufferObject, Verifiable {
     return zzz_DflatGen_BenchDoc.endBenchDoc(&fbb, start: __start)
   }
 
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws
+  where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.pos.p, fieldName: "pos", required: false, type: zzz_DflatGen_Vec3.self)
-    try _v.visit(field: VTOFFSET.color.p, fieldName: "color", required: false, type: zzz_DflatGen_Color.self)
-    try _v.visit(field: VTOFFSET.title.p, fieldName: "title", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(unionKey: VTOFFSET.contentType.p, unionField: VTOFFSET.content.p, unionKeyName: "contentType", fieldName: "content", required: false, completion: { (verifier, key: zzz_DflatGen_Content, pos) in
-      switch key {
-      case .none_:
-        break // NOTE - SWIFT doesnt support none
-      case .textcontent:
-        try ForwardOffset<zzz_DflatGen_TextContent>.verify(&verifier, at: pos, of: zzz_DflatGen_TextContent.self)
-      case .imagecontent:
-        try ForwardOffset<zzz_DflatGen_ImageContent>.verify(&verifier, at: pos, of: zzz_DflatGen_ImageContent.self)
-      }
-    })
-    try _v.visit(field: VTOFFSET.tag.p, fieldName: "tag", required: false, type: ForwardOffset<String>.self)
-    try _v.visit(field: VTOFFSET.priority.p, fieldName: "priority", required: false, type: Int32.self)
+    try _v.visit(
+      field: VTOFFSET.pos.p, fieldName: "pos", required: false, type: zzz_DflatGen_Vec3.self)
+    try _v.visit(
+      field: VTOFFSET.color.p, fieldName: "color", required: false, type: zzz_DflatGen_Color.self)
+    try _v.visit(
+      field: VTOFFSET.title.p, fieldName: "title", required: false, type: ForwardOffset<String>.self
+    )
+    try _v.visit(
+      unionKey: VTOFFSET.contentType.p, unionField: VTOFFSET.content.p, unionKeyName: "contentType",
+      fieldName: "content", required: false,
+      completion: { (verifier, key: zzz_DflatGen_Content, pos) in
+        switch key {
+        case .none_:
+          break  // NOTE - SWIFT doesnt support none
+        case .textcontent:
+          try ForwardOffset<zzz_DflatGen_TextContent>.verify(
+            &verifier, at: pos, of: zzz_DflatGen_TextContent.self)
+        case .imagecontent:
+          try ForwardOffset<zzz_DflatGen_ImageContent>.verify(
+            &verifier, at: pos, of: zzz_DflatGen_ImageContent.self)
+        }
+      })
+    try _v.visit(
+      field: VTOFFSET.tag.p, fieldName: "tag", required: false, type: ForwardOffset<String>.self)
+    try _v.visit(
+      field: VTOFFSET.priority.p, fieldName: "priority", required: false, type: Int32.self)
     _v.finish()
   }
 }
-
