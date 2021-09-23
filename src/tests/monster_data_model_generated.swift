@@ -33,7 +33,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_Sample_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Vec3.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_Sample_Vec3>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Vec3.self)
       return true
     } catch {
       return false
@@ -56,7 +56,7 @@ public struct Profile: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_Sample_Profile.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Profile.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_Sample_Profile>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Profile.self)
       return true
     } catch {
       return false
@@ -184,7 +184,7 @@ public final class Monster: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecod
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_Sample_Monster.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Monster.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_Sample_Monster>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Monster.self)
       return true
     } catch {
       return false

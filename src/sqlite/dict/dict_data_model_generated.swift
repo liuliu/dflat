@@ -81,7 +81,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_DictItem.verify(&verifier, at: 0, of: zzz_DflatGen_DictItem.self)
+      try ForwardOffset<zzz_DflatGen_DictItem>.verify(&verifier, at: 0, of: zzz_DflatGen_DictItem.self)
       return true
     } catch {
       return false

@@ -57,7 +57,7 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_BenchDocV2.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDocV2.self)
+      try ForwardOffset<zzz_DflatGen_BenchDocV2>.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDocV2.self)
       return true
     } catch {
       return false

@@ -105,10 +105,11 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         assert(value.valueType == .flatBuffersValue)
         let object: T? = value.codable.withUnsafeBytes {
           guard let baseAddress = $0.baseAddress else { return nil }
-          return T.from(
-            byteBuffer: ByteBuffer(
-              assumingMemoryBound: UnsafeMutableRawPointer(mutating: baseAddress),
-              capacity: $0.count))
+          let byteBuffer = ByteBuffer(
+            assumingMemoryBound: UnsafeMutableRawPointer(mutating: baseAddress),
+            capacity: $0.count)
+          guard T.verify(byteBuffer: byteBuffer) else { return nil }
+          return T.from(byteBuffer: byteBuffer)
         }
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.

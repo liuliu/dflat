@@ -43,7 +43,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_SampleV3_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Vec3.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_SampleV3_Vec3>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Vec3.self)
       return true
     } catch {
       return false
@@ -63,7 +63,7 @@ public struct Empty: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_SampleV3_Empty.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Empty.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_SampleV3_Empty>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Empty.self)
       return true
     } catch {
       return false
@@ -149,7 +149,7 @@ public struct Monster: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_SampleV3_Monster.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Monster.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_SampleV3_Monster>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Monster.self)
       return true
     } catch {
       return false
@@ -175,7 +175,7 @@ public struct Weapon: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_SampleV3_Weapon.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Weapon.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_SampleV3_Weapon>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Weapon.self)
       return true
     } catch {
       return false
@@ -201,7 +201,7 @@ public struct Orb: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_SampleV3_Orb.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Orb.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_SampleV3_Orb>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_SampleV3_Orb.self)
       return true
     } catch {
       return false

@@ -40,7 +40,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_Vec3.verify(&verifier, at: 0, of: zzz_DflatGen_Vec3.self)
+      try ForwardOffset<zzz_DflatGen_Vec3>.verify(&verifier, at: 0, of: zzz_DflatGen_Vec3.self)
       return true
     } catch {
       return false
@@ -63,7 +63,7 @@ public struct TextContent: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_TextContent.verify(&verifier, at: 0, of: zzz_DflatGen_TextContent.self)
+      try ForwardOffset<zzz_DflatGen_TextContent>.verify(&verifier, at: 0, of: zzz_DflatGen_TextContent.self)
       return true
     } catch {
       return false
@@ -91,7 +91,7 @@ public struct ImageContent: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_ImageContent.verify(&verifier, at: 0, of: zzz_DflatGen_ImageContent.self)
+      try ForwardOffset<zzz_DflatGen_ImageContent>.verify(&verifier, at: 0, of: zzz_DflatGen_ImageContent.self)
       return true
     } catch {
       return false
@@ -154,7 +154,7 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_BenchDoc.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDoc.self)
+      try ForwardOffset<zzz_DflatGen_BenchDoc>.verify(&verifier, at: 0, of: zzz_DflatGen_BenchDoc.self)
       return true
     } catch {
       return false

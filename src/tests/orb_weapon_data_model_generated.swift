@@ -33,7 +33,7 @@ public struct Weapon: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_Sample_Weapon.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Weapon.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_Sample_Weapon>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Weapon.self)
       return true
     } catch {
       return false
@@ -59,7 +59,7 @@ public struct Orb: Equatable, FlatBuffersDecodable {
     do {
       var bb = bb
       var verifier = try Verifier(buffer: &bb)
-      try zzz_DflatGen_MyGame_Sample_Orb.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Orb.self)
+      try ForwardOffset<zzz_DflatGen_MyGame_Sample_Orb>.verify(&verifier, at: 0, of: zzz_DflatGen_MyGame_Sample_Orb.self)
       return true
     } catch {
       return false
