@@ -417,13 +417,16 @@ func generateFlatbuffers(_ rootType: GraphQLNamedType) -> String {
     guard !set.contains(entityType.name) else { continue }
     set.insert(entityType.name)
     if let interfaceType = entityType as? GraphQLInterfaceType {
-      typeDigests[entityType.name] = generateInterfaceDigest(
+      let typeDigest = generateInterfaceDigest(
         interfaceType, rootType: rootType, typeDigests: typeDigests)
-      fbs += generateInterfaceType(interfaceType, rootType: rootType)
+      typeDigests[entityType.name] = typeDigest
+      fbs += generateInterfaceType(
+        interfaceType, rootType: rootType, v: String(typeDigest.prefix(16)))
     } else if let objectType = entityType as? GraphQLObjectType {
-      typeDigests[entityType.name] = generateObjectDigest(
+      let typeDigest = generateObjectDigest(
         objectType, rootType: rootType, typeDigests: typeDigests)
-      fbs += generateObjectType(objectType, rootType: rootType)
+      typeDigests[entityType.name] = typeDigest
+      fbs += generateObjectType(objectType, rootType: rootType, v: String(typeDigest.prefix(16)))
     } else if let enumType = entityType as? GraphQLEnumType {
       typeDigests[entityType.name] = generateEnumDigest(enumType)
       fbs += generateEnumType(enumType)

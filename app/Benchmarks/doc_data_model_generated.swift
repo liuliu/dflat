@@ -32,6 +32,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     self.y = obj.y
     self.z = obj.z
   }
+
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     // Assuming this is the root
     Self(
@@ -39,6 +40,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
         def: zzz_DflatGen_Vec3.self,
         position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
   }
+
   public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
     do {
       var bb = bb
@@ -48,6 +50,10 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     } catch {
       return false
     }
+  }
+
+  public static var _version: String? {
+    return nil
   }
 }
 
@@ -59,9 +65,11 @@ public struct TextContent: Equatable, FlatBuffersDecodable {
   public init(_ obj: zzz_DflatGen_TextContent) {
     self.text = obj.text
   }
+
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_TextContent.getRootAsTextContent(bb: bb))
   }
+
   public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
     do {
       var bb = bb
@@ -72,6 +80,10 @@ public struct TextContent: Equatable, FlatBuffersDecodable {
     } catch {
       return false
     }
+  }
+
+  public static var _version: String? {
+    return nil
   }
 }
 
@@ -88,9 +100,11 @@ public struct ImageContent: Equatable, FlatBuffersDecodable {
     }
     self.images = __images
   }
+
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_ImageContent.getRootAsImageContent(bb: bb))
   }
+
   public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
     do {
       var bb = bb
@@ -101,6 +115,10 @@ public struct ImageContent: Equatable, FlatBuffersDecodable {
     } catch {
       return false
     }
+  }
+
+  public static var _version: String? {
+    return nil
   }
 }
 
@@ -174,6 +192,9 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     } catch {
       return false
     }
+  }
+  public static var _version: String? {
+    return nil
   }
   public static var table: String { "benchdoc" }
   public static var indexFields: [String] { [] }

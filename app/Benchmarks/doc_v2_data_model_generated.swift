@@ -69,6 +69,9 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
       return false
     }
   }
+  public static var _version: String? {
+    return nil
+  }
   public static var table: String { "benchdocv2" }
   public static var indexFields: [String] { [] }
   public static func setUpSchema(_ toolbox: PersistenceToolbox) {

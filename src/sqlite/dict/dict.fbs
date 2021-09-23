@@ -12,6 +12,7 @@ enum ValueType: byte {
 table DictItem (v: "_dflat_internal__") {
   key: string (primary);
   namespace: string (primary);
+  version: string;
   value_type: ValueType;
   bool_value: bool;
   long_value: long;

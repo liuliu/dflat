@@ -103,12 +103,17 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
         assert(value.valueType == .flatBuffersValue)
-        let object: T? = value.codable.withUnsafeBytes {
-          guard let baseAddress = $0.baseAddress else { return nil }
-          return T.from(
-            byteBuffer: ByteBuffer(
-              assumingMemoryBound: UnsafeMutableRawPointer(mutating: baseAddress),
-              capacity: $0.count))
+        let object: T?
+        if value.version == T._version {
+          object = value.codable.withUnsafeBytes {
+            guard let baseAddress = $0.baseAddress else { return nil }
+            return T.from(
+              byteBuffer: ByteBuffer(
+                assumingMemoryBound: UnsafeMutableRawPointer(mutating: baseAddress),
+                capacity: $0.count))
+          }
+        } else {
+          object = nil
         }
         storage.lock(tuple.1)
         // If no one else populated the cache, do that now.
@@ -142,8 +147,8 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
           let offset = value.to(flatBufferBuilder: &fbb)
           fbb.finish(offset: offset)
           return DictItem(
-            key: key, namespace: namespace, valueType: .flatBuffersValue,
-            codable: fbb.sizedByteArray)
+            key: key, namespace: namespace, version: T._version,
+            valueType: .flatBuffersValue, codable: fbb.sizedByteArray)
         }
       } else {
         storage.remove(workspace, key: key)

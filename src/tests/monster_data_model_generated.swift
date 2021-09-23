@@ -25,6 +25,7 @@ extension MyGame.Sample {
       self.y = obj.y
       self.z = obj.z
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       // Assuming this is the root
       Self(
@@ -32,6 +33,7 @@ extension MyGame.Sample {
           def: zzz_DflatGen_MyGame_Sample_Vec3.self,
           position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -43,6 +45,10 @@ extension MyGame.Sample {
         return false
       }
     }
+
+    public static var _version: String? {
+      return nil
+    }
   }
 
   public struct Profile: Equatable, FlatBuffersDecodable {
@@ -53,9 +59,11 @@ extension MyGame.Sample {
     public init(_ obj: zzz_DflatGen_MyGame_Sample_Profile) {
       self.url = obj.url
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_Sample_Profile.getRootAsProfile(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -66,6 +74,10 @@ extension MyGame.Sample {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 
@@ -207,6 +219,9 @@ extension MyGame.Sample {
       } catch {
         return false
       }
+    }
+    public static var _version: String? {
+      return "1.1"
     }
     public static var table: String { "mygame__sample__monster_v1_1" }
     public static var indexFields: [String] { ["f6", "f26__type", "f26__u2__f4"] }

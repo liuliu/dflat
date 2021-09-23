@@ -96,6 +96,9 @@ struct Struct: Decodable {
   var fields: [Field]
   var attributes: [[String: String]]
   var generated: Bool
+  var version: String? {
+    attributes.first(where: { $0["v"] != nil }).flatMap({ $0["v"] })
+  }
 }
 
 struct RootStruct: Decodable {
@@ -473,18 +476,17 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "  }\n"
   code += "  public init(_ obj: \(GetDflatGenFullyQualifiedName(structDef))) {\n"
   code += GetStructDeserializer(structDef)
-  code += "  }\n"
+  code += "  }\n\n"
   code += "  public static func from(byteBuffer bb: ByteBuffer) -> Self {\n"
   if structDef.fixed {
     code += "    // Assuming this is the root\n"
     code +=
       "    Self(bb.read(def: \(GetDflatGenFullyQualifiedName(structDef)).self, position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))\n"
-    code += "  }\n"
   } else {
     code +=
       "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
-    code += "  }\n"
   }
+  code += "  }\n\n"
   code += "  public static func verify(byteBuffer bb: ByteBuffer) -> Bool {\n"
   code += "    do {\n"
   code += "      var bb = bb\n"
@@ -495,6 +497,9 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "    } catch {\n"
   code += "      return false\n"
   code += "    }\n"
+  code += "  }\n\n"
+  code += "  public static var _version: String? {\n"
+  code += "    return \(structDef.version.map { "\"\($0)\"" } ?? "nil")\n"
   code += "  }\n"
   code += "}\n"
 }
@@ -552,6 +557,9 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "    } catch {\n"
   code += "      return false\n"
   code += "    }\n"
+  code += "  }\n"
+  code += "  public static var _version: String? {\n"
+  code += "    return \(structDef.version.map { "\"\($0)\"" } ?? "nil")\n"
   code += "  }\n"
   let indexedFields = GetIndexedFields(structDef)
   let tableName = GetTableName(structDef)
@@ -982,8 +990,7 @@ func GetIndexedFields(_ structDef: Struct) -> [IndexedField] {
 func GetTableName(_ structDef: Struct) -> String {
   var names: [String] = structDef.namespace.map { $0.lowercased() }
   names.append(structDef.name.lowercased())
-  guard let version = structDef.attributes.first(where: { $0["v"] != nil }).flatMap({ $0["v"] })
-  else {
+  guard let version = structDef.version else {
     return names.joined(separator: "__")
   }
   let sanitizedVersion = version.replacingOccurrences(of: ".", with: "_")

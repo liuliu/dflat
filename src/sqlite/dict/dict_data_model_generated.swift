@@ -21,6 +21,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public static func == (lhs: DictItem, rhs: DictItem) -> Bool {
     guard lhs.key == rhs.key else { return false }
     guard lhs.namespace == rhs.namespace else { return false }
+    guard lhs.version == rhs.version else { return false }
     guard lhs.valueType == rhs.valueType else { return false }
     guard lhs.boolValue == rhs.boolValue else { return false }
     guard lhs.longValue == rhs.longValue else { return false }
@@ -33,6 +34,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   }
   public let key: String
   public let namespace: String
+  public let version: String?
   public let valueType: ValueType
   public let boolValue: Bool
   public let longValue: Int64
@@ -42,12 +44,14 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public let stringValue: String?
   public let codable: [UInt8]
   public init(
-    key: String, namespace: String, valueType: ValueType? = .boolValue, boolValue: Bool? = false,
-    longValue: Int64? = 0, unsignedLongValue: UInt64? = 0, floatValue: Float32? = 0.0,
-    doubleValue: Double? = 0.0, stringValue: String? = nil, codable: [UInt8]? = []
+    key: String, namespace: String, version: String? = nil, valueType: ValueType? = .boolValue,
+    boolValue: Bool? = false, longValue: Int64? = 0, unsignedLongValue: UInt64? = 0,
+    floatValue: Float32? = 0.0, doubleValue: Double? = 0.0, stringValue: String? = nil,
+    codable: [UInt8]? = []
   ) {
     self.key = key
     self.namespace = namespace
+    self.version = version ?? nil
     self.valueType = valueType ?? .boolValue
     self.boolValue = boolValue ?? false
     self.longValue = longValue ?? 0
@@ -60,6 +64,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   public init(_ obj: zzz_DflatGen_DictItem) {
     self.key = obj.key!
     self.namespace = obj.namespace!
+    self.version = obj.version
     self.valueType = ValueType(rawValue: obj.valueType.rawValue) ?? .boolValue
     self.boolValue = obj.boolValue
     self.longValue = obj.longValue
@@ -93,6 +98,9 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     } catch {
       return false
     }
+  }
+  public static var _version: String? {
+    return "_dflat_internal__"
   }
   public static var table: String { "dictitem_v_dflat_internal__" }
   public static var indexFields: [String] { [] }

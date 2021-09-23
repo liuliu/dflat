@@ -26,9 +26,11 @@ extension MyGame.Sample {
       self.name = obj.name
       self.damage = obj.damage
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_Sample_Weapon.getRootAsWeapon(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -39,6 +41,10 @@ extension MyGame.Sample {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 
@@ -53,9 +59,11 @@ extension MyGame.Sample {
       self.name = obj.name
       self.color = MyGame.Sample.Color(rawValue: obj.color.rawValue) ?? .red
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_Sample_Orb.getRootAsOrb(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -66,6 +74,10 @@ extension MyGame.Sample {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 

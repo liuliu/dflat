@@ -35,6 +35,7 @@ extension MyGame.SampleV2 {
       self.y = obj.y
       self.z = obj.z
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       // Assuming this is the root
       Self(
@@ -42,6 +43,7 @@ extension MyGame.SampleV2 {
           def: zzz_DflatGen_MyGame_SampleV2_Vec3.self,
           position: Int(bb.read(def: UOffset.self, position: bb.reader)) + bb.reader))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -53,6 +55,10 @@ extension MyGame.SampleV2 {
         return false
       }
     }
+
+    public static var _version: String? {
+      return nil
+    }
   }
 
   public struct Empty: Equatable, FlatBuffersDecodable {
@@ -60,9 +66,11 @@ extension MyGame.SampleV2 {
     }
     public init(_ obj: zzz_DflatGen_MyGame_SampleV2_Empty) {
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_SampleV2_Empty.getRootAsEmpty(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -73,6 +81,10 @@ extension MyGame.SampleV2 {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 
@@ -87,9 +99,11 @@ extension MyGame.SampleV2 {
       self.name = obj.name
       self.damage = obj.damage
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_SampleV2_Weapon.getRootAsWeapon(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -100,6 +114,10 @@ extension MyGame.SampleV2 {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 
@@ -114,9 +132,11 @@ extension MyGame.SampleV2 {
       self.name = obj.name
       self.color = MyGame.SampleV2.Color(rawValue: obj.color.rawValue) ?? .red
     }
+
     public static func from(byteBuffer bb: ByteBuffer) -> Self {
       Self(zzz_DflatGen_MyGame_SampleV2_Orb.getRootAsOrb(bb: bb))
     }
+
     public static func verify(byteBuffer bb: ByteBuffer) -> Bool {
       do {
         var bb = bb
@@ -127,6 +147,10 @@ extension MyGame.SampleV2 {
       } catch {
         return false
       }
+    }
+
+    public static var _version: String? {
+      return nil
     }
   }
 
@@ -255,6 +279,9 @@ extension MyGame.SampleV2 {
       } catch {
         return false
       }
+    }
+    public static var _version: String? {
+      return "1.1"
     }
     public static var table: String { "mygame__samplev2__monster_v1_1" }
     public static var indexFields: [String] {

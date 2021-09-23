@@ -17,12 +17,14 @@ extension DictItem: FlatBuffersEncodable {
   public func to(flatBufferBuilder: inout FlatBufferBuilder) -> Offset {
     let __key = flatBufferBuilder.create(string: self.key)
     let __namespace = flatBufferBuilder.create(string: self.namespace)
+    let __version = self.version.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let __valueType = zzz_DflatGen_ValueType(rawValue: self.valueType.rawValue) ?? .boolvalue
     let __stringValue = self.stringValue.map { flatBufferBuilder.create(string: $0) } ?? Offset()
     let __vector_codable = flatBufferBuilder.createVector(self.codable)
     let start = zzz_DflatGen_DictItem.startDictItem(&flatBufferBuilder)
     zzz_DflatGen_DictItem.add(key: __key, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(namespace: __namespace, &flatBufferBuilder)
+    zzz_DflatGen_DictItem.add(version: __version, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(valueType: __valueType, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(boolValue: self.boolValue, &flatBufferBuilder)
     zzz_DflatGen_DictItem.add(longValue: self.longValue, &flatBufferBuilder)
@@ -59,6 +61,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
   public var _rowid: Int64
   public var key: String
   public var namespace: String
+  public var version: String?
   public var valueType: ValueType
   public var boolValue: Bool
   public var longValue: Int64
@@ -73,6 +76,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
     _rowid = -1
     key = ""
     namespace = ""
+    version = nil
     valueType = .boolValue
     boolValue = false
     longValue = 0
@@ -88,6 +92,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
     _rowid = _o._rowid
     key = _o.key
     namespace = _o.namespace
+    version = _o.version
     valueType = _o.valueType
     boolValue = _o.boolValue
     longValue = _o.longValue
@@ -135,7 +140,7 @@ public final class DictItemChangeRequest: Dflat.ChangeRequest {
   }
   var _atom: DictItem {
     let atom = DictItem(
-      key: key, namespace: namespace, valueType: valueType, boolValue: boolValue,
+      key: key, namespace: namespace, version: version, valueType: valueType, boolValue: boolValue,
       longValue: longValue, unsignedLongValue: unsignedLongValue, floatValue: floatValue,
       doubleValue: doubleValue, stringValue: stringValue, codable: codable)
     atom._rowid = _rowid
