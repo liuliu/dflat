@@ -763,7 +763,7 @@ func generateObjectInits(
     guard field.name != primaryKey else {
       emitPrimaryKey = true
       if isRoot {
-        fieldAssignments.append("\(primaryKey): \(primaryKey))")
+        fieldAssignments.append("\(field.name): obj.\(fieldAliasedName.camelCase())")
       }
       continue
     }

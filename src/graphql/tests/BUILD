@@ -47,6 +47,7 @@ dflat_graphql(
 dflat_graphql(
     name = "Starship_Sources",
     srcs = [":GraphQL_Files"],
+    primary_key = "id",
     root = "Starship",
     schema = ":GraphQL_Schema",
 )
