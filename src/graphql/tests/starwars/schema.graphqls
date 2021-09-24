@@ -1,4 +1,3 @@
-
 schema {
   query: Query
   mutation: Mutation
@@ -188,7 +187,10 @@ type Starship {
   # Length of the starship, along the longest axis
   length(unit: LengthUnit = METER): Float
 
-  coordinates: [[Float!]!]
+  coordinates: [Float!]
+  spreading: [Float]
+  histogram: [Int!]
+  catalogs: [Int]
 }
 
 union SearchResult = Human | Droid | Starship

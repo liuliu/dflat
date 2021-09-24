@@ -44,6 +44,13 @@ dflat_graphql(
     schema = ":GraphQL_Schema",
 )
 
+dflat_graphql(
+    name = "Starship_Sources",
+    srcs = [":GraphQL_Files"],
+    root = "Starship",
+    schema = ":GraphQL_Schema",
+)
+
 swift_library(
     name = "Tests_lib",
     srcs = [
@@ -52,6 +59,7 @@ swift_library(
         ":Character_Sources",
         ":Review_Sources",
         ":StarWarsAPI_Sources",
+        ":Starship_Sources",
     ],
     deps = [
         "//:SQLiteDflat",

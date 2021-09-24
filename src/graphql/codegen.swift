@@ -457,8 +457,8 @@ func isBaseType(_ graphQLType: GraphQLType) -> Bool {
     return ["Int", "Float", "String", "Boolean", "ID"].contains(type.name)
   case .nonNull(let ofType):
     return isBaseType(ofType)
-  case .list(_):
-    return false
+  case .list(let ofType):
+    return isBaseType(ofType)
   }
 }
 
@@ -467,9 +467,9 @@ func isIntType(_ graphQLType: GraphQLType) -> Bool {
   case .named(let type):
     return ["Int"].contains(type.name)
   case .nonNull(let ofType):
-    return isBaseType(ofType)
-  case .list(_):
-    return false
+    return isIntType(ofType)
+  case .list(let ofType):
+    return isIntType(ofType)
   }
 }
 
@@ -497,7 +497,8 @@ func isOptionalFragments(fragmentType: GraphQLCompositeType, objectType: GraphQL
 {
   // If the object type is interface while fragment is not, that means we may have empty object for
   // a given interface, hence, this fragment can be optional.
-  return !(fragmentType is GraphQLInterfaceType) && (objectType is GraphQLInterfaceType)
+  return !(fragmentType is GraphQLInterfaceType) && !(fragmentType is GraphQLUnionType)
+    && ((objectType is GraphQLInterfaceType) || (objectType is GraphQLUnionType))
 }
 
 func primaryKeyPosition(
@@ -762,7 +763,7 @@ func generateObjectInits(
     guard field.name != primaryKey else {
       emitPrimaryKey = true
       if isRoot {
-        fieldAssignments.append("\(field.name): obj.\(fieldAliasedName.camelCase())")
+        fieldAssignments.append("\(primaryKey): \(primaryKey))")
       }
       continue
     }
@@ -858,7 +859,8 @@ func generateInits(
   } else if let enumType = entityType as? GraphQLEnumType {
     return generateEnumInits(enumType, rootType: rootType)
   } else {
-    fatalError("Entity type has to be either an interface type, object type or enum type.")
+    fatalError(
+      "Entity type: \(entityType) has to be either an interface type, object type or enum type.")
   }
 }
 
@@ -899,8 +901,9 @@ func inlineDowncastRequired(
 ) -> Bool {
   guard let rootType = rootType else { return false }
   // Need to downcast when the root is an interface type while the inline fragment is not.
-  return (rootType is GraphQLInterfaceType)
+  return ((rootType is GraphQLInterfaceType) || (rootType is GraphQLUnionType))
     && !(inlineFragment.selectionSet.parentType is GraphQLInterfaceType)
+    && !(inlineFragment.selectionSet.parentType is GraphQLUnionType)
 }
 
 func findEntityInits(
