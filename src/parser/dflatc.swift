@@ -498,7 +498,7 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
   code += "      return false\n"
   code += "    }\n"
   code += "  }\n\n"
-  code += "  public static var _version: String? {\n"
+  code += "  public static var flatBuffersSchemaVersion: String? {\n"
   code += "    return \(structDef.version.map { "\"\($0)\"" } ?? "nil")\n"
   code += "  }\n"
   code += "}\n"
@@ -558,7 +558,7 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "      return false\n"
   code += "    }\n"
   code += "  }\n"
-  code += "  public static var _version: String? {\n"
+  code += "  public static var flatBuffersSchemaVersion: String? {\n"
   code += "    return \(structDef.version.map { "\"\($0)\"" } ?? "nil")\n"
   code += "  }\n"
   let indexedFields = GetIndexedFields(structDef)

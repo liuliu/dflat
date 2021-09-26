@@ -56,7 +56,7 @@ extension MyGame.SampleV2 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -83,7 +83,7 @@ extension MyGame.SampleV2 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -116,7 +116,7 @@ extension MyGame.SampleV2 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -149,7 +149,7 @@ extension MyGame.SampleV2 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -280,7 +280,7 @@ extension MyGame.SampleV2 {
         return false
       }
     }
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return "1.1"
     }
     public static var table: String { "mygame__samplev2__monster_v1_1" }

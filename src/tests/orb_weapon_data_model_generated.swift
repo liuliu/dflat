@@ -43,7 +43,7 @@ extension MyGame.Sample {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -76,7 +76,7 @@ extension MyGame.Sample {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }

@@ -53,7 +53,7 @@ public final class BenchDocV4: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
       return false
     }
   }
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return nil
   }
   public static var table: String { "benchdocv4" }

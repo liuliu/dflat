@@ -99,7 +99,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
       return false
     }
   }
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return "_dflat_internal__"
   }
   public static var table: String { "dictitem_v_dflat_internal__" }

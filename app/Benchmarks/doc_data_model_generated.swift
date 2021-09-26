@@ -52,7 +52,7 @@ public struct Vec3: Equatable, FlatBuffersDecodable {
     }
   }
 
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return nil
   }
 }
@@ -82,7 +82,7 @@ public struct TextContent: Equatable, FlatBuffersDecodable {
     }
   }
 
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return nil
   }
 }
@@ -117,7 +117,7 @@ public struct ImageContent: Equatable, FlatBuffersDecodable {
     }
   }
 
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return nil
   }
 }
@@ -193,7 +193,7 @@ public final class BenchDoc: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
       return false
     }
   }
-  public static var _version: String? {
+  public static var flatBuffersSchemaVersion: String? {
     return nil
   }
   public static var table: String { "benchdoc" }

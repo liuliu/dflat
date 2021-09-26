@@ -104,7 +104,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       ).first {
         assert(value.valueType == .flatBuffersValue)
         let object: T?
-        if value.version == T._version {
+        if value.version == T.flatBuffersSchemaVersion {
           object = value.codable.withUnsafeBytes {
             guard let baseAddress = $0.baseAddress else { return nil }
             return T.from(
@@ -147,7 +147,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
           let offset = value.to(flatBufferBuilder: &fbb)
           fbb.finish(offset: offset)
           return DictItem(
-            key: key, namespace: namespace, version: T._version,
+            key: key, namespace: namespace, version: T.flatBuffersSchemaVersion,
             valueType: .flatBuffersValue, codable: fbb.sizedByteArray)
         }
       } else {

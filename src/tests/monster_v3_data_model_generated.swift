@@ -56,7 +56,7 @@ extension MyGame.SampleV3 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -83,7 +83,7 @@ extension MyGame.SampleV3 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -192,7 +192,7 @@ extension MyGame.SampleV3 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return "1.3"
     }
   }
@@ -225,7 +225,7 @@ extension MyGame.SampleV3 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
@@ -258,7 +258,7 @@ extension MyGame.SampleV3 {
       }
     }
 
-    public static var _version: String? {
+    public static var flatBuffersSchemaVersion: String? {
       return nil
     }
   }
