@@ -89,6 +89,22 @@ public protocol Workspace: Queryable {
   func performChanges(
     _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler,
     completionHandler: CompletionHandler?)
+  #if compiler(>=5.5) && canImport(_Concurrency)
+    /**
+   * Perform a transaction for given object types and await either success or failure boolean.
+   *
+   * - Parameters:
+   *    - transactionalObjectTypes: A list of object types you are going to transact with. If you
+   *                                If you fetch or mutation an object outside of this list, it will fatal.
+   *    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
+   *                      data mutations through submission of change requests.
+   */
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    @discardableResult
+    func performChanges(
+      _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
+    ) async -> Bool
+  #endif
   /**
    * A persisted, in-memory cached key-value storage backed by current Workspace.
    * While writing data to disk is serialized under the hood, we don't wait the
@@ -139,18 +155,18 @@ public protocol Workspace: Queryable {
     /**
    * Return a publisher for object subscription in Combine.
    */
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
     /**
    * Return a publisher for fetched result subscription in Combine.
    */
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
     where Element: Equatable
     /**
    * Return a publisher builder for query subscription in Combine.
    */
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
     where Element: Equatable
   #endif

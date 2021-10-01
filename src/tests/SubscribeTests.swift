@@ -408,7 +408,7 @@ class SubscribeTests: XCTestCase {
       }
       wait(for: [mainQueueDrain], timeout: 10.0)
     }
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func testObjectPublisher() {
       guard let dflat = dflat else { return }
       let expectation = XCTestExpectation(description: "transcation done")
@@ -475,7 +475,7 @@ class SubscribeTests: XCTestCase {
       cancellable.cancel()
     }
 
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func testFetchedResultPublisher() {
       guard let dflat = dflat else { return }
       let expectation = XCTestExpectation(description: "transcation done")
@@ -586,7 +586,7 @@ class SubscribeTests: XCTestCase {
       cancellable.cancel()
     }
 
-    @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func testQueryPublisher() {
       guard let dflat = dflat else { return }
       let expectation = XCTestExpectation(description: "transcation done")

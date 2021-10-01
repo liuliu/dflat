@@ -1,7 +1,7 @@
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
   import Combine
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   open class AtomPublisher<Element: Atom>: Publisher where Element: Equatable {
     public typealias Output = SubscribedObject<Element>
     public typealias Failure = Never
@@ -11,7 +11,7 @@
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   open class FetchedResultPublisher<Element: Atom>: Publisher where Element: Equatable {
     public typealias Output = FetchedResult<Element>
     public typealias Failure = Never
@@ -21,7 +21,7 @@
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   open class QueryPublisher<Element: Atom>: Publisher where Element: Equatable {
     public typealias Output = FetchedResult<Element>
     public typealias Failure = Never
@@ -31,7 +31,7 @@
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   open class QueryPublisherBuilder<Element: Atom> where Element: Equatable {
     public init() {}
     /**

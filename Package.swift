@@ -120,6 +120,7 @@ let package = Package(
       dependencies: ["SQLiteDflat"],
       path: "src/tests",
       sources: [
+        "AsyncTests.swift",
         "ConcurrencyTests.swift",
         "DictionaryTests.swift",
         "ExprTests.swift",

@@ -25,6 +25,7 @@ dflatc(
 swift_library(
     name = "Tests_lib",
     srcs = [
+        "AsyncTests.swift",
         "ConcurrencyTests.swift",
         "DictionaryTests.swift",
         "ExprTests.swift",

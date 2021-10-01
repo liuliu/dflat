@@ -4,7 +4,7 @@ import Dispatch
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
   import Combine
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   final class SQLiteAtomPublisher<Element: Atom>: AtomPublisher<Element> where Element: Equatable {
     final class AtomSubscription<S: Subscriber>: Subscription
     where Failure == S.Failure, Output == S.Input {
@@ -45,7 +45,7 @@ import Dispatch
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   final class SQLiteFetchedResultPublisher<Element: Atom>: FetchedResultPublisher<Element>
   where Element: Equatable {
     final class FetchedResultSubscription<S: Subscriber>: Subscription
@@ -85,7 +85,7 @@ import Dispatch
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   final class SQLiteQueryPublisher<Element: Atom>: QueryPublisher<Element>
   where Element: Equatable {
     final class QuerySubscription<S: Subscriber>: Subscription
@@ -146,7 +146,7 @@ import Dispatch
     }
   }
 
-  @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   final class SQLiteQueryPublisherBuilder<Element: Atom>: QueryPublisherBuilder<Element>
   where Element: Equatable {
     private let workspace: SQLiteWorkspace
