@@ -49,7 +49,7 @@ var FlatBuffersFromSwiftType: [String: String] = [
   "UInt32": "uint",
   "Int64": "long",
   "UInt64": "ulong",
-  "Float32": "float",
+  "Float": "float",
   "Double": "double",
   "String": "string",
 ]

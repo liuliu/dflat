@@ -145,7 +145,7 @@ root_type Post; // This is important, it says the Post object will be the one Df
 You can then ether use `dflatc` compiler to manually generate code from the schema:
 
 ```
-./dflatc.py -o ../PostExample ../PostExample/post.fbs
+./dflatc.py compile -o ../PostExample ../PostExample/post.fbs
 ```
 
 Or use `dflatc` rule from Bazel:
