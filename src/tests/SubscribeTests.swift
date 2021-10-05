@@ -398,6 +398,16 @@ class SubscribeTests: XCTestCase {
   ]
 
   #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    func drainMainQueue() {
+      // Double dispatch to avoid nested main queue dispatch in previous blocks.
+      let mainQueueDrain = XCTestExpectation(description: "main")
+      DispatchQueue.main.async {
+        DispatchQueue.main.async {
+          mainQueueDrain.fulfill()
+        }
+      }
+      wait(for: [mainQueueDrain], timeout: 10.0)
+    }
     @available(OSX 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func testObjectPublisher() {
       guard let dflat = dflat else { return }
@@ -432,6 +442,9 @@ class SubscribeTests: XCTestCase {
             pubExpectation.fulfill()
           }
         }
+      // The subscription happens on main queue asynchronously. Drain it to avoid we skip
+      // directly to deletion.
+      drainMainQueue()
       let firstExpectation = XCTestExpectation(description: "transcation done")
       dflat.performChanges(
         [MyGame.Sample.Monster.self],
@@ -494,6 +507,9 @@ class SubscribeTests: XCTestCase {
             subExpectation.fulfill()
           }
         }
+      // The subscription happens on main queue asynchronously. Drain it to avoid we skip
+      // directly to deletion.
+      drainMainQueue()
       // Add one.
       let firstExpectation = XCTestExpectation(description: "transcation done")
       dflat.performChanges(
