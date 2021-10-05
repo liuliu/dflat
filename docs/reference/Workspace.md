@@ -26,6 +26,39 @@ Provide a consistent view for fetching multiple objects at once.
 
 **PROTOCOL**
 
+# `WorkspaceDictionary`
+
+```swift
+public protocol WorkspaceDictionary
+```
+
+## Properties
+### `keys`
+
+```swift
+var keys: [String]
+```
+
+Return all keys available in the dictionary. This is an expensive (for this dictionary)
+method as it fetches from disk, from in-memory structures, and acquire locks if needed.
+
+## Methods
+### `synchronize()`
+
+```swift
+func synchronize()
+```
+
+Force current thread to wait until everything has been written to disk.
+Note that this function forces wait to disk, but not synchronize across
+threads. You could have one thread called synchronize while another thread
+is still holding their own lock to update in-memory value. It doesn't guarantee
+the first thread will wait the second thread's dictionary[key] = value to finish.
+This method only guarantees all writes on current thread done.
+
+
+**PROTOCOL**
+
 # `Workspace`
 
 ```swift

@@ -172,6 +172,15 @@ class DictionaryTests: XCTestCase {
     XCTAssertEqual(anotherDict["stringValue", default: "1234"], "1234")
   }
 
+  func testIterateKeys() {
+    guard var dictionary = dflat?.dictionary else { return }
+    dictionary["stringValue"] = "abcde"
+    dictionary["intValue"] = Int(10)
+    dictionary["doubleValue"] = Double(12.3)
+    let keys = dictionary.keys
+    XCTAssertEqual(Set(keys), Set(["stringValue", "intValue", "doubleValue"]))
+  }
+
   static let allTests = [
     ("testReadWriteReadCodableObject", testReadWriteReadCodableObject),
     ("testReadWriteReadFlatBuffersObject", testReadWriteReadFlatBuffersObject),
@@ -185,5 +194,6 @@ class DictionaryTests: XCTestCase {
     ("testReadWriteReadFloat", testReadWriteReadFloat),
     ("testReadWriteReadDouble", testReadWriteReadDouble),
     ("testReadWriteReadString", testReadWriteReadString),
+    ("testIterateKeys", testIterateKeys),
   ]
 }

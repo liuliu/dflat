@@ -52,6 +52,11 @@ public protocol WorkspaceDictionary {
    * This method only guarantees all writes on current thread done.
    */
   func synchronize()
+  /**
+   * Return all keys available in the dictionary. This is an expensive (for this dictionary)
+   * method as it fetches from disk, from in-memory structures, and acquire locks if needed.
+   */
+  var keys: [String] { get }
 }
 
 public protocol Workspace: Queryable {

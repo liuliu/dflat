@@ -451,6 +451,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
+
   func synchronize() {
     let group = DispatchGroup()
     group.enter()
@@ -460,6 +461,17 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         group.leave()
       })
     group.wait()
+  }
+
+  var keys: [String] {
+    let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == storage.namespace)
+    var keys = Set(items.map { $0.key })
+    for i in 0..<Storage.size {
+      storage.lock(i)
+      defer { storage.unlock(i) }
+      keys.formUnion(storage.dictionaries[i].keys)
+    }
+    return Array(keys)
   }
 }
 
