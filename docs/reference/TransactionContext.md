@@ -33,14 +33,14 @@ error.
 
 # `TransactionContext`
 ```swift
-public extension TransactionContext
+extension TransactionContext
 ```
 
 ## Methods
 ### `try(submit:)`
 
 ```swift
-func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject?
+public func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject?
 ```
 
 Convenient method for submit change request. `submit()` may throw exceptions, but `try(submit:)` will

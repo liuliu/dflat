@@ -32,6 +32,17 @@ Provide a consistent view for fetching multiple objects at once.
 public protocol Workspace: Queryable
 ```
 
+## Properties
+### `dictionary`
+
+```swift
+var dictionary: WorkspaceDictionary
+```
+
+A persisted, in-memory cached key-value storage backed by current Workspace.
+While writing data to disk is serialized under the hood, we don't wait the
+writes. This dictionary is an class object, it is always mutable.
+
 ## Methods
 ### `shutdown(completion:)`
 
@@ -50,7 +61,9 @@ return.
 ### `performChanges(_:changesHandler:completionHandler:)`
 
 ```swift
-func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler, completionHandler: CompletionHandler?)
+func performChanges(
+  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler,
+  completionHandler: CompletionHandler?)
 ```
 
  Perform a transaction for given object types.
@@ -75,7 +88,10 @@ func performChanges(_ transactionalObjectTypes: [Any.Type], changesHandler: @esc
 ### `subscribe(fetchedResult:changeHandler:)`
 
 ```swift
-func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandler: @escaping (_: FetchedResult<Element>) -> Void) -> Subscription where Element: Equatable
+func subscribe<Element: Atom>(
+  fetchedResult: FetchedResult<Element>,
+  changeHandler: @escaping (_: FetchedResult<Element>) -> Void
+) -> Subscription where Element: Equatable
 ```
 
  Subscribe to changes of a fetched result. You queries fetched result with
@@ -101,7 +117,9 @@ func subscribe<Element: Atom>(fetchedResult: FetchedResult<Element>, changeHandl
 ### `subscribe(object:changeHandler:)`
 
 ```swift
-func subscribe<Element: Atom>(object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void) -> Subscription where Element: Equatable
+func subscribe<Element: Atom>(
+  object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
+) -> Subscription where Element: Equatable
 ```
 
  Subscribe to changes of an object. If anything in the object changed or
@@ -137,7 +155,8 @@ Return a publisher for object subscription in Combine.
 ### `publisher(for:)`
 
 ```swift
-func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element> where Element: Equatable
+func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
+where Element: Equatable
 ```
 
 Return a publisher for fetched result subscription in Combine.
@@ -145,7 +164,8 @@ Return a publisher for fetched result subscription in Combine.
 ### `publisher(for:)`
 
 ```swift
-func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element> where Element: Equatable
+func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
+where Element: Equatable
 ```
 
 Return a publisher builder for query subscription in Combine.
@@ -169,7 +189,9 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element
+open func `where`<T: Expr & SQLiteExpr>(
+  _ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []
+) -> FetchedResult<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Make query against the Workspace. This is coupled with `fetch(for:)` method and shouldn't be used independently.
@@ -273,7 +295,9 @@ public init()
 ### `where(_:limit:orderBy:)`
 
 ```swift
-open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element
+open func `where`<T: Expr & SQLiteExpr>(
+  _ query: T, limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []
+) -> QueryPublisher<Element> where T.ResultType == Bool, T.Element == Element
 ```
 
  Subscribe to a query against the Workspace. This is coupled with `publisher(for: Element.self)` method
@@ -286,18 +310,12 @@ open func `where`<T: Expr & SQLiteExpr>(_ query: T, limit: Limit = .noLimit, ord
 
  - Returns: A publisher object that can be interacted with Combine.
 
-#### Parameters
-
-| Name | Description |
-| ---- | ----------- |
-| query | The query such as `Post.title == "some title" && Post.color == .red` |
-| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
-| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
-
 ### `all(limit:orderBy:)`
 
 ```swift
-open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<Element>
+open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> QueryPublisher<
+  Element
+>
 ```
 
  Subscribe to all changes to a class. This is coupled with `publisher(for: Element.self)` method
@@ -308,10 +326,3 @@ open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> Quer
     - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
 
  - Returns: A publisher object that can be interacted with Combine.
-
-#### Parameters
-
-| Name | Description |
-| ---- | ----------- |
-| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
-| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
