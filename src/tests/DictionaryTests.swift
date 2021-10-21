@@ -36,7 +36,7 @@ class DictionaryTests: XCTestCase {
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(
       newDictionary["codableValue", default: MyEntity(name: "candy", value: -10)], zonda)
-    newDictionary["codableValue"] = nil as MyEntity?
+    newDictionary["codableValue", MyEntity.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(
       anotherDict["codableValue", default: MyEntity(name: "candy", value: -10)],
@@ -55,7 +55,7 @@ class DictionaryTests: XCTestCase {
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(
       newDictionary["fbsValue", default: MyGame.SampleV3.Monster(name: "candy")], zonda)
-    newDictionary["fbsValue"] = nil as MyGame.SampleV3.Monster?
+    newDictionary["fbsValue", MyGame.SampleV3.Monster.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(
       anotherDict["fbsValue", default: MyGame.SampleV3.Monster(name: "candy")],
@@ -76,7 +76,7 @@ class DictionaryTests: XCTestCase {
     XCTAssertEqual(
       newDictionary["fbsValue", default: MyGame.SampleV2.Monster(name: "candy", color: .blue)],
       candy)
-    newDictionary["fbsValue"] = nil as MyGame.SampleV2.Monster?
+    newDictionary["fbsValue", MyGame.SampleV2.Monster.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(
       anotherDict["fbsValue", default: MyGame.SampleV2.Monster(name: "candy", color: .blue)], candy)
@@ -92,7 +92,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["boolValue", default: false], true)
-    newDictionary["boolValue"] = nil as Bool?
+    newDictionary["boolValue", Bool.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["boolValue", default: false], false)
   }
@@ -107,7 +107,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["intValue", default: Int(123)], Int(-123))
-    newDictionary["intValue"] = nil as Int?
+    newDictionary["intValue", Int.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["intValue", default: Int(123)], Int(123))
   }
@@ -122,7 +122,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["uintValue", default: UInt(123)], UInt(23))
-    newDictionary["uintValue"] = nil as UInt?
+    newDictionary["uintValue", UInt.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["uintValue", default: UInt(123)], UInt(123))
   }
@@ -137,7 +137,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["floatValue", default: Float(1.23)], Float(-2.3))
-    newDictionary["floatValue"] = nil as Float?
+    newDictionary["floatValue", Float.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["floatValue", default: Float(1.23)], Float(1.23))
   }
@@ -152,7 +152,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["doubleValue", default: Double(12.3)], Double(2.3))
-    newDictionary["doubleValue"] = nil as Double?
+    newDictionary["doubleValue", Double.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["doubleValue", default: Double(12.3)], Double(12.3))
   }
@@ -167,7 +167,7 @@ class DictionaryTests: XCTestCase {
     let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
     var newDictionary = newDflat.dictionary
     XCTAssertEqual(newDictionary["stringValue", default: "1234"], "abcde")
-    newDictionary["stringValue"] = nil as String?
+    newDictionary["stringValue", String.self] = nil
     let anotherDict = newDflat.dictionary
     XCTAssertEqual(anotherDict["stringValue", default: "1234"], "1234")
   }
@@ -175,8 +175,8 @@ class DictionaryTests: XCTestCase {
   func testIterateKeys() {
     guard var dictionary = dflat?.dictionary else { return }
     dictionary["stringValue"] = "abcde"
-    dictionary["intValue"] = Int(10)
-    dictionary["doubleValue"] = Double(12.3)
+    dictionary["intValue", Int.self] = 10
+    dictionary["doubleValue", Double.self] = 12.3
     let keys = dictionary.keys
     XCTAssertEqual(Set(keys), Set(["stringValue", "intValue", "doubleValue"]))
   }

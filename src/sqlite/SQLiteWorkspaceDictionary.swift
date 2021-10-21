@@ -24,7 +24,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
   }
   let workspace: SQLiteWorkspace
   let storage: Storage
-  subscript<T: Codable & Equatable>(key: String) -> T? {
+  subscript<T: Codable & Equatable>(key: String, _: T.Type) -> T? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -91,7 +91,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript<T: FlatBuffersCodable & Equatable>(key: String) -> T? {
+  subscript<T: FlatBuffersCodable & Equatable>(key: String, _: T.Type) -> T? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -156,7 +156,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> Bool? {
+  subscript(key: String, _: Bool.Type) -> Bool? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -205,7 +205,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> Int? {
+  subscript(key: String, _: Int.Type) -> Int? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -254,7 +254,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> UInt? {
+  subscript(key: String, _: UInt.Type) -> UInt? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -304,7 +304,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> Float? {
+  subscript(key: String, _: Float.Type) -> Float? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -353,7 +353,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> Double? {
+  subscript(key: String, _: Double.Type) -> Double? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {
@@ -402,7 +402,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       storage.unlock(hashValue)
     }
   }
-  subscript(key: String) -> String? {
+  subscript(key: String, _: String.Type) -> String? {
     get {
       let tuple = storage.getAndLock(key)
       if let value = tuple.0 {

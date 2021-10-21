@@ -35,14 +35,14 @@ public protocol WorkspaceDictionary {
    * Get the latest value, whether it is in memory or from disk.
    * Set the value, it will persist asynchronously.
    */
-  subscript<T: Codable & Equatable>(_: String) -> T? { get set }
-  subscript<T: FlatBuffersCodable & Equatable>(_: String) -> T? { get set }
-  subscript(_: String) -> Bool? { get set }
-  subscript(_: String) -> Int? { get set }
-  subscript(_: String) -> UInt? { get set }
-  subscript(_: String) -> Float? { get set }
-  subscript(_: String) -> Double? { get set }
-  subscript(_: String) -> String? { get set }
+  subscript<T: Codable & Equatable>(_: String, _: T.Type) -> T? { get set }
+  subscript<T: FlatBuffersCodable & Equatable>(_: String, _: T.Type) -> T? { get set }
+  subscript(_: String, _: Bool.Type) -> Bool? { get set }
+  subscript(_: String, _: Int.Type) -> Int? { get set }
+  subscript(_: String, _: UInt.Type) -> UInt? { get set }
+  subscript(_: String, _: Float.Type) -> Float? { get set }
+  subscript(_: String, _: Double.Type) -> Double? { get set }
+  subscript(_: String, _: String.Type) -> String? { get set }
   /**
    * Force current thread to wait until everything has been written to disk.
    * Note that this function forces wait to disk, but not synchronize across
@@ -170,6 +170,44 @@ public protocol Workspace: Queryable {
     func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
     where Element: Equatable
   #endif
+}
+
+extension WorkspaceDictionary {
+  /**
+   * Get the value without type specifier.
+   */
+  public subscript<T: Codable & Equatable>(key: String) -> T? {
+    get { self[key, T.self] }
+    set { self[key, T.self] = newValue }
+  }
+  public subscript<T: FlatBuffersCodable & Equatable>(key: String) -> T? {
+    get { self[key, T.self] }
+    set { self[key, T.self] = newValue }
+  }
+  public subscript(key: String) -> Bool? {
+    get { self[key, Bool.self] }
+    set { self[key, Bool.self] = newValue }
+  }
+  public subscript(key: String) -> Int? {
+    get { self[key, Int.self] }
+    set { self[key, Int.self] = newValue }
+  }
+  public subscript(key: String) -> UInt? {
+    get { self[key, UInt.self] }
+    set { self[key, UInt.self] = newValue }
+  }
+  public subscript(key: String) -> Float? {
+    get { self[key, Float.self] }
+    set { self[key, Float.self] = newValue }
+  }
+  public subscript(key: String) -> Double? {
+    get { self[key, Double.self] }
+    set { self[key, Double.self] = newValue }
+  }
+  public subscript(key: String) -> String? {
+    get { self[key, String.self] }
+    set { self[key, String.self] = newValue }
+  }
 }
 
 extension WorkspaceDictionary {
