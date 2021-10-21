@@ -8,7 +8,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     case none
   }
   final class Storage {
-    static let size = 8
+    static let size = 12
     let namespace: String
     var locks: UnsafeMutablePointer<os_unfair_lock_s>
     var dictionaries: [[String: Any]]

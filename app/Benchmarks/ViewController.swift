@@ -32,7 +32,7 @@ final class BenchmarksViewController: UIViewController {
   }
   private lazy var runDflatButton: UIButton = {
     let button = UIButton(
-      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 12, width: 200, height: 36))
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2, y: 12, width: 260, height: 36))
     button.setTitle("Run Dflat CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -42,7 +42,7 @@ final class BenchmarksViewController: UIViewController {
   }()
   private lazy var runCoreDataButton: UIButton = {
     let button = UIButton(
-      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 54, width: 200, height: 36))
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2, y: 54, width: 260, height: 36))
     button.setTitle("Run Core Data CRUD", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -52,7 +52,7 @@ final class BenchmarksViewController: UIViewController {
   }()
   private lazy var runDflatSubButton: UIButton = {
     let button = UIButton(
-      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 96, width: 200, height: 36))
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2, y: 96, width: 260, height: 36))
     button.setTitle("Run Dflat Subscription", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -62,7 +62,7 @@ final class BenchmarksViewController: UIViewController {
   }()
   private lazy var runCoreDataSubButton: UIButton = {
     let button = UIButton(
-      frame: CGRect(x: (UIScreen.main.bounds.width - 200) / 2, y: 138, width: 200, height: 36))
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2, y: 138, width: 260, height: 36))
     button.setTitle("Run Core Data Subscription", for: .normal)
     button.titleLabel?.textColor = .black
     button.backgroundColor = .lightGray
@@ -70,13 +70,34 @@ final class BenchmarksViewController: UIViewController {
     button.addTarget(self, action: #selector(runCoreDataSubBenchmark), for: .touchUpInside)
     return button
   }()
+  private lazy var runDflatDictButton: UIButton = {
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2, y: 180, width: 127, height: 36))
+    button.setTitle("Run Dflat Dictionary", for: .normal)
+    button.titleLabel?.textColor = .black
+    button.backgroundColor = .lightGray
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runDflatDictBenchmark), for: .touchUpInside)
+    return button
+  }()
+  private lazy var runUserDefaultsButton: UIButton = {
+    let button = UIButton(
+      frame: CGRect(x: (UIScreen.main.bounds.width - 260) / 2 + 133, y: 180, width: 127, height: 36)
+    )
+    button.setTitle("Run UserDefaults", for: .normal)
+    button.titleLabel?.textColor = .black
+    button.backgroundColor = .lightGray
+    button.titleLabel?.font = .systemFont(ofSize: 12)
+    button.addTarget(self, action: #selector(runUserDefaultsBenchmark), for: .touchUpInside)
+    return button
+  }()
   private lazy var text: UILabel = {
     let text = UILabel(
-      frame: CGRect(x: 20, y: 180, width: UIScreen.main.bounds.width - 40, height: 320))
+      frame: CGRect(x: 0, y: 216, width: UIScreen.main.bounds.width, height: 278))
     text.textColor = .black
     text.numberOfLines = 0
     text.textAlignment = .center
-    text.font = .systemFont(ofSize: 12)
+    text.font = .systemFont(ofSize: 11)
     return text
   }()
   override func loadView() {
@@ -86,6 +107,8 @@ final class BenchmarksViewController: UIViewController {
     view.addSubview(runCoreDataButton)
     view.addSubview(runDflatSubButton)
     view.addSubview(runCoreDataSubButton)
+    view.addSubview(runDflatDictButton)
+    view.addSubview(runUserDefaultsButton)
     view.addSubview(text)
   }
 
@@ -1168,5 +1191,212 @@ final class BenchmarksViewController: UIViewController {
     let subStats = runDflatSub()
     text.text = subStats
     print(subStats)
+  }
+
+  struct Doc: Codable & Equatable {
+    struct Vec3: Codable & Equatable {
+      var x: Float
+      var y: Float
+      var z: Float
+    }
+    enum Color: Codable & Equatable {
+      case red
+      case green
+      case blue
+    }
+    struct ImageContent: Codable & Equatable {
+      var images: [String]
+    }
+    struct TextContent: Codable & Equatable {
+      var text: String
+    }
+    enum Content: Codable & Equatable {
+      case imageContent(ImageContent)
+      case textContent(TextContent)
+    }
+    var pos: Vec3?
+    var color: Color
+    var title: String
+    var content: Content?
+    var tag: String?
+    var priority: Int
+  }
+
+  private func runDflatDict() -> String {
+    var stats = ""
+    let insertStartTime = CACurrentMediaTime()
+    var dictionary = dflat.dictionary
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        dictionary["key_\(i)_\(j)"] = j + i * 1000
+      }
+    }
+    let insertEndTime = CACurrentMediaTime()
+    dictionary.synchronize()
+    let insertSyncEndTime = CACurrentMediaTime()
+    stats += "Dflat Insert 100,000 Int: \(insertEndTime - insertStartTime) sec\n"
+    stats += "Synced: \(insertSyncEndTime - insertStartTime) sec\n"
+    let hotReadStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = dictionary["key_\(i)_\(j)", Int.self]
+        precondition(v == j + i * 1000)
+      }
+    }
+    let hotReadEndTime = CACurrentMediaTime()
+    stats += "Dflat Read 100,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    let oneHotKeyUpdateStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        dictionary["one_hot_key"] = j + i * 1000
+      }
+    }
+    let oneHotKeyUpdateEndTime = CACurrentMediaTime()
+    dictionary.synchronize()
+    let oneHotKeyUpdateSyncEndTime = CACurrentMediaTime()
+    stats +=
+      "Dflat Update 1 Key 100,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
+    stats += "Synced: \(oneHotKeyUpdateSyncEndTime - oneHotKeyUpdateStartTime) sec\n"
+    let insertCodableStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        dictionary["codable_\(i)_\(j)"] = Doc(
+          pos: nil, color: .blue, title: "codable_\(i)_\(j)", content: nil, tag: nil, priority: 100)
+      }
+    }
+    let insertCodableEndTime = CACurrentMediaTime()
+    dictionary.synchronize()
+    let insertCodableSyncEndTime = CACurrentMediaTime()
+    stats += "Dflat Insert 100,000 Codable: \(insertCodableEndTime - insertCodableStartTime) sec\n"
+    stats += "Synced: \(insertCodableSyncEndTime - insertCodableStartTime) sec\n"
+    let insertFlatBuffersStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        dictionary["fbs_\(i)_\(j)"] = BenchDoc(title: "fbs_\(i)_\(j)", color: .blue, priority: 100)
+      }
+    }
+    let insertFlatBuffersEndTime = CACurrentMediaTime()
+    dictionary.synchronize()
+    let insertFlatBuffersSyncEndTime = CACurrentMediaTime()
+    stats +=
+      "Dflat Insert 100,000 FlatBuffersCodable: \(insertFlatBuffersEndTime - insertFlatBuffersStartTime) sec\n"
+    stats += "Synced: \(insertFlatBuffersSyncEndTime - insertFlatBuffersStartTime) sec\n"
+    let newDflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let newDictionary = newDflat.dictionary
+    let coldReadStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newDictionary["key_\(i)_\(j)", Int.self]
+        precondition(v == j + i * 1000)
+      }
+    }
+    let coldReadEndTime = CACurrentMediaTime()
+    stats += "Dflat Read 100,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
+    let coldReadCodableStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newDictionary["codable_\(i)_\(j)", Doc.self]!
+        precondition(v.title == "codable_\(i)_\(j)")
+      }
+    }
+    let coldReadCodableEndTime = CACurrentMediaTime()
+    stats +=
+      "Dflat Read 100,000 Codable, Cold: \(coldReadCodableEndTime - coldReadCodableStartTime) sec\n"
+    let coldReadFlatBuffersStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newDictionary["fbs_\(i)_\(j)", BenchDoc.self]!
+        precondition(v.title == "fbs_\(i)_\(j)")
+      }
+    }
+    let coldReadFlatBuffersEndTime = CACurrentMediaTime()
+    stats +=
+      "Dflat Read 100,000 FlatBuffersCodable, Cold: \(coldReadFlatBuffersEndTime - coldReadFlatBuffersStartTime) sec\n"
+    let newDflat2 = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
+    let newDictionary2 = newDflat.dictionary
+    let coldReadStartTime2 = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newDictionary2["key_0_\(j)", Int.self]
+        precondition(v == j)
+      }
+    }
+    let coldReadEndTime2 = CACurrentMediaTime()
+    stats += "Dflat Read 1,000 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
+    return stats
+  }
+
+  private func runUserDefaults() -> String {
+    let suiteName = "\(UUID().uuidString).user"
+    let userDefaults = UserDefaults(suiteName: suiteName)!
+    var stats = ""
+    let insertStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        userDefaults.set(j + i * 1000, forKey: "key_\(i)_\(j)")
+      }
+    }
+    let insertEndTime = CACurrentMediaTime()
+    userDefaults.synchronize()
+    let insertSyncEndTime = CACurrentMediaTime()
+    stats += "UserDefaults Insert 100,000 Int: \(insertEndTime - insertStartTime) sec\n"
+    stats += "Synced: \(insertSyncEndTime - insertStartTime) sec\n"
+    let hotReadStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = userDefaults.integer(forKey: "key_\(i)_\(j)")
+        precondition(v == i * 1000 + j)
+      }
+    }
+    let hotReadEndTime = CACurrentMediaTime()
+    stats += "UserDefaults Read 100,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    let oneHotKeyUpdateStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        userDefaults.set(j + i * 1000, forKey: "one_hot_key")
+      }
+    }
+    let oneHotKeyUpdateEndTime = CACurrentMediaTime()
+    userDefaults.synchronize()
+    let oneHotKeyUpdateSyncEndTime = CACurrentMediaTime()
+    stats +=
+      "UserDefaults Update 1 Key 100,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
+    stats += "Synced: \(oneHotKeyUpdateSyncEndTime - oneHotKeyUpdateStartTime) sec\n"
+    let newUserDefaults = UserDefaults(suiteName: suiteName)!
+    let coldReadStartTime = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newUserDefaults.integer(forKey: "key_\(i)_\(j)")
+        precondition(v == i * 1000 + j)
+      }
+    }
+    let coldReadEndTime = CACurrentMediaTime()
+    stats += "UserDefaults Read 100,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
+    let newUserDefaults2 = UserDefaults(suiteName: suiteName)!
+    let coldReadStartTime2 = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<1000 {
+        let v = newUserDefaults.integer(forKey: "key_0_\(j)")
+        precondition(v == j)
+      }
+    }
+    let coldReadEndTime2 = CACurrentMediaTime()
+    stats +=
+      "UserDefaults Read 1,000 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
+    return stats
+  }
+
+  @objc
+  func runDflatDictBenchmark() {
+    let stats = runDflatDict()
+    text.text = stats
+    print(stats)
+  }
+
+  @objc
+  func runUserDefaultsBenchmark() {
+    let stats = runUserDefaults()
+    text.text = stats
+    print(stats)
   }
 }
