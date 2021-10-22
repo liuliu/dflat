@@ -430,9 +430,9 @@ Both are quite doable, while each has its own challenges. For 1, we need to wres
 
 ### Key-Value Container, WorkspaceDictionary
 
-New data collected to compare **Dflat**'s `WorkspaceDictionay` against `UserDefaults` as a convenient persisted key-value container on iOS. As a reminder, raw performance rarely is a consideration for persisted key-value containers on mobile apps. The data provided here are helpful for us to understand the characteristics in designing **Dflat**'s `WorkspaceDictionary`.
+New data were collected to compare **Dflat**'s `WorkspaceDictionay` against `UserDefaults` as a convenient persisted key-value container on iOS. As a reminder, raw performance rarely is a consideration for persisted key-value containers on mobile apps. The data provided here are helpful for us to understand the characteristics in designing **Dflat**'s `WorkspaceDictionary`.
 
-The new data were collected from a iPhone 13 Pro with 128GiB storage. Compilation parameters were the same as the other benchmarks.
+The new data were from a iPhone 13 Pro with 128GiB storage. Compilation parameters were the same as the other benchmarks.
 
 ![](docs/dflat-vs-userdefaults.png)
 
@@ -446,12 +446,14 @@ When keys are "cold", there is a performance gap between `UserDefaults` and `Wor
 
 Unlike `UserDefaults` which only supports plist values, **Dflat**'s `WorkspaceDictionary` supports both `Codable` objects, and the newly introduced `FlatBuffersCodable` objects. The performance wins of `FlatBuffersCodable` is validated in the benchmark. On saving, `FlatBufersCodable` is about 2 to 3 times faster while on loading, `FlatBuffersCodable` is about 50% faster. The encoding performance is noticeable because when set, `WorkspaceDictionary` does encoding synchronously. This is a practical choice because the `Codable` object may not be thread-safe. On the other hand, `FlatBuffersCodable` objects are generated and trivially thread-safe.
 
+The insert performance, when compared to **Dflat** above, is not fast. *Insert 40,000 Int, to Disk* took 2.7 seconds. If the other metrics is to be believed, this should take less than 0.3 seconds (as the *Insert 10,000 Objects* above). This is understandable because each individual insert is a transaction. When looked at *Update 10,000 Objects Individually*, the data is much more comparable.
+
 Since `WorkspaceDictionary` is effectively a thread-safe dictionary, there is a trivial improvement we can do by sharding the dictionary to avoid lock-contention. This turns out to be beneficial.
 
 ![](docs/dflat-shards.png)
 
 Comparing no shard (using a lock to protect the in-memory dictionary) with 12-way shards (by key hash value, only lock one of the 12 dictionaries), in simpler cases such as insert integers, fewer lock-contention is beneficial. When there is a lock-contention, such as *Update 1 Key with 40,000 Int*, as expected, the difference is minimal.
 
-There is a bigger difference with `Codable`, it is unfortunate. When set, we only release lock when the object is encoded. There is a complex reason for that (we only update when compared old value with the new, and the old value is fetched with the lock. Thus, our current sequence is: update in-memory dictionary with new value and get old value -> if old value != new value -> encode object -> dispatch to persist in background thread. We need to protect the whole in-memory dictionary update til dispatch to persist, otherwise we may end up with in-memory dictionary of one value but on disk, it is another. Alternative is to move the encode object part before updating in-memory dictionary. That missed the opportunity to skip the encoding entirely if old == new). The difference you saw is when we can do encoding in parallel v.s. we have to serialize it.
+There is a bigger difference with `Codable`, it is unfortunate. When set, we only release lock when the object is encoded. There is a complex reason for that (we only update when compared old value with the new, and the old value is fetched with the lock. Thus, our current sequence is: update in-memory dictionary with new value and get old value -> if old value != new value -> encode object -> dispatch to persist in background thread. We need to protect the whole in-memory dictionary update til dispatch to persist, otherwise we may end up with in-memory dictionary of one value, but on disk, it is another. Alternative is to move the encode object part before updating in-memory dictionary. That missed the opportunity to skip the encoding entirely if old == new). The difference you saw is when we can do encoding in parallel v.s. we have to serialize it.
 
-The above comparison raises question about when to use `WorkspaceDictionary`. The answer is not easy. If you are using **Dflat** already, `WorkspaceDictionary` is an easy way to persist some one off data with the same guarantee **Dflat** has, you don't need to deal with OS differences with `UserDefaults`, or worry about the size limitations. It will be more beneficial with **Dflat** when I introduce transactional guarantee later this year.
+The above comparison raises question about when to use `WorkspaceDictionary`. The answer is not easy. If you are using **Dflat** already, `WorkspaceDictionary` is an easy way to persist some one off data with the same guarantee **Dflat** has. You don't need to deal with OS differences with `UserDefaults`, or worry about the size limitations. It will be more beneficial with **Dflat** when I introduce transactional guarantee later this year.
