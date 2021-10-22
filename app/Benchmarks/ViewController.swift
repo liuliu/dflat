@@ -1224,42 +1224,53 @@ final class BenchmarksViewController: UIViewController {
 
   private func runDflatDict() -> String {
     var stats = ""
-    let insertStartTime = CACurrentMediaTime()
     var dictionary = dflat.dictionary
+    let insertStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
-        dictionary["key_\(i)_\(j)"] = j + i * 1000
+      for j in 0..<400 {
+        dictionary["key_\(i)_\(j)"] = j + i * 400
       }
     }
     let insertEndTime = CACurrentMediaTime()
     dictionary.synchronize()
     let insertSyncEndTime = CACurrentMediaTime()
-    stats += "Dflat Insert 100,000 Int: \(insertEndTime - insertStartTime) sec\n"
+    stats += "Dflat Insert 40,000 Int: \(insertEndTime - insertStartTime) sec\n"
     stats += "Synced: \(insertSyncEndTime - insertStartTime) sec\n"
     let hotReadStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = dictionary["key_\(i)_\(j)", Int.self]
-        precondition(v == j + i * 1000)
+        precondition(v == j + i * 400)
       }
     }
     let hotReadEndTime = CACurrentMediaTime()
-    stats += "Dflat Read 100,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    stats += "Dflat Read 40,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    let insertStartTime2 = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<400 {
+        dictionary["key_\(i + 100)_\(j)"] = j + (i + 100) * 400
+      }
+    }
+    let insertEndTime2 = CACurrentMediaTime()
+    dictionary.synchronize()
+    let insertSyncEndTime2 = CACurrentMediaTime()
+    stats += "Dflat Insert Another 40,000 Int: \(insertEndTime2 - insertStartTime2) sec\n"
+    stats += "Synced: \(insertSyncEndTime2 - insertStartTime2) sec\n"
     let oneHotKeyUpdateStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
-        dictionary["one_hot_key"] = j + i * 1000
+      for j in 0..<400 {
+        dictionary["one_hot_key"] = j + i * 400
       }
     }
     let oneHotKeyUpdateEndTime = CACurrentMediaTime()
     dictionary.synchronize()
     let oneHotKeyUpdateSyncEndTime = CACurrentMediaTime()
     stats +=
-      "Dflat Update 1 Key 100,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
+      "Dflat Update 1 Key 40,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
     stats += "Synced: \(oneHotKeyUpdateSyncEndTime - oneHotKeyUpdateStartTime) sec\n"
     let insertCodableStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         dictionary["codable_\(i)_\(j)"] = Doc(
           pos: nil, color: .blue, title: "codable_\(i)_\(j)", content: nil, tag: nil, priority: 100)
       }
@@ -1267,11 +1278,11 @@ final class BenchmarksViewController: UIViewController {
     let insertCodableEndTime = CACurrentMediaTime()
     dictionary.synchronize()
     let insertCodableSyncEndTime = CACurrentMediaTime()
-    stats += "Dflat Insert 100,000 Codable: \(insertCodableEndTime - insertCodableStartTime) sec\n"
+    stats += "Dflat Insert 40,000 Codable: \(insertCodableEndTime - insertCodableStartTime) sec\n"
     stats += "Synced: \(insertCodableSyncEndTime - insertCodableStartTime) sec\n"
     let insertFlatBuffersStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         dictionary["fbs_\(i)_\(j)"] = BenchDoc(title: "fbs_\(i)_\(j)", color: .blue, priority: 100)
       }
     }
@@ -1279,50 +1290,50 @@ final class BenchmarksViewController: UIViewController {
     dictionary.synchronize()
     let insertFlatBuffersSyncEndTime = CACurrentMediaTime()
     stats +=
-      "Dflat Insert 100,000 FlatBuffersCodable: \(insertFlatBuffersEndTime - insertFlatBuffersStartTime) sec\n"
+      "Dflat Insert 40,000 FlatBuffersCodable: \(insertFlatBuffersEndTime - insertFlatBuffersStartTime) sec\n"
     stats += "Synced: \(insertFlatBuffersSyncEndTime - insertFlatBuffersStartTime) sec\n"
     let newDflat = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let newDictionary = newDflat.dictionary
     let coldReadStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newDictionary["key_\(i)_\(j)", Int.self]
-        precondition(v == j + i * 1000)
+        precondition(v == j + i * 400)
       }
     }
     let coldReadEndTime = CACurrentMediaTime()
-    stats += "Dflat Read 100,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
+    stats += "Dflat Read 40,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
     let coldReadCodableStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newDictionary["codable_\(i)_\(j)", Doc.self]!
         precondition(v.title == "codable_\(i)_\(j)")
       }
     }
     let coldReadCodableEndTime = CACurrentMediaTime()
     stats +=
-      "Dflat Read 100,000 Codable, Cold: \(coldReadCodableEndTime - coldReadCodableStartTime) sec\n"
+      "Dflat Read 40,000 Codable, Cold: \(coldReadCodableEndTime - coldReadCodableStartTime) sec\n"
     let coldReadFlatBuffersStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newDictionary["fbs_\(i)_\(j)", BenchDoc.self]!
         precondition(v.title == "fbs_\(i)_\(j)")
       }
     }
     let coldReadFlatBuffersEndTime = CACurrentMediaTime()
     stats +=
-      "Dflat Read 100,000 FlatBuffersCodable, Cold: \(coldReadFlatBuffersEndTime - coldReadFlatBuffersStartTime) sec\n"
+      "Dflat Read 40,000 FlatBuffersCodable, Cold: \(coldReadFlatBuffersEndTime - coldReadFlatBuffersStartTime) sec\n"
     let newDflat2 = SQLiteWorkspace(filePath: filePath, fileProtectionLevel: .noProtection)
     let newDictionary2 = newDflat.dictionary
     let coldReadStartTime2 = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newDictionary2["key_0_\(j)", Int.self]
         precondition(v == j)
       }
     }
     let coldReadEndTime2 = CACurrentMediaTime()
-    stats += "Dflat Read 1,000 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
+    stats += "Dflat Read 400 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
     return stats
   }
 
@@ -1332,57 +1343,68 @@ final class BenchmarksViewController: UIViewController {
     var stats = ""
     let insertStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
-        userDefaults.set(j + i * 1000, forKey: "key_\(i)_\(j)")
+      for j in 0..<400 {
+        userDefaults.set(j + i * 400, forKey: "key_\(i)_\(j)")
       }
     }
     let insertEndTime = CACurrentMediaTime()
     userDefaults.synchronize()
     let insertSyncEndTime = CACurrentMediaTime()
-    stats += "UserDefaults Insert 100,000 Int: \(insertEndTime - insertStartTime) sec\n"
+    stats += "UserDefaults Insert 40,000 Int: \(insertEndTime - insertStartTime) sec\n"
     stats += "Synced: \(insertSyncEndTime - insertStartTime) sec\n"
     let hotReadStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = userDefaults.integer(forKey: "key_\(i)_\(j)")
-        precondition(v == i * 1000 + j)
+        precondition(v == i * 400 + j)
       }
     }
     let hotReadEndTime = CACurrentMediaTime()
-    stats += "UserDefaults Read 100,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    stats += "UserDefaults Read 40,000 Int, Hot: \(hotReadEndTime - hotReadStartTime) sec\n"
+    let insertStartTime2 = CACurrentMediaTime()
+    DispatchQueue.concurrentPerform(iterations: 100) { i in
+      for j in 0..<400 {
+        userDefaults.set(j + (i + 100) * 400, forKey: "key_\(i + 100)_\(j)")
+      }
+    }
+    let insertEndTime2 = CACurrentMediaTime()
+    userDefaults.synchronize()
+    let insertSyncEndTime2 = CACurrentMediaTime()
+    stats += "UserDefaults Insert Another 40,000 Int: \(insertEndTime2 - insertStartTime2) sec\n"
+    stats += "Synced: \(insertSyncEndTime2 - insertStartTime2) sec\n"
     let oneHotKeyUpdateStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
-        userDefaults.set(j + i * 1000, forKey: "one_hot_key")
+      for j in 0..<400 {
+        userDefaults.set(j + i * 400, forKey: "one_hot_key")
       }
     }
     let oneHotKeyUpdateEndTime = CACurrentMediaTime()
     userDefaults.synchronize()
     let oneHotKeyUpdateSyncEndTime = CACurrentMediaTime()
     stats +=
-      "UserDefaults Update 1 Key 100,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
+      "UserDefaults Update 1 Key 40,000 Int: \(oneHotKeyUpdateEndTime - oneHotKeyUpdateStartTime) sec\n"
     stats += "Synced: \(oneHotKeyUpdateSyncEndTime - oneHotKeyUpdateStartTime) sec\n"
     let newUserDefaults = UserDefaults(suiteName: suiteName)!
     let coldReadStartTime = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newUserDefaults.integer(forKey: "key_\(i)_\(j)")
-        precondition(v == i * 1000 + j)
+        precondition(v == i * 400 + j)
       }
     }
     let coldReadEndTime = CACurrentMediaTime()
-    stats += "UserDefaults Read 100,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
+    stats += "UserDefaults Read 40,000 Int, Cold: \(coldReadEndTime - coldReadStartTime) sec\n"
     let newUserDefaults2 = UserDefaults(suiteName: suiteName)!
     let coldReadStartTime2 = CACurrentMediaTime()
     DispatchQueue.concurrentPerform(iterations: 100) { i in
-      for j in 0..<1000 {
+      for j in 0..<400 {
         let v = newUserDefaults.integer(forKey: "key_0_\(j)")
         precondition(v == j)
       }
     }
     let coldReadEndTime2 = CACurrentMediaTime()
     stats +=
-      "UserDefaults Read 1,000 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
+      "UserDefaults Read 400 Int 100 Times, Cold: \(coldReadEndTime2 - coldReadStartTime2) sec\n"
     return stats
   }
 
