@@ -56,6 +56,17 @@ is still holding their own lock to update in-memory value. It doesn't guarantee
 the first thread will wait the second thread's dictionary[key] = value to finish.
 This method only guarantees all writes on current thread done.
 
+### `removeAll()`
+
+```swift
+mutating func removeAll()
+```
+
+Remove all key-value pairs in the dictionary. Like `keys`, this is an expensive method
+in the sense that it needs to acquire locks for all in-memory structures. But it is not
+as expensive as `keys` because the deletion from disk is asynchronous (no need to wait
+fetching from disk).
+
 
 **PROTOCOL**
 
