@@ -469,9 +469,35 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     for i in 0..<Storage.size {
       storage.lock(i)
       defer { storage.unlock(i) }
-      keys.formUnion(storage.dictionaries[i].keys)
+      keys.formUnion(
+        storage.dictionaries[i].compactMap { (key, value) -> String? in
+          guard !(value is None) else { return nil }
+          return key
+        })
     }
     return Array(keys)
+  }
+
+  func removeAll() {
+    for i in 0..<Storage.size {
+      storage.lock(i)
+      defer { storage.unlock(i) }
+      for key in storage.dictionaries[i].keys {
+        storage.dictionaries[i][key] = None.none
+      }
+    }
+    let workspace = self.workspace
+    let namespace = storage.namespace
+    workspace.performChanges(
+      [DictItem.self],
+      changesHandler: { txnContext in
+        let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == namespace)
+        for item in items {
+          if let deletionRequest = DictItemChangeRequest.deletionRequest(item) {
+            txnContext.try(submit: deletionRequest)
+          }
+        }
+      })
   }
 }
 

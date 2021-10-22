@@ -179,6 +179,33 @@ class DictionaryTests: XCTestCase {
     dictionary["doubleValue", Double.self] = 12.3
     let keys = dictionary.keys
     XCTAssertEqual(Set(keys), Set(["stringValue", "intValue", "doubleValue"]))
+    dictionary.synchronize()
+    let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
+    let newDictionary = newDflat.dictionary
+    let newKeys = newDictionary.keys
+    XCTAssertEqual(Set(newKeys), Set(["stringValue", "intValue", "doubleValue"]))
+  }
+
+  func testRemoveAll() {
+    guard var dictionary = dflat?.dictionary else { return }
+    dictionary["stringValue"] = "abcde"
+    dictionary["intValue", Int.self] = 10
+    dictionary["doubleValue", Double.self] = 12.3
+    dictionary.removeAll()
+    let keys = dictionary.keys
+    XCTAssertEqual(keys.count, 0)
+    dictionary["intValue", Int.self] = 12
+    dictionary["doubleValue", Double.self] = 11.2
+    dictionary.removeAll()
+    dictionary["stringValue"] = "abc"
+    let newKeys = dictionary.keys
+    XCTAssertEqual(Set(newKeys), Set(["stringValue"]))
+    XCTAssertEqual(dictionary["stringValue", String.self], "abc")
+    dictionary.synchronize()
+    let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
+    let newDictionary = newDflat.dictionary
+    XCTAssertEqual(newDictionary["stringValue", default: "1234"], "abc")
+    XCTAssertEqual(newDictionary["intValue", default: 9], 9)
   }
 
   static let allTests = [
@@ -195,5 +222,6 @@ class DictionaryTests: XCTestCase {
     ("testReadWriteReadDouble", testReadWriteReadDouble),
     ("testReadWriteReadString", testReadWriteReadString),
     ("testIterateKeys", testIterateKeys),
+    ("testRemoveAll", testRemoveAll),
   ]
 }

@@ -57,6 +57,13 @@ public protocol WorkspaceDictionary {
    * method as it fetches from disk, from in-memory structures, and acquire locks if needed.
    */
   var keys: [String] { get }
+  /**
+   * Remove all key-value pairs in the dictionary. Like `keys`, this is an expensive method
+   * in the sense that it needs to acquire locks for all in-memory structures. But it is not
+   * as expensive as `keys` because the deletion from disk is asynchronous (no need to wait
+   * fetching from disk).
+   */
+  mutating func removeAll()
 }
 
 public protocol Workspace: Queryable {
