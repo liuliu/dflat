@@ -2,8 +2,6 @@ import _SQLiteDflatOSShim
 
 #if os(Linux)
 
-  import SwiftGlibc.POSIX.sys.types
-
   typealias os_unfair_lock_s = pthread_mutex_t
 
   func os_unfair_lock() -> os_unfair_lock_s {

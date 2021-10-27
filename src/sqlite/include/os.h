@@ -1,3 +1,4 @@
+#include <pthread.h>
 
 extern int open_dprotected_np(const char *path, int flags, int class, int dpflags, ...);
 
