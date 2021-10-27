@@ -18,7 +18,7 @@ class AsyncTests: XCTestCase {
     dflat?.shutdown()
   }
 
-  #if compiler(>=5.5) && canImport(_Concurrency)
+  #if compiler(>=5.5) && canImport(_Concurrency) && !os(Linux)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     func testAwaitPerformChangesWithSimpleQuery() async {
       guard let dflat = dflat else { return }
