@@ -469,28 +469,47 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     for i in 0..<Storage.size {
       storage.lock(i)
       defer { storage.unlock(i) }
-      keys.formUnion(
-        storage.dictionaries[i].compactMap { (key, value) -> String? in
-          guard !(value is None) else { return nil }
-          return key
-        })
+      for (key, value) in storage.dictionaries[i] {
+        // Remove it, it doesn't exist any more from disk.
+        if value is None {
+          keys.remove(key)
+        } else {
+          keys.insert(key)
+        }
+      }
     }
     return Array(keys)
   }
 
   func removeAll() {
+    let namespace = storage.namespace
+    let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == namespace)
+    var keys = [[String]](repeating: [], count: Storage.size)
+    for key in items.lazy.map(\.key) {
+      var hasher = Hasher()
+      key.hash(into: &hasher)
+      let hashValue = Int(UInt(bitPattern: hasher.finalize()) % UInt(Storage.size))
+      keys[hashValue].append(key)
+    }
     for i in 0..<Storage.size {
       storage.lock(i)
       defer { storage.unlock(i) }
+      // Set existing ones in the dictionaries to be None.
       for key in storage.dictionaries[i].keys {
+        storage.dictionaries[i][key] = None.none
+      }
+      // Set the ones fetched from disk to be None.
+      for key in keys[i] {
         storage.dictionaries[i][key] = None.none
       }
     }
     let workspace = self.workspace
-    let namespace = storage.namespace
     workspace.performChanges(
       [DictItem.self],
       changesHandler: { txnContext in
+        // Note that any insertions / updates after removeAll will be queued after this.
+        // We need to fetch again because we may have pending writes that not available
+        // when do the fetching in the beginning of removeAll.
         let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == namespace)
         for item in items {
           if let deletionRequest = DictItemChangeRequest.deletionRequest(item) {

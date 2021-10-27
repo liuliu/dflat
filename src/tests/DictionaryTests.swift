@@ -208,6 +208,19 @@ class DictionaryTests: XCTestCase {
     XCTAssertEqual(newDictionary["intValue", default: 9], 9)
   }
 
+  func testRemoveAllWithPersistence() {
+    guard var dictionary = dflat?.dictionary else { return }
+    dictionary["stringValue"] = "abcde"
+    dictionary["intValue", Int.self] = 10
+    dictionary["doubleValue", Double.self] = 12.3
+    dictionary.synchronize()
+    let newDflat = SQLiteWorkspace(filePath: filePath!, fileProtectionLevel: .noProtection)
+    var newDictionary = newDflat.dictionary
+    newDictionary.removeAll()
+    let keys = newDictionary.keys
+    XCTAssertEqual(keys.count, 0)
+  }
+
   static let allTests = [
     ("testReadWriteReadCodableObject", testReadWriteReadCodableObject),
     ("testReadWriteReadFlatBuffersObject", testReadWriteReadFlatBuffersObject),
@@ -223,5 +236,6 @@ class DictionaryTests: XCTestCase {
     ("testReadWriteReadString", testReadWriteReadString),
     ("testIterateKeys", testIterateKeys),
     ("testRemoveAll", testRemoveAll),
+    ("testRemoveAllWithPersistence", testRemoveAllWithPersistence),
   ]
 }
