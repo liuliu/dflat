@@ -68,6 +68,12 @@ public func performChanges(
 
 ### `performChanges(_:changesHandler:)`
 
+```swift
+public func performChanges(
+  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
+) async -> Bool
+```
+
  Perform a transaction for given object types and await either success or failure boolean.
 
  - Parameters:
@@ -91,10 +97,10 @@ public func fetchWithinASnapshot<T>(_ closure: () -> T) -> T
 ### `subscribe(fetchedResult:changeHandler:)`
 
 ```swift
-public func subscribe<Element: Atom>(
+public func subscribe<Element: Atom & Equatable>(
   fetchedResult: FetchedResult<Element>,
   changeHandler: @escaping (_: FetchedResult<Element>) -> Void
-) -> Workspace.Subscription where Element: Equatable
+) -> Workspace.Subscription
 ```
 
 #### Parameters
@@ -107,9 +113,9 @@ public func subscribe<Element: Atom>(
 ### `subscribe(object:changeHandler:)`
 
 ```swift
-public func subscribe<Element: Atom>(
+public func subscribe<Element: Atom & Equatable>(
   object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
-) -> Workspace.Subscription where Element: Equatable
+) -> Workspace.Subscription
 ```
 
 #### Parameters
@@ -122,22 +128,39 @@ public func subscribe<Element: Atom>(
 ### `publisher(for:)`
 
 ```swift
-public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element>
-where Element: Equatable
+public func publisher<Element: Atom & Equatable>(for object: Element) -> AtomPublisher<Element>
 ```
 
 ### `publisher(for:)`
 
 ```swift
-public func publisher<Element: Atom>(for fetchedResult: FetchedResult<Element>)
-  -> FetchedResultPublisher<Element> where Element: Equatable
+public func publisher<Element: Atom & Equatable>(for fetchedResult: FetchedResult<Element>)
+  -> FetchedResultPublisher<Element>
 ```
 
 ### `publisher(for:)`
 
 ```swift
-public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
-where Element: Equatable
+public func publisher<Element: Atom & Equatable>(for: Element.Type) -> QueryPublisherBuilder<
+  Element
+>
+```
+
+### `subscribe(object:bufferingPolicy:)`
+
+```swift
+public func subscribe<Element: Atom & Equatable>(
+  object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
+) -> AsyncStream<Element>
+```
+
+### `subscribe(fetchedResult:bufferingPolicy:)`
+
+```swift
+public func subscribe<Element: Atom & Equatable>(
+  fetchedResult: FetchedResult<Element>,
+  bufferingPolicy: AsyncStream<FetchedResult<Element>>.Continuation.BufferingPolicy
+) -> AsyncStream<FetchedResult<Element>>
 ```
 
 

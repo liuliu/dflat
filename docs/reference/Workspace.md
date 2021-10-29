@@ -39,8 +39,10 @@ public protocol WorkspaceDictionary
 var keys: [String]
 ```
 
-Return all keys available in the dictionary. This is an expensive (for this dictionary)
-method as it fetches from disk, from in-memory structures, and acquire locks if needed.
+ Return all keys available in the dictionary. This is an expensive (for this dictionary)
+ method as it fetches from disk, from in-memory structures, and acquire locks if needed.
+
+ - Returns: List of all keys available at the point of time in persisted dictionary.
 
 ## Methods
 ### `synchronize()`
@@ -131,6 +133,12 @@ func performChanges(
 
 ### `performChanges(_:changesHandler:)`
 
+```swift
+func performChanges(
+  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
+) async -> Bool
+```
+
  Perform a transaction for given object types and await either success or failure boolean.
 
  - Parameters:
@@ -142,10 +150,10 @@ func performChanges(
 ### `subscribe(fetchedResult:changeHandler:)`
 
 ```swift
-func subscribe<Element: Atom>(
+func subscribe<Element: Atom & Equatable>(
   fetchedResult: FetchedResult<Element>,
   changeHandler: @escaping (_: FetchedResult<Element>) -> Void
-) -> Subscription where Element: Equatable
+) -> Subscription
 ```
 
  Subscribe to changes of a fetched result. You queries fetched result with
@@ -171,9 +179,9 @@ func subscribe<Element: Atom>(
 ### `subscribe(object:changeHandler:)`
 
 ```swift
-func subscribe<Element: Atom>(
+func subscribe<Element: Atom & Equatable>(
   object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
-) -> Subscription where Element: Equatable
+) -> Subscription
 ```
 
  Subscribe to changes of an object. If anything in the object changed or
@@ -201,7 +209,7 @@ func subscribe<Element: Atom>(
 ### `publisher(for:)`
 
 ```swift
-func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
+func publisher<Element: Atom & Equatable>(for: Element) -> AtomPublisher<Element>
 ```
 
 Return a publisher for object subscription in Combine.
@@ -209,8 +217,8 @@ Return a publisher for object subscription in Combine.
 ### `publisher(for:)`
 
 ```swift
-func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
-where Element: Equatable
+func publisher<Element: Atom & Equatable>(for: FetchedResult<Element>)
+  -> FetchedResultPublisher<Element>
 ```
 
 Return a publisher for fetched result subscription in Combine.
@@ -218,11 +226,43 @@ Return a publisher for fetched result subscription in Combine.
 ### `publisher(for:)`
 
 ```swift
-func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
-where Element: Equatable
+func publisher<Element: Atom & Equatable>(for: Element.Type) -> QueryPublisherBuilder<Element>
 ```
 
 Return a publisher builder for query subscription in Combine.
+
+### `subscribe(object:bufferingPolicy:)`
+
+```swift
+func subscribe<Element: Atom & Equatable>(
+  object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
+) -> AsyncStream<Element>
+```
+
+ Subscribe to changes to the said object, and return the AsyncSequence you can iterate over.
+
+ - Parameters:
+    - object: The object previously fetched that we want to observe the new updates.
+    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+
+ - Returns: An AsyncSequence that can await for new object updates. Finishes only if the object deletes.
+
+### `subscribe(fetchedResult:bufferingPolicy:)`
+
+```swift
+func subscribe<Element: Atom & Equatable>(
+  fetchedResult: FetchedResult<Element>,
+  bufferingPolicy: AsyncStream<FetchedResult<Element>>.Continuation.BufferingPolicy
+) -> AsyncStream<FetchedResult<Element>>
+```
+
+ Subscribe to changes to the said fetched result, and return the AsyncSequence you can iterate over.
+
+ - Parameters:
+    - fetchedResult: The result fetched that we want to observe the new updates.
+    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+
+ - Returns: An AsyncSequence that can await for new fetched result. It never finishes.
 
 
 **EXTENSION**
@@ -245,6 +285,19 @@ public func shutdown()
 public func performChanges(
   _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
 )
+```
+
+### `subscribe(object:)`
+
+```swift
+public func subscribe<Element: Atom & Equatable>(object: Element) -> AsyncStream<Element>
+```
+
+### `subscribe(fetchedResult:)`
+
+```swift
+public func subscribe<Element: Atom & Equatable>(fetchedResult: FetchedResult<Element>)
+  -> AsyncStream<FetchedResult<Element>>
 ```
 
 
@@ -359,7 +412,7 @@ The object is deleted. This denotes the end of a subscription.
 # `QueryPublisherBuilder`
 
 ```swift
-open class QueryPublisherBuilder<Element: Atom> where Element: Equatable
+open class QueryPublisherBuilder<Element: Atom & Equatable>
 ```
 
 ## Methods
