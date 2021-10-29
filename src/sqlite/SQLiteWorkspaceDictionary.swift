@@ -1,3 +1,4 @@
+import Atomics
 import Dflat
 import Dispatch
 import FlatBuffers
@@ -12,6 +13,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     let namespace: String
     var locks: UnsafeMutablePointer<os_unfair_lock_s>
     var dictionaries: [[String: Any]]
+    var disableDiskFetch = UnsafeAtomic<Bool>.Storage(false)
     init(namespace: String) {
       self.namespace = namespace
       locks = UnsafeMutablePointer.allocate(capacity: Self.size)
@@ -99,6 +101,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! T)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -164,6 +172,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Bool)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -213,6 +227,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Int)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -262,6 +282,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! UInt)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -312,6 +338,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Float)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -361,6 +393,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! Double)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -410,6 +448,12 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
         return value is None ? nil : (value as! String)
       }  // Otherwise, try to load from disk.
       storage.unlock(tuple.1)
+      // Don't need to fetch from disk if it is disabled.
+      guard
+        !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+          UnsafeAtomic(at: $0).load(ordering: .acquiring)
+        })
+      else { return nil }
       if let value = workspace.fetch(for: DictItem.self).where(
         DictItem.key == key && DictItem.namespace == storage.namespace
       ).first {
@@ -464,8 +508,14 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
   }
 
   var keys: [String] {
-    let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == storage.namespace)
-    var keys = Set(items.map { $0.key })
+    var keys = Set<String>()
+    // Only need to fetch from disk if it is not disabled.
+    if !(withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+      UnsafeAtomic(at: $0).load(ordering: .acquiring)
+    }) {
+      let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == storage.namespace)
+      keys = Set(items.map { $0.key })
+    }
     for i in 0..<Storage.size {
       storage.lock(i)
       defer { storage.unlock(i) }
@@ -482,15 +532,6 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
   }
 
   func removeAll() {
-    let namespace = storage.namespace
-    let items = workspace.fetch(for: DictItem.self).where(DictItem.namespace == namespace)
-    var keys = [[String]](repeating: [], count: Storage.size)
-    for key in items.lazy.map(\.key) {
-      var hasher = Hasher()
-      key.hash(into: &hasher)
-      let hashValue = Int(UInt(bitPattern: hasher.finalize()) % UInt(Storage.size))
-      keys[hashValue].append(key)
-    }
     for i in 0..<Storage.size {
       storage.lock(i)
       defer { storage.unlock(i) }
@@ -498,12 +539,15 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
       for key in storage.dictionaries[i].keys {
         storage.dictionaries[i][key] = None.none
       }
-      // Set the ones fetched from disk to be None.
-      for key in keys[i] {
-        storage.dictionaries[i][key] = None.none
-      }
+    }
+    // Since removed everything from disk. We no longer need to fetch from disk in case
+    // of a miss any more (because the only thing accessible is write to the in-memory
+    // data structure first).
+    withUnsafeMutablePointer(to: &storage.disableDiskFetch) {
+      UnsafeAtomic(at: $0).store(true, ordering: .releasing)
     }
     let workspace = self.workspace
+    let namespace = storage.namespace
     workspace.performChanges(
       [DictItem.self],
       changesHandler: { txnContext in

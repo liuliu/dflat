@@ -134,10 +134,10 @@ public protocol Workspace: Queryable {
    * - Returns: A subscription object that you can cancel the subscription. If no one hold the subscription
    *            object, it will cancel automatically.
    */
-  func subscribe<Element: Atom>(
+  func subscribe<Element: Atom & Equatable>(
     fetchedResult: FetchedResult<Element>,
     changeHandler: @escaping (_: FetchedResult<Element>) -> Void
-  ) -> Subscription where Element: Equatable
+  ) -> Subscription
   /**
    * Subscribe to changes of an object. If anything in the object changed or
    * the object itself is deleted. Deletion is a terminal event for subscription.
@@ -154,28 +154,27 @@ public protocol Workspace: Queryable {
    * - Returns: A subscription object that you can cancel on. If no one hold the subscription, it will cancel
    *            automatically.
    */
-  func subscribe<Element: Atom>(
+  func subscribe<Element: Atom & Equatable>(
     object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
-  ) -> Subscription where Element: Equatable
+  ) -> Subscription
   #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
     // MARK - Combine-compliant
     /**
    * Return a publisher for object subscription in Combine.
    */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    func publisher<Element: Atom>(for: Element) -> AtomPublisher<Element> where Element: Equatable
+    func publisher<Element: Atom & Equatable>(for: Element) -> AtomPublisher<Element>
     /**
    * Return a publisher for fetched result subscription in Combine.
    */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    func publisher<Element: Atom>(for: FetchedResult<Element>) -> FetchedResultPublisher<Element>
-    where Element: Equatable
+    func publisher<Element: Atom & Equatable>(for: FetchedResult<Element>)
+      -> FetchedResultPublisher<Element>
     /**
    * Return a publisher builder for query subscription in Combine.
    */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
-    where Element: Equatable
+    func publisher<Element: Atom & Equatable>(for: Element.Type) -> QueryPublisherBuilder<Element>
   #endif
 }
 

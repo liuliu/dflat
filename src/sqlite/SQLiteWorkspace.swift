@@ -366,10 +366,10 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Observation
 
-  public func subscribe<Element: Atom>(
+  public func subscribe<Element: Atom & Equatable>(
     fetchedResult: FetchedResult<Element>,
     changeHandler: @escaping (_: FetchedResult<Element>) -> Void
-  ) -> Workspace.Subscription where Element: Equatable {
+  ) -> Workspace.Subscription {
     let fetchedResult = fetchedResult as! SQLiteFetchedResult<Element>
     let identifier = ObjectIdentifier(fetchedResult.query)
     let subscription = SQLiteSubscription(
@@ -430,9 +430,9 @@ public final class SQLiteWorkspace: Workspace {
     return subscription
   }
 
-  public func subscribe<Element: Atom>(
+  public func subscribe<Element: Atom & Equatable>(
     object: Element, changeHandler: @escaping (_: SubscribedObject<Element>) -> Void
-  ) -> Workspace.Subscription where Element: Equatable {
+  ) -> Workspace.Subscription {
     let subscription = SQLiteSubscription(
       ofType: .object(Element.self, object._rowid), workspace: self)
     guard
@@ -520,21 +520,22 @@ public final class SQLiteWorkspace: Workspace {
   #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    public func publisher<Element: Atom>(for object: Element) -> AtomPublisher<Element>
-    where Element: Equatable {
+    public func publisher<Element: Atom & Equatable>(for object: Element) -> AtomPublisher<Element>
+    {
       return SQLiteAtomPublisher<Element>(workspace: self, object: object)
     }
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    public func publisher<Element: Atom>(for fetchedResult: FetchedResult<Element>)
-      -> FetchedResultPublisher<Element> where Element: Equatable
+    public func publisher<Element: Atom & Equatable>(for fetchedResult: FetchedResult<Element>)
+      -> FetchedResultPublisher<Element>
     {
       return SQLiteFetchedResultPublisher<Element>(workspace: self, fetchedResult: fetchedResult)
     }
 
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-    public func publisher<Element: Atom>(for: Element.Type) -> QueryPublisherBuilder<Element>
-    where Element: Equatable {
+    public func publisher<Element: Atom & Equatable>(for: Element.Type) -> QueryPublisherBuilder<
+      Element
+    > {
       return SQLiteQueryPublisherBuilder<Element>(workspace: self)
     }
 
