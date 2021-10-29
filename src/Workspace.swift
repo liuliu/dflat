@@ -34,6 +34,11 @@ public protocol WorkspaceDictionary {
   /**
    * Get the latest value, whether it is in memory or from disk.
    * Set the value, it will persist asynchronously.
+   *
+   * - Parameters:
+   *    - key: Key to index into the persisted dictionary.
+   *
+   * - Returns: Value associated with the provided key. Nil if doesn't exist.
    */
   subscript<T: Codable & Equatable>(_: String, _: T.Type) -> T? { get set }
   subscript<T: FlatBuffersCodable & Equatable>(_: String, _: T.Type) -> T? { get set }
@@ -55,6 +60,8 @@ public protocol WorkspaceDictionary {
   /**
    * Return all keys available in the dictionary. This is an expensive (for this dictionary)
    * method as it fetches from disk, from in-memory structures, and acquire locks if needed.
+   *
+   * - Returns: List of all keys available at the point of time in persisted dictionary.
    */
   var keys: [String] { get }
   /**
@@ -160,21 +167,50 @@ public protocol Workspace: Queryable {
   #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
     // MARK - Combine-compliant
     /**
-   * Return a publisher for object subscription in Combine.
-   */
+     * Return a publisher for object subscription in Combine.
+     */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom & Equatable>(for: Element) -> AtomPublisher<Element>
     /**
-   * Return a publisher for fetched result subscription in Combine.
-   */
+     * Return a publisher for fetched result subscription in Combine.
+     */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom & Equatable>(for: FetchedResult<Element>)
       -> FetchedResultPublisher<Element>
     /**
-   * Return a publisher builder for query subscription in Combine.
-   */
+     * Return a publisher builder for query subscription in Combine.
+     */
     @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
     func publisher<Element: Atom & Equatable>(for: Element.Type) -> QueryPublisherBuilder<Element>
+  #endif
+  #if compiler(>=5.5) && canImport(_Concurrency)
+    /**
+   * Subscribe to changes to the said object, and return the AsyncSequence you can iterate over.
+   *
+   * - Parameters:
+   *    - object: The object previously fetched that we want to observe the new updates.
+   *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+   *
+   * - Returns: An AsyncSequence that can await for new object updates. Finishes only if the object deletes.
+   */
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe<Element: Atom & Equatable>(
+      object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Element>
+    /**
+   * Subscribe to changes to the said fetched result, and return the AsyncSequence you can iterate over.
+   *
+   * - Parameters:
+   *    - fetchedResult: The result fetched that we want to observe the new updates.
+   *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+   *
+   * - Returns: An AsyncSequence that can await for new fetched result. It never finishes.
+   */
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe<Element: Atom & Equatable>(
+      fetchedResult: FetchedResult<Element>,
+      bufferingPolicy: AsyncStream<FetchedResult<Element>>.Continuation.BufferingPolicy
+    ) -> AsyncStream<FetchedResult<Element>>
   #endif
 }
 
@@ -224,6 +260,12 @@ extension WorkspaceDictionary {
    * call this method again with different default value (while
    * the underlying kept nil), it will return that different default
    * value.
+   *
+   * - Parameters:
+   *    - key: Key to index into the persisted dictionary.
+   *    - default: The default value to use if the key is missing.
+   *
+   * - Returns: Value associated with the provided key. Return the default value if missing.
    */
   public subscript<T: Codable & Equatable>(key: String, default value: T) -> T {
     get { self[key] ?? value }
@@ -260,4 +302,16 @@ extension Workspace {
   ) {
     performChanges(transactionalObjectTypes, changesHandler: changesHandler, completionHandler: nil)
   }
+  #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    public func subscribe<Element: Atom & Equatable>(object: Element) -> AsyncStream<Element> {
+      subscribe(object: object, bufferingPolicy: .bufferingNewest(1))
+    }
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    public func subscribe<Element: Atom & Equatable>(fetchedResult: FetchedResult<Element>)
+      -> AsyncStream<FetchedResult<Element>>
+    {
+      subscribe(fetchedResult: fetchedResult, bufferingPolicy: .bufferingNewest(1))
+    }
+  #endif
 }

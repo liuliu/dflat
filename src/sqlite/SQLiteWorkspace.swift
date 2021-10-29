@@ -254,6 +254,7 @@ public final class SQLiteWorkspace: Workspace {
       )
     }
   }
+
   #if compiler(>=5.5) && canImport(_Concurrency)
     /**
    * Perform a transaction for given object types and await either success or failure boolean.
@@ -539,6 +540,44 @@ public final class SQLiteWorkspace: Workspace {
       return SQLiteQueryPublisherBuilder<Element>(workspace: self)
     }
 
+  #endif
+
+  // MARK - Subscription as AsyncSequence
+
+  #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    public func subscribe<Element: Atom & Equatable>(
+      object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Element> {
+      AsyncStream { continuation in
+        let cancellable = self.subscribe(object: object) { object in
+          switch object {
+          case .deleted:
+            continuation.finish()
+          case .updated(let object):
+            continuation.yield(object)
+          }
+        }
+        continuation.onTermination = { @Sendable _ in
+          cancellable.cancel()
+        }
+      }
+    }
+
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    public func subscribe<Element: Atom & Equatable>(
+      fetchedResult: FetchedResult<Element>,
+      bufferingPolicy: AsyncStream<FetchedResult<Element>>.Continuation.BufferingPolicy
+    ) -> AsyncStream<FetchedResult<Element>> {
+      AsyncStream { continuation in
+        let cancellable = self.subscribe(fetchedResult: fetchedResult) { fetchedResult in
+          continuation.yield(fetchedResult)
+        }
+        continuation.onTermination = { @Sendable _ in
+          cancellable.cancel()
+        }
+      }
+    }
   #endif
 
   // MARK - Internal
