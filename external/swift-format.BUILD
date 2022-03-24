@@ -64,6 +64,7 @@ swift_library(
         ":SwiftFormatPrettyPrint",
         ":SwiftFormatRules",
         ":SwiftFormatWhitespaceLinter",
+        "@SwiftSyntax//:SwiftSyntaxParser",
     ],
 )
 
@@ -76,5 +77,6 @@ swift_binary(
     deps = [
         ":SwiftFormat",
         "@SwiftArgumentParser//:ArgumentParser",
+        "@SwiftToolsSupportCore//:TSCBasic",
     ],
 )
