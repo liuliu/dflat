@@ -4,7 +4,7 @@
 import PackageDescription
 
 #if os(Linux)
-  let dependencies: [Package.Dependency] = [
+  var dependencies: [Package.Dependency] = [
     .package(
       name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git",
       .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
@@ -14,13 +14,16 @@ import PackageDescription
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
 #else
-  let dependencies: [Package.Dependency] = [
+  var dependencies: [Package.Dependency] = [
     .package(
       name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git",
       .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]
+#endif
+#if swift(>=5.6)
+  dependencies.append(.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"))
 #endif
 
 let package = Package(
