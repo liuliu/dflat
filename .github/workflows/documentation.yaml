@@ -25,6 +25,7 @@ jobs:
 
       - name: Setup clang
         run: |
+          sudo apt -y install clang llvm
           ./bazel/setup_clang.sh
 
       - name: Clean up documentation branch
