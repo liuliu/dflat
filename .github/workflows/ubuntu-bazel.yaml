@@ -20,6 +20,12 @@ jobs:
           mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
           chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
 
+      - name: Setup clang
+        run: |
+          ./bazel/setup_clang.sh
+          echo "build --config=clang" >> "${GITHUB_WORKSPACE}/.bazelrc"
+          echo "try-import %workspace%/clang.bazelrc" >> "${GITHUB_WORKSPACE}/.bazelrc"
+
       - name: Run tests
         run: |
           "${GITHUB_WORKSPACE}/bin/bazel" test --test_output=errors //src/tests:Tests

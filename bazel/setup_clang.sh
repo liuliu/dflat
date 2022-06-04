@@ -28,5 +28,8 @@ build:clang-asan --linkopt=-fsanitize=vptr,function
 build:clang-asan --linkopt='-L${RT_LIBRARY_PATH}'
 build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone-x86_64.a
 build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone_cxx-x86_64.a
+
+build --linkopt="-z nostart-stop-gc"
+build --host_linkopt="-z nostart-stop-gc"
 " > ${BAZELRC_FILE}
 
