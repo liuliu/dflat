@@ -8,7 +8,7 @@ jobs:
 
       - name: Install bazelisk
         run: |
-          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.7.5/bazelisk-darwin-amd64"
+          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-darwin-amd64"
           mkdir -p "${GITHUB_WORKSPACE}/bin/"
           mv bazelisk-darwin-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
           chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
