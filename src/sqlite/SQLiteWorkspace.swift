@@ -255,29 +255,6 @@ public final class SQLiteWorkspace: Workspace {
     }
   }
 
-  #if compiler(>=5.5) && canImport(_Concurrency)
-    /**
-   * Perform a transaction for given object types and await either success or failure boolean.
-   *
-   * - Parameters:
-   *    - transactionalObjectTypes: A list of object types you are going to transact with. If you
-   *                                If you fetch or mutation an object outside of this list, it will fatal.
-   *    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
-   *                      data mutations through submission of change requests.
-   */
-    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    @discardableResult
-    public func performChanges(
-      _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
-    ) async -> Bool {
-      return await withUnsafeContinuation { continuation in
-        performChanges(transactionalObjectTypes, changesHandler: changesHandler) {
-          continuation.resume(returning: $0)
-        }
-      }
-    }
-  #endif
-
   // MARK - Fetching
 
   class Snapshot {

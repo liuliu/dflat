@@ -1,13 +1,13 @@
 workspace(name = "dflat")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 git_repository(
     name = "build_bazel_rules_apple",
-    commit = "7115f0188d141d57d64a6875735847c975956dae",
+    commit = "39bf97fb9b2db76bca8fe015b8c72fc92d5c6b81",
     remote = "https://github.com/bazelbuild/rules_apple.git",
-    shallow_since = "1648060786 -0700",
+    shallow_since = "1653707025 -0700",
 )
 
 new_git_repository(

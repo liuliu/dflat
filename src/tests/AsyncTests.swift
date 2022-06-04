@@ -32,6 +32,7 @@ class AsyncTests: XCTestCase {
         MyGame.Sample.Monster.name == "What's my name")
       let firstMonster = fetchedResult[0]
       XCTAssertEqual(firstMonster.name, "What's my name")
+      await dflat.shutdown()
     }
 
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
