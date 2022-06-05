@@ -169,27 +169,27 @@ public protocol Workspace: Queryable {
   #endif
   #if compiler(>=5.5) && canImport(_Concurrency)
     /**
-   * Subscribe to changes to the said object, and return the AsyncSequence you can iterate over.
-   *
-   * - Parameters:
-   *    - object: The object previously fetched that we want to observe the new updates.
-   *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
-   *
-   * - Returns: An AsyncSequence that can await for new object updates. Finishes only if the object deletes.
-   */
+     * Subscribe to changes to the said object, and return the AsyncSequence you can iterate over.
+     *
+     * - Parameters:
+     *    - object: The object previously fetched that we want to observe the new updates.
+     *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+     *
+     * - Returns: An AsyncSequence that can await for new object updates. Finishes only if the object deletes.
+     */
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     func subscribe<Element: Atom & Equatable>(
       object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
     ) -> AsyncStream<Element>
     /**
-   * Subscribe to changes to the said fetched result, and return the AsyncSequence you can iterate over.
-   *
-   * - Parameters:
-   *    - fetchedResult: The result fetched that we want to observe the new updates.
-   *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
-   *
-   * - Returns: An AsyncSequence that can await for new fetched result. It never finishes.
-   */
+     * Subscribe to changes to the said fetched result, and return the AsyncSequence you can iterate over.
+     *
+     * - Parameters:
+     *    - fetchedResult: The result fetched that we want to observe the new updates.
+     *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+     *
+     * - Returns: An AsyncSequence that can await for new fetched result. It never finishes.
+     */
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     func subscribe<Element: Atom & Equatable>(
       fetchedResult: FetchedResult<Element>,
