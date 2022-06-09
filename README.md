@@ -7,6 +7,7 @@
 [![macos-bazel](https://github.com/liuliu/dflat/actions/workflows/macos-bazel.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/macos-bazel.yaml?query=branch%3Aunstable)
 [![ubuntu-spm](https://github.com/liuliu/dflat/actions/workflows/ubuntu-spm.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/ubuntu-spm.yaml?query=branch%3Aunstable)
 [![ubuntu-bazel](https://github.com/liuliu/dflat/actions/workflows/ubuntu-bazel.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/ubuntu-bazel.yaml?query=branch%3Aunstable)
+[![documentation](https://github.com/liuliu/dflat/actions/workflows/documentation.yaml/badge.svg?branch=unstable)](https://github.com/liuliu/dflat/actions/workflows/documentation.yaml?query=branch%3Aunstable)
 
 If you are familiar with [Core Data](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/index.html) or [Realm](https://realm.io/), **Dflat** occupies the same space as these two in your application. It helps you to persist and retrieve objects to or from disk for your application needs. Unlike these two, **Dflat** has a different set of features and makes very different trade-offs. These features and trade-offs are grounded from real-world experiences in writing some of the world largest apps. **Dflat** is also built from ground-up using Swift and hopefully, you will find it is natural to interact with in the Swift language.
 
