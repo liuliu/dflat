@@ -144,14 +144,13 @@ class AsyncTests: XCTestCase {
         MyGame.Sample.Monster.mana <= 50, orderBy: [MyGame.Sample.Monster.mana.ascending])
       XCTAssertEqual(fetchedResult.count, 6)
       let subscribeTask = Task { () -> FetchedResult<MyGame.Sample.Monster> in
-        var updateCount = 0
         var updatedFetchedResult = fetchedResult
         for await newFetchedResult in dflat.subscribe(
           fetchedResult: fetchedResult, bufferingPolicy: .unbounded)
         {
           updatedFetchedResult = newFetchedResult
-          updateCount += 1
-          if updateCount == 4 {
+          if newFetchedResult.first(where: { $0.name == "name 3" }) == nil {
+            // We've deleted this one, that's the last mutation, exit.
             break
           }
         }

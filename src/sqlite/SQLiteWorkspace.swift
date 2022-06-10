@@ -526,7 +526,7 @@ public final class SQLiteWorkspace: Workspace {
     public func subscribe<Element: Atom & Equatable>(
       object: Element, bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy
     ) -> AsyncStream<Element> {
-      AsyncStream { continuation in
+      AsyncStream(bufferingPolicy: bufferingPolicy) { continuation in
         let cancellable = self.subscribe(object: object) { object in
           switch object {
           case .deleted:
@@ -546,7 +546,7 @@ public final class SQLiteWorkspace: Workspace {
       fetchedResult: FetchedResult<Element>,
       bufferingPolicy: AsyncStream<FetchedResult<Element>>.Continuation.BufferingPolicy
     ) -> AsyncStream<FetchedResult<Element>> {
-      AsyncStream { continuation in
+      AsyncStream(bufferingPolicy: bufferingPolicy) { continuation in
         let cancellable = self.subscribe(fetchedResult: fetchedResult) { fetchedResult in
           continuation.yield(fetchedResult)
         }
