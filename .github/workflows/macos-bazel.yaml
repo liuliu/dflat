@@ -13,6 +13,10 @@ jobs:
           mv bazelisk-darwin-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
           chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
 
+      - name: Run GraphQL tests
+        run: |
+          "${GITHUB_WORKSPACE}/bin/bazel" test --test_output=errors //src/graphql/tests:Tests
+
       - name: Run tests
         run: |
           "${GITHUB_WORKSPACE}/bin/bazel" test --test_output=errors //src/tests:Tests
