@@ -7,7 +7,10 @@ package(
 cc_binary(
     name = "dflats",
     srcs = ["dflats.cpp"],
-    deps = ["@flatbuffers//:flatc"],
+    deps = [
+        "@flatbuffers",
+        "@flatbuffers//:flatc",
+    ],
 )
 
 swift_binary(

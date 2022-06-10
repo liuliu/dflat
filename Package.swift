@@ -7,7 +7,7 @@ import PackageDescription
   var dependencies: [Package.Dependency] = [
     .package(
       name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git",
-      .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
+      .revision("b52c73460318ab1fef4a68913c9870eb2c2dd5a7")),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
     .package(
       name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.38.5"),
@@ -17,7 +17,7 @@ import PackageDescription
   var dependencies: [Package.Dependency] = [
     .package(
       name: "FlatBuffers", url: "https://github.com/mustiikhalil/flatbuffers.git",
-      .revision("7d043834fd9e1dc0dcc2a5bea2852210433b597a")),
+      .revision("b52c73460318ab1fef4a68913c9870eb2c2dd5a7")),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.1"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim"]

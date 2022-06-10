@@ -52,16 +52,16 @@ static const char *idl_types[] = {
 
 const std::string GenJSONType(const flatbuffers::Type &type) {
 	if (type.base_type == flatbuffers::BASE_TYPE_STRUCT) {
-		return std::string("{\"type\": \"struct\", \"struct\": \"") + type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.struct_def->name, false)) + "\"}";
+		return std::string("{\"type\": \"struct\", \"struct\": \"") + type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.struct_def->name, flatbuffers::Case::kLowerCamel)) + "\"}";
 	} else if (flatbuffers::IsSeries(type)) {
 		if (type.element == flatbuffers::BASE_TYPE_STRUCT) {
-			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"struct\", \"struct\": \"") + type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.struct_def->name, false)) + "\"}}";
+			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"struct\", \"struct\": \"") + type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.struct_def->name, flatbuffers::Case::kLowerCamel)) + "\"}}";
 		} else if (type.element == flatbuffers::BASE_TYPE_UNION) {
-			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"union\", \"union\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}}";
+			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"union\", \"union\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}}";
 		} else if (type.element == flatbuffers::BASE_TYPE_UTYPE) {
-			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"utype\", \"utype\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}}";
+			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"utype\", \"utype\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}}";
 		} else if (type.enum_def) {
-			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"enum\", \"enum\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}}";
+			return std::string("{\"type\": \"vector\", \"element\": {\"type\": \"enum\", \"enum\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}}";
 		} else if (type.element == flatbuffers::BASE_TYPE_VECTOR || type.element == flatbuffers::BASE_TYPE_ARRAY) {
 			exit(-1);
 		} else {
@@ -69,14 +69,14 @@ const std::string GenJSONType(const flatbuffers::Type &type) {
 		}
 	} else if (flatbuffers::IsUnion(type)) {
 		if (type.base_type == flatbuffers::BASE_TYPE_UTYPE) {
-			return std::string("{\"type\": \"utype\", \"utype\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}";
+			return std::string("{\"type\": \"utype\", \"utype\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}";
 		} else if (type.base_type == flatbuffers::BASE_TYPE_UNION) {
-			return std::string("{\"type\": \"union\", \"union\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}";
+			return std::string("{\"type\": \"union\", \"union\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}";
 		} else {
 			exit(-1);
 		}
 	} else if (flatbuffers::IsEnum(type)) {
-		return std::string("{\"type\": \"enum\", \"enum\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(type.enum_def->name, false)) + "\"}";
+		return std::string("{\"type\": \"enum\", \"enum\": \"") + type.enum_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(type.enum_def->name, flatbuffers::Case::kLowerCamel)) + "\"}";
 	} else {
 		return std::string("{\"type\": \"") + idl_types[type.base_type] + "\"}";
 	}
@@ -111,7 +111,7 @@ const std::string GenAttributes(const flatbuffers::SymbolTable<flatbuffers::Valu
 
 const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 	std::string json = std::string("{\"is_union\": ") + (enum_def.is_union ? "true" : "false") + ", ";
-	json += "\"name\": \"" + flatbuffers::MakeCamel(enum_def.name, false) + "\", ";
+	json += "\"name\": \"" + flatbuffers::ConvertCase(enum_def.name, flatbuffers::Case::kLowerCamel) + "\", ";
 	json += "\"generated\": ";
 	json += (enum_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*enum_def.defined_namespace) + "], ";
@@ -123,9 +123,9 @@ const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 	for (auto it = vals.begin(); it != vals.end(); ++it) {
 		const auto &enum_val = **it;
 		if (enum_val.union_type.struct_def) {
-			json += "{\"name\": \"" + flatbuffers::MakeCamel(enum_val.name, false) + "\", \"type\": \"struct\", \"struct\": \"" + enum_val.union_type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::MakeCamel(enum_val.union_type.struct_def->name, false)) + "\", \"value\": " + enum_def.ToString(enum_val) + "}, ";
+			json += "{\"name\": \"" + flatbuffers::ConvertCase(enum_val.name, flatbuffers::Case::kLowerCamel) + "\", \"type\": \"struct\", \"struct\": \"" + enum_val.union_type.struct_def->defined_namespace->GetFullyQualifiedName(flatbuffers::ConvertCase(enum_val.union_type.struct_def->name, flatbuffers::Case::kLowerCamel)) + "\", \"value\": " + enum_def.ToString(enum_val) + "}, ";
 		} else {
-			json += "{\"name\": \"" + flatbuffers::MakeCamel(enum_val.name, false) + "\", \"type\": \"\", \"value\": " + enum_def.ToString(enum_val) + "}, ";
+			json += "{\"name\": \"" + flatbuffers::ConvertCase(enum_val.name, flatbuffers::Case::kLowerCamel) + "\", \"type\": \"\", \"value\": " + enum_def.ToString(enum_val) + "}, ";
 		}
 	}
 	if (vals.size() > 0) {
@@ -138,7 +138,7 @@ const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 
 const std::string GenStruct(const flatbuffers::StructDef &struct_def) {
 	std::string json = std::string("{\"fixed\": ") + (struct_def.fixed ? "true" : "false") + ", ";
-	json += "\"name\": \"" + flatbuffers::MakeCamel(struct_def.name, false) + "\", ";
+	json += "\"name\": \"" + flatbuffers::ConvertCase(struct_def.name, flatbuffers::Case::kLowerCamel) + "\", ";
 	json += "\"generated\": ";
 	json += (struct_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*struct_def.defined_namespace) + "], ";
@@ -147,9 +147,9 @@ const std::string GenStruct(const flatbuffers::StructDef &struct_def) {
 	for (auto it = struct_def.fields.vec.begin(); it != struct_def.fields.vec.end(); ++it) {
 		const auto &field_def = **it;
 		if (field_def.value.constant != "0") {
-			json += "{\"name\": \"" + flatbuffers::MakeCamel(field_def.name, false) + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", \"default\": \"" + field_def.value.constant + "\", " + GenAttributes(field_def.attributes) + "}, ";
+			json += "{\"name\": \"" + flatbuffers::ConvertCase(field_def.name, flatbuffers::Case::kLowerCamel) + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", \"default\": \"" + field_def.value.constant + "\", " + GenAttributes(field_def.attributes) + "}, ";
 		} else {
-			json += "{\"name\": \"" + flatbuffers::MakeCamel(field_def.name, false) + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", " + GenAttributes(field_def.attributes) + "}, ";
+			json += "{\"name\": \"" + flatbuffers::ConvertCase(field_def.name, flatbuffers::Case::kLowerCamel) + "\", \"deprecated\": " + (field_def.deprecated ? "true" : "false") + ", \"type\": " + GenJSONType(field_def.value.type) + ", \"offset\": " + std::to_string(field_def.value.offset) + ", " + GenAttributes(field_def.attributes) + "}, ";
 		}
 	}
 	if (struct_def.fields.vec.size() > 0) {
@@ -185,9 +185,9 @@ static void GenerateJSONAdapter(const flatbuffers::Parser &parser, const std::st
 	}
 	if (parser.root_struct_def_) {
 		if (parser.structs_.vec.size() > 0) {
-			json = json.substr(0, json.size() - 2) + "], \"root\": {\"namespace\": [" + GenNamespace(*parser.root_struct_def_->defined_namespace) + "], \"name\": \"" + flatbuffers::MakeCamel(parser.root_struct_def_->name, false) + "\"}}";
+			json = json.substr(0, json.size() - 2) + "], \"root\": {\"namespace\": [" + GenNamespace(*parser.root_struct_def_->defined_namespace) + "], \"name\": \"" + flatbuffers::ConvertCase(parser.root_struct_def_->name, flatbuffers::Case::kLowerCamel) + "\"}}";
 		} else {
-			json = json + "], \"root\": {\"namespace\": [" + GenNamespace(*parser.root_struct_def_->defined_namespace) + "], \"name\": \"" + flatbuffers::MakeCamel(parser.root_struct_def_->name, false) + "\"}}";
+			json = json + "], \"root\": {\"namespace\": [" + GenNamespace(*parser.root_struct_def_->defined_namespace) + "], \"name\": \"" + flatbuffers::ConvertCase(parser.root_struct_def_->name, flatbuffers::Case::kLowerCamel) + "\"}}";
 		}
 	} else {
 		json = json + "]}";

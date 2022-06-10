@@ -15,7 +15,7 @@ swift_library(
     srcs = ["//src:DflatFiles"],
     module_name = "Dflat",
     deps = [
-        "@flatbuffers//:FlatBuffers",
+        "@flatbuffers//swift",
         "@swift-atomics//:SwiftAtomics",
     ],
 )

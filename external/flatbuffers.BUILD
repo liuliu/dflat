@@ -1,7 +1,6 @@
-licenses(["notice"])
-
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+
+licenses(["notice"])
 
 package(
     default_visibility = ["//visibility:public"],
@@ -9,7 +8,22 @@ package(
 
 exports_files([
     "LICENSE",
+    "tsconfig.json",
 ])
+
+config_setting(
+    name = "platform_freebsd",
+    constraint_values = [
+        "@platforms//os:freebsd",
+    ],
+)
+
+config_setting(
+    name = "platform_openbsd",
+    constraint_values = [
+        "@platforms//os:openbsd",
+    ],
+)
 
 # Public flatc library to compile flatbuffer files at runtime.
 cc_library(
@@ -24,10 +38,20 @@ cc_library(
 filegroup(
     name = "public_headers",
     srcs = [
+        "include/flatbuffers/allocator.h",
+        "include/flatbuffers/array.h",
         "include/flatbuffers/base.h",
+        "include/flatbuffers/bfbs_generator.h",
+        "include/flatbuffers/buffer.h",
+        "include/flatbuffers/buffer_ref.h",
         "include/flatbuffers/code_generators.h",
+        "include/flatbuffers/default_allocator.h",
+        "include/flatbuffers/detached_buffer.h",
+        "include/flatbuffers/flatbuffer_builder.h",
         "include/flatbuffers/flatbuffers.h",
+        "include/flatbuffers/flex_flat_util.h",
         "include/flatbuffers/flexbuffers.h",
+        "include/flatbuffers/grpc.h",
         "include/flatbuffers/hash.h",
         "include/flatbuffers/idl.h",
         "include/flatbuffers/minireflect.h",
@@ -35,7 +59,13 @@ filegroup(
         "include/flatbuffers/reflection_generated.h",
         "include/flatbuffers/registry.h",
         "include/flatbuffers/stl_emulation.h",
+        "include/flatbuffers/string.h",
+        "include/flatbuffers/struct.h",
+        "include/flatbuffers/table.h",
         "include/flatbuffers/util.h",
+        "include/flatbuffers/vector.h",
+        "include/flatbuffers/vector_downward.h",
+        "include/flatbuffers/verifier.h",
     ],
 )
 
@@ -51,7 +81,6 @@ cc_library(
 # Public flatc compiler.
 cc_library(
     name = "flatc",
-    linkopts = ["-lm"],
     deps = [
         "//src:flatc",
     ],
@@ -74,13 +103,9 @@ cc_library(
         "include/flatbuffers/flexbuffers.h",
         "include/flatbuffers/stl_emulation.h",
         "include/flatbuffers/util.h",
+        "include/flatbuffers/vector.h",
+        "include/flatbuffers/verifier.h",
     ],
     linkstatic = 1,
     strip_include_prefix = "/include",
-)
-
-swift_library(
-    name = "FlatBuffers",
-    srcs = glob(["swift/Sources/FlatBuffers/*.swift"]),
-    module_name = "FlatBuffers",
 )
