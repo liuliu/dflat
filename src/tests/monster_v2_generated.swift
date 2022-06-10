@@ -34,13 +34,21 @@ public enum zzz_DflatGen_MyGame_SampleV2_Equipment: UInt8, UnionEnum {
   public static var min: zzz_DflatGen_MyGame_SampleV2_Equipment { return .none_ }
 }
 
-public struct zzz_DflatGen_MyGame_SampleV2_Vec3: NativeStruct, Verifiable {
+public struct zzz_DflatGen_MyGame_SampleV2_Vec3: NativeStruct, Verifiable, FlatbuffersInitializable
+{
 
   static func validateVersion() { FlatBuffersVersion_2_0_0() }
 
   private var _x: Float32
   private var _y: Float32
   private var _z: Float32
+
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _x = _accessor.readBuffer(of: Float32.self, at: 0)
+    _y = _accessor.readBuffer(of: Float32.self, at: 4)
+    _z = _accessor.readBuffer(of: Float32.self, at: 8)
+  }
 
   public init(x: Float32, y: Float32, z: Float32) {
     _x = x
@@ -171,6 +179,10 @@ public struct zzz_DflatGen_MyGame_SampleV2_Monster: FlatBufferObject, Verifiable
       : zzz_DflatGen_MyGame_SampleV2_Color(rawValue: _accessor.readBuffer(of: Int8.self, at: o))
         ?? .blue
   }
+  public var hasInventory: Bool {
+    let o = _accessor.offset(VTOFFSET.inventory.v)
+    return o == 0 ? false : true
+  }
   public var inventoryCount: Int32 {
     let o = _accessor.offset(VTOFFSET.inventory.v)
     return o == 0 ? 0 : _accessor.vector(count: o)
@@ -181,6 +193,10 @@ public struct zzz_DflatGen_MyGame_SampleV2_Monster: FlatBufferObject, Verifiable
       ? 0 : _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)
   }
   public var inventory: [UInt8] { return _accessor.getVector(at: VTOFFSET.inventory.v) ?? [] }
+  public var hasWeapons: Bool {
+    let o = _accessor.offset(VTOFFSET.weapons.v)
+    return o == 0 ? false : true
+  }
   public var weaponsCount: Int32 {
     let o = _accessor.offset(VTOFFSET.weapons.v)
     return o == 0 ? 0 : _accessor.vector(count: o)
@@ -203,6 +219,10 @@ public struct zzz_DflatGen_MyGame_SampleV2_Monster: FlatBufferObject, Verifiable
     let o = _accessor.offset(VTOFFSET.equipped.v)
     return o == 0 ? nil : _accessor.union(o)
   }
+  public var hasColors: Bool {
+    let o = _accessor.offset(VTOFFSET.colors.v)
+    return o == 0 ? false : true
+  }
   public var colorsCount: Int32 {
     let o = _accessor.offset(VTOFFSET.colors.v)
     return o == 0 ? 0 : _accessor.vector(count: o)
@@ -213,6 +233,10 @@ public struct zzz_DflatGen_MyGame_SampleV2_Monster: FlatBufferObject, Verifiable
       ? zzz_DflatGen_MyGame_SampleV2_Color.red
       : zzz_DflatGen_MyGame_SampleV2_Color(
         rawValue: _accessor.directRead(of: Int8.self, offset: _accessor.vector(at: o) + index * 1))
+  }
+  public var hasPath: Bool {
+    let o = _accessor.offset(VTOFFSET.path.v)
+    return o == 0 ? false : true
   }
   public var pathCount: Int32 {
     let o = _accessor.offset(VTOFFSET.path.v)
