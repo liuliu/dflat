@@ -131,22 +131,6 @@ func performChanges(
 | changesHandler | The transaction closure where you will give a transactionContext and safe to do data mutations through submission of change requests. |
 | completionHandler | If supplied, will be called once the transaction committed. It will be called with success / failure. You don’t need to handle failure cases specifically (such as retry), but rather to surface and log such error. |
 
-### `performChanges(_:changesHandler:)`
-
-```swift
-func performChanges(
-  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
-) async -> Bool
-```
-
- Perform a transaction for given object types and await either success or failure boolean.
-
- - Parameters:
-    - transactionalObjectTypes: A list of object types you are going to transact with. If you
-                                If you fetch or mutation an object outside of this list, it will fatal.
-    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
-                      data mutations through submission of change requests.
-
 ### `subscribe(fetchedResult:changeHandler:)`
 
 ```swift
@@ -247,6 +231,13 @@ func subscribe<Element: Atom & Equatable>(
 
  - Returns: An AsyncSequence that can await for new object updates. Finishes only if the object deletes.
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| object | The object previously fetched that we want to observe the new updates. |
+| bufferingPolicy | The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1. |
+
 ### `subscribe(fetchedResult:bufferingPolicy:)`
 
 ```swift
@@ -264,6 +255,12 @@ func subscribe<Element: Atom & Equatable>(
 
  - Returns: An AsyncSequence that can await for new fetched result. It never finishes.
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| fetchedResult | The result fetched that we want to observe the new updates. |
+| bufferingPolicy | The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1. |
 
 **EXTENSION**
 
@@ -286,6 +283,35 @@ public func performChanges(
   _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
 )
 ```
+
+### `shutdown()`
+
+```swift
+public func shutdown() async
+```
+
+### `performChanges(_:changesHandler:)`
+
+```swift
+public func performChanges(
+  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
+) async -> Bool
+```
+
+ Perform a transaction for given object types and await either success or failure boolean.
+
+ - Parameters:
+    - transactionalObjectTypes: A list of object types you are going to transact with. If you
+                                If you fetch or mutation an object outside of this list, it will fatal.
+    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
+                      data mutations through submission of change requests.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| transactionalObjectTypes | A list of object types you are going to transact with. If you If you fetch or mutation an object outside of this list, it will fatal. |
+| changesHandler | The transaction closure where you will give a transactionContext and safe to do data mutations through submission of change requests. |
 
 ### `subscribe(object:)`
 
@@ -440,6 +466,14 @@ open func `where`<T: Expr & SQLiteExpr>(
 
  - Returns: A publisher object that can be interacted with Combine.
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| query | The query such as `Post.title == "some title" && Post.color == .red` |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |
+
 ### `all(limit:orderBy:)`
 
 ```swift
@@ -456,3 +490,10 @@ open func all(limit: Limit = .noLimit, orderBy: [OrderBy<Element>] = []) -> Quer
     - orderBy: The array of keys to order the result. Such as `[Post.priority.descending]`
 
  - Returns: A publisher object that can be interacted with Combine.
+
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| limit | The limit. Default to `.noLimit`, you can supply `.limit(number)` |
+| orderBy | The array of keys to order the result. Such as `[Post.priority.descending]` |

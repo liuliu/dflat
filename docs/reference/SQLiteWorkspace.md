@@ -66,22 +66,6 @@ public func performChanges(
 | changesHandler | The transaction closure where you will give a transactionContext and safe to do data mutations through submission of change requests. |
 | completionHandler | If supplied, will be called once the transaction committed. It will be called with success / failure. You don’t need to handle failure cases specifically (such as retry), but rather to surface and log such error. |
 
-### `performChanges(_:changesHandler:)`
-
-```swift
-public func performChanges(
-  _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
-) async -> Bool
-```
-
- Perform a transaction for given object types and await either success or failure boolean.
-
- - Parameters:
-    - transactionalObjectTypes: A list of object types you are going to transact with. If you
-                                If you fetch or mutation an object outside of this list, it will fatal.
-    - changesHandler: The transaction closure where you will give a transactionContext and safe to do
-                      data mutations through submission of change requests.
-
 ### `fetch(for:)`
 
 ```swift
@@ -154,6 +138,13 @@ public func subscribe<Element: Atom & Equatable>(
 ) -> AsyncStream<Element>
 ```
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| object | The object previously fetched that we want to observe the new updates. |
+| bufferingPolicy | The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1. |
+
 ### `subscribe(fetchedResult:bufferingPolicy:)`
 
 ```swift
@@ -163,6 +154,12 @@ public func subscribe<Element: Atom & Equatable>(
 ) -> AsyncStream<FetchedResult<Element>>
 ```
 
+#### Parameters
+
+| Name | Description |
+| ---- | ----------- |
+| fetchedResult | The result fetched that we want to observe the new updates. |
+| bufferingPolicy | The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1. |
 
 **ENUM**
 
