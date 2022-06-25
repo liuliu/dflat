@@ -18,8 +18,8 @@ def dflat_deps():
         new_git_repository,
         name = "flatbuffers",
         remote = "https://github.com/google/flatbuffers.git",
-        commit = "354d97f6da18cbbdeddfcdd2d5aebf1bcc57a092",
-        shallow_since = "1632261689 -0700",
+        commit = "11a19887053534c43f73e74786b46a615ecbf28e",
+        shallow_since = "1654463045 +0200",
         build_file = "@dflat//:external/flatbuffers.BUILD",
     )
 
@@ -35,7 +35,7 @@ def dflat_deps():
     _maybe(
         http_archive,
         name = "sqlite3",
-        sha256 = "bebb039b748441e3d25d71d11f7a4a33f5df11f318ec18fa7f343d2083755e2c",
-        urls = ["https://www.sqlite.org/2022/sqlite-amalgamation-3380500.zip"],
+        sha256 = "35109dd6e4f062f4d76b48bd7614eec35abae9d2da70351c7ef936876b064b5f",
+        urls = ["https://www.sqlite.org/2022/sqlite-amalgamation-3390000.zip"],
         build_file = "@dflat//:external/sqlite3.BUILD",
     )
