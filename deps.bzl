@@ -27,8 +27,8 @@ def dflat_deps():
         new_git_repository,
         name = "swift-atomics",
         remote = "https://github.com/apple/swift-atomics.git",
-        commit = "2eb6b8d3ce4e18a9ad10caff4e9c9b99b9ab4899",
-        shallow_since = "1631646447 -0700",
+        commit = "088df27f0683f2b458021ebf04873174b91ae597",
+        shallow_since = "1649274362 -0700",
         build_file = "@dflat//:external/swift-atomics.BUILD",
     )
 

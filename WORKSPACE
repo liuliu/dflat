@@ -28,9 +28,9 @@ new_git_repository(
 new_git_repository(
     name = "swift-atomics",
     build_file = "swift-atomics.BUILD",
-    commit = "2eb6b8d3ce4e18a9ad10caff4e9c9b99b9ab4899",
+    commit = "088df27f0683f2b458021ebf04873174b91ae597",
     remote = "https://github.com/apple/swift-atomics.git",
-    shallow_since = "1631646447 -0700",
+    shallow_since = "1649274362 -0700",
 )
 
 load(
