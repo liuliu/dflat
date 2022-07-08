@@ -91,7 +91,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
       let orderBy = fetchedResult.orderBy
       let limit = fetchedResult.limit
       var elementsToBeInserted = [Element]()
-      var rowidsToBeRemoved = Set<Int64>()
+      var rowidsToBeRemoved = [Int64]()
       var resultUpdated = false
       for (rowid, updatedObject) in updatedObjects {
         switch updatedObject {
@@ -117,19 +117,19 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
                 resultUpdated = true
               } else {
                 elementsToBeInserted.append(element)
-                rowidsToBeRemoved.insert(rowid)
+                rowidsToBeRemoved.append(rowid)
               }
             } else {
               // This hasn't been added before, add it now.
               elementsToBeInserted.append(element)
             }
           } else if objects.contains(rowid) {
-            rowidsToBeRemoved.insert(rowid)
+            rowidsToBeRemoved.append(rowid)
           }
           break
         case .deleted(let rowid):
           if objects.contains(rowid) {
-            rowidsToBeRemoved.insert(rowid)
+            rowidsToBeRemoved.append(rowid)
           }
         }
       }
@@ -137,7 +137,8 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
       // First, remove objects.
       if rowidsToBeRemoved.count > 0 {
         objects.subtract(rowidsToBeRemoved)
-        underlyingArray.removeAll { rowidsToBeRemoved.contains($0._rowid) }
+        let rowidsToBeRemovedSet = Set(rowidsToBeRemoved)
+        underlyingArray.removeAll { rowidsToBeRemovedSet.contains($0._rowid) }
       }
       // Then insert relevant elements back.
       for element in elementsToBeInserted {
