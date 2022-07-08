@@ -87,13 +87,12 @@ public final class SQLiteTransactionContext: TransactionContext {
   }
 
   @discardableResult
-  public func submit(_ changeRequest: ChangeRequest) throws -> UpdatedObject {
-    let atomType = type(of: changeRequest).atomType
-    precondition(contains(ofType: atomType))
+  public func submit<T: ChangeRequest>(_ changeRequest: T) throws -> UpdatedObject {
+    precondition(contains(ofType: T.Element.self))
     guard !aborted else { throw TransactionError.aborted }
-    let atomTypeIdentifier = ObjectIdentifier(atomType)
+    let atomTypeIdentifier = ObjectIdentifier(T.Element.self)
     if !state.tableCreated.contains(atomTypeIdentifier) {
-      (atomType as! SQLiteAtom.Type).setUpSchema(toolbox)
+      (T.Element.self as! SQLiteAtom.Type).setUpSchema(toolbox)
       state.tableCreated.insert(atomTypeIdentifier)
       tableCreated.insert(atomTypeIdentifier)
     }

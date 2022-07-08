@@ -41,7 +41,7 @@ extension BenchDocV4 {
 
 public final class BenchDocV4ChangeRequest: Dflat.ChangeRequest {
   private var _o: BenchDocV4?
-  public static var atomType: Any.Type { BenchDocV4.self }
+  public typealias Element = BenchDocV4
   public var _type: ChangeRequestType
   public var _rowid: Int64
   public var title: String

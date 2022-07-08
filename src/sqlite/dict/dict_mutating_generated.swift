@@ -56,7 +56,7 @@ extension DictItem {
 
 public final class DictItemChangeRequest: Dflat.ChangeRequest {
   private var _o: DictItem?
-  public static var atomType: Any.Type { DictItem.self }
+  public typealias Element = DictItem
   public var _type: ChangeRequestType
   public var _rowid: Int64
   public var key: String

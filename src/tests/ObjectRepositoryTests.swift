@@ -41,13 +41,13 @@ class ObjectRepositoryTests: XCTestCase {
     monster2._rowid = 2
     objectRepository.set(
       updatedObject: .inserted(monster1),
-      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
+      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.Element.self))
     objectRepository.set(
       updatedObject: .updated(monster2),
-      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
+      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.Element.self))
     objectRepository.set(
       updatedObject: .deleted(3),
-      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.atomType))
+      ofTypeIdentifier: ObjectIdentifier(MyGame.Sample.MonsterChangeRequest.Element.self))
     guard
       let reader = SQLiteConnection(
         filePath: NSTemporaryDirectory().appending("\(UUID().uuidString).db"),

@@ -173,7 +173,7 @@ extension MyGame.SampleV2 {
 
   public final class MonsterChangeRequest: Dflat.ChangeRequest {
     private var _o: Monster?
-    public static var atomType: Any.Type { Monster.self }
+    public typealias Element = Monster
     public var _type: ChangeRequestType
     public var _rowid: Int64
     public var pos: MyGame.SampleV2.Vec3?

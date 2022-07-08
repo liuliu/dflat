@@ -49,7 +49,7 @@ extension BenchDocV2 {
 
 public final class BenchDocV2ChangeRequest: Dflat.ChangeRequest {
   private var _o: BenchDocV2?
-  public static var atomType: Any.Type { BenchDocV2.self }
+  public typealias Element = BenchDocV2
   public var _type: ChangeRequestType
   public var _rowid: Int64
   public var color: ColorV2

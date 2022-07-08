@@ -25,7 +25,7 @@ public protocol TransactionContext {
    * UpdatedObject to denote whether you inserted, updated or deleted an object.
    */
   @discardableResult
-  func submit(_: ChangeRequest) throws -> UpdatedObject
+  func submit<T: ChangeRequest>(_: T) throws -> UpdatedObject
   /**
    * Abort the current transaction. This will cause whatever happened inside the current transaction
    * to rollback immediately, and anything submitted after abort will throw `TransactionError.aborted`
@@ -42,7 +42,7 @@ extension TransactionContext {
    * `TransactionError`, it will simply return nil.
    */
   @discardableResult
-  public func `try`(submit changeRequest: ChangeRequest) -> UpdatedObject? {
+  public func `try`<T: ChangeRequest>(submit changeRequest: T) -> UpdatedObject? {
     do {
       return try self.submit(changeRequest)
     } catch TransactionError.objectAlreadyExists {

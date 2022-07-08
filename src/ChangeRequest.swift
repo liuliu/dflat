@@ -20,7 +20,7 @@ public enum UpdatedObject {
 }
 
 public protocol ChangeRequest {
-  static var atomType: Any.Type { get }
+  associatedtype Element: Atom
   // Commit whatever you have in the ChangeRequest to be permanent in persistence storage.
   func commit(_: PersistenceToolbox) -> UpdatedObject?
 }

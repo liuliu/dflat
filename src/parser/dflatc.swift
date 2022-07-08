@@ -1034,7 +1034,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   }
   code += "\npublic final class \(structDef.name)ChangeRequest: Dflat.ChangeRequest {\n"
   code += "  private var _o: \(structDef.name)?\n"
-  code += "  public static var atomType: Any.Type { \(structDef.name).self }\n"
+  code += "  public typealias Element = \(structDef.name)\n"
   code += "  public var _type: ChangeRequestType\n"
   code += "  public var _rowid: Int64\n"
   for field in structDef.fields {
