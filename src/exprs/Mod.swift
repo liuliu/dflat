@@ -17,8 +17,17 @@ where
     self.right = right
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     guard let lval = left.evaluate(object: object), let rval = right.evaluate(object: object) else {
+      return nil
+    }
+    return lval % rval
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    guard let lval = left.evaluate(byteBuffer: byteBuffer),
+      let rval = right.evaluate(byteBuffer: byteBuffer)
+    else {
       return nil
     }
     return lval % rval

@@ -7,11 +7,6 @@ public enum IndexUsefulness {
   case full
 }
 
-public enum Evaluable<Element: Atom> {
-  case table(_: ByteBuffer)
-  case object(_: Element)
-}
-
 public struct IndexSurvey {
   public var full = Set<String>()
   public var partial = Set<String>()
@@ -22,7 +17,8 @@ public struct IndexSurvey {
 public protocol Expr {
   associatedtype ResultType
   associatedtype Element: Atom
-  func evaluate(object: Evaluable<Element>) -> ResultType?
+  func evaluate(object: Element) -> ResultType?
+  func evaluate(byteBuffer: ByteBuffer) -> ResultType?
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness
   func existingIndex(_ existingIndexes: inout Set<String>)
 }

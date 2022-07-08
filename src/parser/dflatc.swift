@@ -596,7 +596,7 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
         "      guard let insert = sqlite.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return false }\n"
       code += "      rowid.bindSQLite(insert, parameterId: 1)\n"
       code +=
-        "      if let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .table(table)) {\n"
+        "      if let retval = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(byteBuffer: table) {\n"
       code += "        retval.bindSQLite(insert, parameterId: 2)\n"
       code += "      } else {\n"
       code += "        sqlite3_bind_null(insert, 2)\n"
@@ -1137,7 +1137,7 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
       "        guard let i\(i) = toolbox.connection.prepareStaticStatement(\"INSERT INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"
     code += "        _rowid.bindSQLite(i\(i), parameterId: 1)\n"
     code +=
-      "        if let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom)) {\n"
+      "        if let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: atom) {\n"
     code += "          r\(i).bindSQLite(i\(i), parameterId: 2)\n"
     code += "        } else {\n"
     code += "          sqlite3_bind_null(i\(i), 2)\n"
@@ -1178,9 +1178,9 @@ func GenChangeRequest(_ structDef: Struct, code: inout String) {
   for (i, indexedField) in indexedFields.enumerated() {
     code += "      if indexSurvey.full.contains(\"\(indexedField.keyName)\") {\n"
     code +=
-      "        let or\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(o))\n"
+      "        let or\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: o)\n"
     code +=
-      "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: .object(atom))\n"
+      "        let r\(i) = \(GetIndexedFieldExpr(structDef, indexedField: indexedField)).evaluate(object: atom)\n"
     code += "        if or\(i) != r\(i) {\n"
     code +=
       "          guard let u\(i) = toolbox.connection.prepareStaticStatement(\"REPLACE INTO \(tableName)__\(indexedField.keyName) (rowid, \(indexedField.keyName)) VALUES (?1, ?2)\") else { return nil }\n"

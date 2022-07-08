@@ -271,7 +271,7 @@ extension MyGame.Sample {
             "INSERT INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
-        if let retval = MyGame.Sample.Monster.mana.evaluate(object: .table(table)) {
+        if let retval = MyGame.Sample.Monster.mana.evaluate(byteBuffer: table) {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
           sqlite3_bind_null(insert, 2)
@@ -284,7 +284,7 @@ extension MyGame.Sample {
           )
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
-        if let retval = MyGame.Sample.Monster.equipped._type.evaluate(object: .table(table)) {
+        if let retval = MyGame.Sample.Monster.equipped._type.evaluate(byteBuffer: table) {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
           sqlite3_bind_null(insert, 2)
@@ -298,7 +298,7 @@ extension MyGame.Sample {
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-          object: .table(table))
+          byteBuffer: table)
         {
           retval.bindSQLite(insert, parameterId: 2)
         } else {

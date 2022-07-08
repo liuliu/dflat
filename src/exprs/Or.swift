@@ -16,12 +16,28 @@ where
     self.right = right
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     let lval = left.evaluate(object: object)
     if lval == true {
       return true
     }
     let rval = right.evaluate(object: object)
+    // If any of these result is true and !unknown, the whole expression evaluated to true and !unknown
+    if rval == true {
+      return true
+    }
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else {
+      return nil
+    }
+    return lvalUnwrapped || rvalUnwrapped
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    let lval = left.evaluate(byteBuffer: byteBuffer)
+    if lval == true {
+      return true
+    }
+    let rval = right.evaluate(byteBuffer: byteBuffer)
     // If any of these result is true and !unknown, the whole expression evaluated to true and !unknown
     if rval == true {
       return true

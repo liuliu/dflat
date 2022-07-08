@@ -349,7 +349,7 @@ extension MyGame.SampleV2 {
             "INSERT INTO mygame__samplev2__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
-        if let retval = MyGame.SampleV2.Monster.mana.evaluate(object: .table(table)) {
+        if let retval = MyGame.SampleV2.Monster.mana.evaluate(byteBuffer: table) {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
           sqlite3_bind_null(insert, 2)
@@ -361,7 +361,7 @@ extension MyGame.SampleV2 {
             "INSERT INTO mygame__samplev2__monster_v1_1__f8 (rowid, f8) VALUES (?1, ?2)")
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
-        if let retval = MyGame.SampleV2.Monster.hp.evaluate(object: .table(table)) {
+        if let retval = MyGame.SampleV2.Monster.hp.evaluate(byteBuffer: table) {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
           sqlite3_bind_null(insert, 2)
@@ -374,7 +374,7 @@ extension MyGame.SampleV2 {
           )
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
-        if let retval = MyGame.SampleV2.Monster.equipped._type.evaluate(object: .table(table)) {
+        if let retval = MyGame.SampleV2.Monster.equipped._type.evaluate(byteBuffer: table) {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
           sqlite3_bind_null(insert, 2)
@@ -388,7 +388,7 @@ extension MyGame.SampleV2 {
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.SampleV2.Monster.equipped.as(MyGame.SampleV2.Orb.self).name.evaluate(
-          object: .table(table))
+          byteBuffer: table)
         {
           retval.bindSQLite(insert, parameterId: 2)
         } else {
@@ -403,7 +403,7 @@ extension MyGame.SampleV2 {
         else { return false }
         rowid.bindSQLite(insert, parameterId: 1)
         if let retval = MyGame.SampleV2.Monster.wear.as(MyGame.SampleV2.Orb.self).name.evaluate(
-          object: .table(table))
+          byteBuffer: table)
         {
           retval.bindSQLite(insert, parameterId: 2)
         } else {

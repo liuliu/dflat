@@ -10,8 +10,12 @@ public struct IsNullExpr<T: Expr, Element>: Expr where T.Element == Element {
     self.unary = unary
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     return unary.evaluate(object: object) == nil
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    return unary.evaluate(byteBuffer: byteBuffer) == nil
   }
   @inlinable
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

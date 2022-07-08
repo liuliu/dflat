@@ -14,8 +14,13 @@ where T.ResultType: DflatFriendlyValue, T.Element == Element {
     self.set = set
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     guard let val = unary.evaluate(object: object) else { return nil }
+    return set.contains(val)
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    guard let val = unary.evaluate(byteBuffer: byteBuffer) else { return nil }
     return set.contains(val)
   }
   @inlinable

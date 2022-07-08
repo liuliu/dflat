@@ -99,14 +99,14 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
           fatalError()  // We shouldn't process identity updated objects.
         case .inserted(let object):
           let element = object as! Element
-          let retval = fetchedResult.query.evaluate(object: .object(element))
+          let retval = fetchedResult.query.evaluate(object: element)
           if retval == true {
             elementsToBeInserted.append(element)
           }
           break
         case .updated(let object):
           let element = object as! Element
-          let retval = query.evaluate(object: .object(element))
+          let retval = query.evaluate(object: element)
           if retval == true {
             // It belongs to the output.
             if objects.contains(rowid) {

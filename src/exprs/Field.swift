@@ -23,7 +23,7 @@ final class OrderByField<T, Element>: OrderBy<Element> where T: DflatFriendlyVal
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
   @inlinable
-  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+  override func areInSortingOrder(_ lhs: Element, _ rhs: Element)
     -> SortingOrder
   {
     let lval = field.evaluate(object: lhs)
@@ -70,7 +70,7 @@ where T: DflatFriendlyValue, Element: Atom {
   // See: https://www.sqlite.org/lang_select.html#orderby
   // In short, SQLite considers Unknown (NULL) to be smaller than any value. This simply implement that behavior.
   @inlinable
-  override func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+  override func areInSortingOrder(_ lhs: Element, _ rhs: Element)
     -> SortingOrder
   {
     let lval = field.evaluate(object: lhs)
@@ -124,13 +124,12 @@ public final class FieldExpr<T, Element>: Expr where T: DflatFriendlyValue, Elem
     self.objectReader = objectReader
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
-    switch object {
-    case .table(let table):
-      return tableReader(table)
-    case .object(let element):
-      return objectReader(element)
-    }
+  public func evaluate(object: Element) -> ResultType? {
+    return objectReader(object)
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    return tableReader(byteBuffer)
   }
   @inlinable
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {

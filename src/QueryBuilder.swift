@@ -9,7 +9,7 @@ public enum SortingOrder {
 public class OrderBy<Element: Atom> {
   public var name: String { fatalError() }
   public var sortingOrder: SortingOrder { fatalError() }
-  public func areInSortingOrder(_ lhs: Evaluable<Element>, _ rhs: Evaluable<Element>)
+  public func areInSortingOrder(_ lhs: Element, _ rhs: Element)
     -> SortingOrder
   {
     fatalError()

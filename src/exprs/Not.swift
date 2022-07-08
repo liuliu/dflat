@@ -10,8 +10,13 @@ public struct NotExpr<T: Expr, Element>: Expr where T.ResultType == Bool, T.Elem
     self.unary = unary
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     guard let val = unary.evaluate(object: object) else { return nil }
+    return !val
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    guard let val = unary.evaluate(byteBuffer: byteBuffer) else { return nil }
     return !val
   }
   @inlinable

@@ -275,7 +275,7 @@ extension MyGame.Sample {
               "INSERT INTO mygame__sample__monster_v1_1__f6 (rowid, f6) VALUES (?1, ?2)")
           else { return nil }
           _rowid.bindSQLite(i0, parameterId: 1)
-          if let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom)) {
+          if let r0 = MyGame.Sample.Monster.mana.evaluate(object: atom) {
             r0.bindSQLite(i0, parameterId: 2)
           } else {
             sqlite3_bind_null(i0, 2)
@@ -289,7 +289,7 @@ extension MyGame.Sample {
             )
           else { return nil }
           _rowid.bindSQLite(i1, parameterId: 1)
-          if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom)) {
+          if let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: atom) {
             r1.bindSQLite(i1, parameterId: 2)
           } else {
             sqlite3_bind_null(i1, 2)
@@ -304,7 +304,7 @@ extension MyGame.Sample {
           else { return nil }
           _rowid.bindSQLite(i2, parameterId: 1)
           if let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(atom))
+            object: atom)
           {
             r2.bindSQLite(i2, parameterId: 2)
           } else {
@@ -341,8 +341,8 @@ extension MyGame.Sample {
         _rowid.bindSQLite(update, parameterId: 4)
         guard SQLITE_DONE == sqlite3_step(update) else { return nil }
         if indexSurvey.full.contains("f6") {
-          let or0 = MyGame.Sample.Monster.mana.evaluate(object: .object(o))
-          let r0 = MyGame.Sample.Monster.mana.evaluate(object: .object(atom))
+          let or0 = MyGame.Sample.Monster.mana.evaluate(object: o)
+          let r0 = MyGame.Sample.Monster.mana.evaluate(object: atom)
           if or0 != r0 {
             guard
               let u0 = toolbox.connection.prepareStaticStatement(
@@ -358,8 +358,8 @@ extension MyGame.Sample {
           }
         }
         if indexSurvey.full.contains("f26__type") {
-          let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(o))
-          let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: .object(atom))
+          let or1 = MyGame.Sample.Monster.equipped._type.evaluate(object: o)
+          let r1 = MyGame.Sample.Monster.equipped._type.evaluate(object: atom)
           if or1 != r1 {
             guard
               let u1 = toolbox.connection.prepareStaticStatement(
@@ -377,9 +377,9 @@ extension MyGame.Sample {
         }
         if indexSurvey.full.contains("f26__u2__f4") {
           let or2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(o))
+            object: o)
           let r2 = MyGame.Sample.Monster.equipped.as(MyGame.Sample.Orb.self).name.evaluate(
-            object: .object(atom))
+            object: atom)
           if or2 != r2 {
             guard
               let u2 = toolbox.connection.prepareStaticStatement(

@@ -5,7 +5,10 @@ import SQLite3
 struct AllExpr<Element: Atom>: Expr, SQLiteExpr {
   typealias ResultType = Bool
   typealias Element = Element
-  func evaluate(object: Evaluable<Element>) -> ResultType? {
+  func evaluate(object: Element) -> ResultType? {
+    return true
+  }
+  func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
     return true
   }
   func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -58,7 +61,7 @@ private func areInIncreasingOrder<Element>(
   _ lhs: Element, _ rhs: Element, orderBy: [OrderBy<Element>]
 ) -> Bool {
   for i in orderBy {
-    let sortingOrder = i.areInSortingOrder(.object(lhs), .object(rhs))
+    let sortingOrder = i.areInSortingOrder(lhs, rhs)
     guard sortingOrder != .same else { continue }
     return sortingOrder == i.sortingOrder
   }
@@ -210,7 +213,7 @@ func SQLiteQueryWhere<Element: Atom>(
       let rowid = sqlite3_column_int64(preparedQuery, 0)
       let bb = ByteBuffer(
         assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
-      let retval = query.evaluate(object: .table(bb))
+      let retval = query.evaluate(byteBuffer: bb)
       if retval == true {
         var element = Element.from(byteBuffer: bb)
         element._rowid = rowid

@@ -16,13 +16,30 @@ where
     self.right = right
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     let lval = left.evaluate(object: object)
     // Short-cut.
     if lval == false {
       return false
     }
     let rval = right.evaluate(object: object)
+    // If any of these result is false and !unknown, the whole expression evaluated to false and !unknown
+    if rval == false {
+      return false
+    }
+    guard let lvalUnwrapped = lval, let rvalUnwrapped = rval else {
+      return nil
+    }
+    return lvalUnwrapped && rvalUnwrapped
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    let lval = left.evaluate(byteBuffer: byteBuffer)
+    // Short-cut.
+    if lval == false {
+      return false
+    }
+    let rval = right.evaluate(byteBuffer: byteBuffer)
     // If any of these result is false and !unknown, the whole expression evaluated to false and !unknown
     if rval == false {
       return false

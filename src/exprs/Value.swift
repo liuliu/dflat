@@ -32,7 +32,11 @@ public struct ValueExpr<T, Element: Atom>: Expr where T: DflatFriendlyValue {
     self.value = value
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
+    value
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
     value
   }
   @inlinable

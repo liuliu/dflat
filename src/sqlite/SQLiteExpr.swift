@@ -4,7 +4,11 @@ import FlatBuffers
 @usableFromInline
 class _AnyExprBase<ResultType, Element: Atom>: Expr {
   @usableFromInline
-  func evaluate(object: Evaluable<Element>) -> ResultType? {
+  func evaluate(object: Element) -> ResultType? {
+    fatalError()
+  }
+  @usableFromInline
+  func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
     fatalError()
   }
   @usableFromInline
@@ -26,8 +30,12 @@ where T.Element == Element {
     self.base = base
   }
   @inlinable
-  override func evaluate(object: Evaluable<Element>) -> ResultType? {
+  override func evaluate(object: Element) -> ResultType? {
     base.evaluate(object: object)
+  }
+  @inlinable
+  override func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    base.evaluate(byteBuffer: byteBuffer)
   }
   @inlinable
   override func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
@@ -50,8 +58,12 @@ public final class AnySQLiteExpr<ResultType, Element: Atom>: Expr, SQLiteExpr {
     self.base = _AnyExpr(base)
   }
   @inlinable
-  public func evaluate(object: Evaluable<Element>) -> ResultType? {
+  public func evaluate(object: Element) -> ResultType? {
     base.evaluate(object: object)
+  }
+  @inlinable
+  public func evaluate(byteBuffer: ByteBuffer) -> ResultType? {
+    base.evaluate(byteBuffer: byteBuffer)
   }
   @inlinable
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
