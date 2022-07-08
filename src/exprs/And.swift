@@ -6,8 +6,16 @@ where
 {
   public typealias ResultType = Bool
   public typealias Element = Element
-  public let left: L
-  public let right: R
+  @usableFromInline
+  let left: L
+  @usableFromInline
+  let right: R
+  @usableFromInline
+  init(left: L, right: R) {
+    self.left = left
+    self.right = right
+  }
+  @inlinable
   public func evaluate(object: Evaluable<Element>) -> ResultType? {
     let lval = left.evaluate(object: object)
     // Short-cut.
@@ -46,6 +54,7 @@ where
    * operator will binarize .partial into .none. So a NOT operator over AND of .partial state will return .none,
    * and we won't apply the index for field1. All is good.
    */
+  @inlinable
   public func canUsePartialIndex(_ indexSurvey: IndexSurvey) -> IndexUsefulness {
     let lval = left.canUsePartialIndex(indexSurvey)
     let rval = right.canUsePartialIndex(indexSurvey)
@@ -62,6 +71,7 @@ where
   }
 }
 
+@inlinable
 public func && <L, R, Element: Atom>(left: L, right: R) -> AndExpr<L, R, Element>
 where
   L.ResultType == R.ResultType, L.ResultType == Bool, L.Element == R.Element, L.Element == Element
@@ -69,12 +79,14 @@ where
   return AndExpr(left: left, right: right)
 }
 
+@inlinable
 public func && <L, Element: Atom>(left: L, right: Bool) -> AndExpr<
   L, ValueExpr<Bool, Element>, Element
 > where L.ResultType == Bool, L.Element == Element {
   return AndExpr(left: left, right: ValueExpr(right))
 }
 
+@inlinable
 public func && <R, Element: Atom>(left: Bool, right: R) -> AndExpr<
   ValueExpr<Bool, Element>, R, Element
 > where R.ResultType == Bool, Element == R.Element {

@@ -7,7 +7,7 @@ public enum IndexUsefulness {
   case full
 }
 
-public enum Evaluable<Element> {
+public enum Evaluable<Element: Atom> {
   case table(_: ByteBuffer)
   case object(_: Element)
 }

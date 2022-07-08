@@ -5,6 +5,7 @@ public protocol SQLiteBinding {
 public protocol SQLiteValue: SQLiteBinding, DflatFriendlyValue {}
 
 extension ValueExpr: SQLiteExpr where T: SQLiteValue {
+  @inlinable
   public func buildWhereQuery(
     indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32
   ) {
@@ -12,6 +13,7 @@ extension ValueExpr: SQLiteExpr where T: SQLiteValue {
     let parameterId = parameterCount
     query.append("?\(parameterId)")
   }
+  @inlinable
   public func bindWhereQuery(
     indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32
   ) {

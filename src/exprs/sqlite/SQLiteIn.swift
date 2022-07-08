@@ -1,4 +1,5 @@
 extension InExpr: SQLiteExpr where T: SQLiteExpr, T.ResultType: SQLiteValue {
+  @inlinable
   public func buildWhereQuery(
     indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32
   ) {
@@ -19,6 +20,7 @@ extension InExpr: SQLiteExpr where T: SQLiteExpr, T.ResultType: SQLiteValue {
     }
     query.append(")")
   }
+  @inlinable
   public func bindWhereQuery(
     indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32
   ) {

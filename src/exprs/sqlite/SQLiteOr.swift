@@ -1,4 +1,5 @@
 extension OrExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExpr {
+  @inlinable
   public func buildWhereQuery(
     indexSurvey: IndexSurvey, query: inout String, parameterCount: inout Int32
   ) {
@@ -9,6 +10,7 @@ extension OrExpr: SQLiteExpr where L: SQLiteExpr, R: SQLiteExpr {
     right.buildWhereQuery(indexSurvey: indexSurvey, query: &query, parameterCount: &parameterCount)
     query.append(")")
   }
+  @inlinable
   public func bindWhereQuery(
     indexSurvey: IndexSurvey, query: OpaquePointer, parameterCount: inout Int32
   ) {
