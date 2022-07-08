@@ -435,7 +435,7 @@ public final class SQLiteWorkspace: Workspace {
             // Since the object is out of date, now we need to check whether we need to call changeHandler immediately.
             let fetchedObject = SQLiteObjectRepository.object(
               connection, ofType: Element.self, for: .rowid(object._rowid))
-            guard var updatedObject = fetchedObject else {
+            guard let updatedObject = fetchedObject else {
               withUnsafeMutablePointer(to: &subscription.cancelled) {
                 UnsafeAtomic(at: $0).store(true, ordering: .releasing)
               }
