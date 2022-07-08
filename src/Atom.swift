@@ -1,10 +1,6 @@
 import FlatBuffers
 
-open class Atom {
-  public final var _rowid: Int64 = -1
-  public final var _changesTimestamp: Int64 = -1
-  public init() {}
-  open class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
-    fatalError()
-  }
+public protocol Atom: FlatBuffersDecodable {
+  var _rowid: Int64 { get set }
+  var _changesTimestamp: Int64 { get set }
 }

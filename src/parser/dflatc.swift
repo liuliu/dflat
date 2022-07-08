@@ -514,6 +514,8 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   }
   code += "    return true\n"
   code += "  }\n"
+  code += "  public var _rowid: Int64 = -1\n"
+  code += "  public var _changesTimestamp: Int64 = -1\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
     code += "  public let \(field.name): \(GetFieldType(field))\n"
@@ -540,10 +542,6 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "    }\n"
   code += "  }\n"
   code += "  public static func from(byteBuffer bb: ByteBuffer) -> Self {\n"
-  code +=
-    "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
-  code += "  }\n"
-  code += "  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {\n"
   code +=
     "    Self(\(GetDflatGenFullyQualifiedName(structDef)).getRootAs\(structDef.name)(bb: bb))\n"
   code += "  }\n"

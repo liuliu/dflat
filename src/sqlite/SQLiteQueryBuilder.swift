@@ -180,7 +180,7 @@ func SQLiteQueryWhere<Element: Atom>(
       let rowid = sqlite3_column_int64(preparedQuery, 0)
       let bb = ByteBuffer(
         assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
-      let element = Element.fromFlatBuffers(bb)
+      var element = Element.from(byteBuffer: bb)
       element._rowid = rowid
       element._changesTimestamp = changesTimestamp
       if let transactionContext = transactionContext {
@@ -212,7 +212,7 @@ func SQLiteQueryWhere<Element: Atom>(
         assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
       let retval = query.evaluate(object: .table(bb))
       if retval == true {
-        let element = Element.fromFlatBuffers(bb)
+        var element = Element.from(byteBuffer: bb)
         element._rowid = rowid
         element._changesTimestamp = changesTimestamp
         if let transactionContext = transactionContext {

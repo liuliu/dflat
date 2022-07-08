@@ -22,6 +22,8 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
     guard lhs.text == rhs.text else { return false }
     return true
   }
+  public var _rowid: Int64 = -1
+  public var _changesTimestamp: Int64 = -1
   public let color: ColorV2
   public let title: String
   public let tag: String?
@@ -53,9 +55,6 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
     }
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
-    Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
-  }
-  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_BenchDocV2.getRootAsBenchDocV2(bb: bb))
   }
   public static func verify(byteBuffer bb: ByteBuffer) -> Bool {

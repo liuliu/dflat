@@ -103,6 +103,10 @@ public struct zzz_DflatGen_DictItem: FlatBufferObject, Verifiable {
   public var stringValueSegmentArray: [UInt8]? {
     return _accessor.getVector(at: VTOFFSET.stringValue.v)
   }
+  public var hasCodable: Bool {
+    let o = _accessor.offset(VTOFFSET.codable.v)
+    return o == 0 ? false : true
+  }
   public var codableCount: Int32 {
     let o = _accessor.offset(VTOFFSET.codable.v)
     return o == 0 ? 0 : _accessor.vector(count: o)

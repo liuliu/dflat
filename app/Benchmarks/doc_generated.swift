@@ -33,13 +33,20 @@ public enum zzz_DflatGen_Content: UInt8, UnionEnum {
   public static var min: zzz_DflatGen_Content { return .none_ }
 }
 
-public struct zzz_DflatGen_Vec3: NativeStruct, Verifiable {
+public struct zzz_DflatGen_Vec3: NativeStruct, Verifiable, FlatbuffersInitializable {
 
   static func validateVersion() { FlatBuffersVersion_2_0_0() }
 
   private var _x: Float32
   private var _y: Float32
   private var _z: Float32
+
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _x = _accessor.readBuffer(of: Float32.self, at: 0)
+    _y = _accessor.readBuffer(of: Float32.self, at: 4)
+    _z = _accessor.readBuffer(of: Float32.self, at: 8)
+  }
 
   public init(x: Float32, y: Float32, z: Float32) {
     _x = x
@@ -153,6 +160,10 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
+  public var hasImages: Bool {
+    let o = _accessor.offset(VTOFFSET.images.v)
+    return o == 0 ? false : true
+  }
   public var imagesCount: Int32 {
     let o = _accessor.offset(VTOFFSET.images.v)
     return o == 0 ? 0 : _accessor.vector(count: o)

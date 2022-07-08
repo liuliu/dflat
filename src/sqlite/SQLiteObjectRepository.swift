@@ -86,7 +86,7 @@ public struct SQLiteObjectRepository {
     let rowid = sqlite3_column_int64(preparedQuery, 0)
     let bb = ByteBuffer(
       assumingMemoryBound: UnsafeMutableRawPointer(mutating: blob!), capacity: Int(blobSize))
-    let element = Element.fromFlatBuffers(bb)
+    var element = Element.from(byteBuffer: bb)
     element._rowid = rowid
     sqlite3_reset(preparedQuery)
     sqlite3_clear_bindings(preparedQuery)

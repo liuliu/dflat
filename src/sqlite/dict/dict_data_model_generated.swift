@@ -32,6 +32,8 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     guard lhs.codable == rhs.codable else { return false }
     return true
   }
+  public var _rowid: Int64 = -1
+  public var _changesTimestamp: Int64 = -1
   public let key: String
   public let namespace: String
   public let version: String?
@@ -83,9 +85,6 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     }
   }
   public static func from(byteBuffer bb: ByteBuffer) -> Self {
-    Self(zzz_DflatGen_DictItem.getRootAsDictItem(bb: bb))
-  }
-  override public class func fromFlatBuffers(_ bb: ByteBuffer) -> Self {
     Self(zzz_DflatGen_DictItem.getRootAsDictItem(bb: bb))
   }
   public static func verify(byteBuffer bb: ByteBuffer) -> Bool {

@@ -3,6 +3,15 @@ import FlatBuffers
 import XCTest
 
 final class TestObj: Dflat.Atom {
+  var _rowid: Int64 = -1
+  var _changesTimestamp: Int64 = -1
+  static func from(byteBuffer: ByteBuffer) -> TestObj {
+    fatalError()
+  }
+  static func verify(byteBuffer: ByteBuffer) -> Bool {
+    fatalError()
+  }
+  static var flatBuffersSchemaVersion: String? { nil }
   var x: Int32 = 0
   var y: Float = 0
 }
@@ -11,13 +20,11 @@ func testObjXTable(_ table: ByteBuffer) -> Int32? {
   return nil
 }
 
-func testObjX(_ object: Dflat.Atom) -> Int32? {
-  let object: TestObj = object as! TestObj
+func testObjX(_ object: TestObj) -> Int32? {
   return object.x
 }
 
-func testObjX10AsNull(_ object: Dflat.Atom) -> Int32? {
-  let object: TestObj = object as! TestObj
+func testObjX10AsNull(_ object: TestObj) -> Int32? {
   if object.x == 10 {
     return nil
   }
@@ -28,8 +35,7 @@ func testObjYTable(_ table: ByteBuffer) -> Float? {
   return nil
 }
 
-func testObjY(_ object: Dflat.Atom) -> Float? {
-  let object: TestObj = object as! TestObj
+func testObjY(_ object: TestObj) -> Float? {
   return object.y
 }
 
