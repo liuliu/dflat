@@ -10,7 +10,7 @@ import PackageDescription
       .revision("b52c73460318ab1fef4a68913c9870eb2c2dd5a7")),
     .package(url: "https://github.com/apple/swift-atomics.git", from: "1.0.2"),
     .package(
-      name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.39.0"),
+      name: "SQLite3", url: "https://github.com/liuliu/swift-sqlite3-support.git", from: "3.39.2"),
   ]
   let sqliteDflatDependencies: [Target.Dependency] = ["Dflat", "_SQLiteDflatOSShim", "SQLite3"]
 #else
