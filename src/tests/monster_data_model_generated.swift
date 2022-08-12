@@ -315,3 +315,7 @@ extension MyGame.Sample {
 }
 
 // MARK: - MyGame.Sample
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+  extension MyGame.Sample.Monster: @unchecked Sendable {}
+#endif

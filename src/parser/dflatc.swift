@@ -612,6 +612,12 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "}\n"
 }
 
+func GenSendableExtension(_ structDef: Struct, code: inout String) {
+  code += "\n#if compiler(>=5.5) && canImport(_Concurrency)\n"
+  code += "extension \(GetFullyQualifiedName(structDef)): @unchecked Sendable {}\n"
+  code += "#endif\n"
+}
+
 func GenDataModel(schema: Schema, outputPath: String) {
   var code =
     "import Dflat\nimport FlatBuffers\nimport Foundation\nimport SQLiteDflat\nimport SQLite3\n"
@@ -632,15 +638,20 @@ func GenDataModel(schema: Schema, outputPath: String) {
       GenStructDataModel(structDef, code: &code)
     }
   }
+  var rootStructDef: Struct? = nil
   for structDef in schema.structs {
     guard !structDef.generated else { continue }
     if structDef.name == schema.root?.name && structDef.namespace == schema.root?.namespace {
       SetNamespace(structDef.namespace, previous: &namespace, code: &code)
+      rootStructDef = structDef
       GenRootDataModel(structDef, code: &code)
       break
     }
   }
   SetNamespace([String](), previous: &namespace, code: &code)
+  if let rootStructDef = rootStructDef {
+    GenSendableExtension(rootStructDef, code: &code)
+  }
   try! code.write(
     to: URL(fileURLWithPath: outputPath), atomically: false, encoding: String.Encoding.utf8)
 }

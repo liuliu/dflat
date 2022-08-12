@@ -72,3 +72,7 @@ public final class BenchDocV3: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
     return true
   }
 }
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+  extension BenchDocV3: @unchecked Sendable {}
+#endif
