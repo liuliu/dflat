@@ -18,7 +18,7 @@ public enum zzz_DflatGen_MyGame_Sample_Color: Int8, Enum, Verifiable {
 
 public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
@@ -84,7 +84,7 @@ public struct zzz_DflatGen_MyGame_Sample_Weapon: FlatBufferObject, Verifiable {
 
 public struct zzz_DflatGen_MyGame_Sample_Orb: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 

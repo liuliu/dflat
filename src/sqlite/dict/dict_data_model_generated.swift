@@ -118,3 +118,7 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
     return true
   }
 }
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+  extension DictItem: @unchecked Sendable {}
+#endif

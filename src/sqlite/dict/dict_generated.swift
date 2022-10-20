@@ -23,7 +23,7 @@ public enum zzz_DflatGen_ValueType: Int8, Enum, Verifiable {
 
 public struct zzz_DflatGen_DictItem: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 

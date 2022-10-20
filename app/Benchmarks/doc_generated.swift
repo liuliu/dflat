@@ -35,7 +35,7 @@ public enum zzz_DflatGen_Content: UInt8, UnionEnum {
 
 public struct zzz_DflatGen_Vec3: NativeStruct, Verifiable, FlatbuffersInitializable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
 
   private var _x: Float32
   private var _y: Float32
@@ -72,7 +72,7 @@ public struct zzz_DflatGen_Vec3: NativeStruct, Verifiable, FlatbuffersInitializa
 
 public struct zzz_DflatGen_Vec3_Mutable: FlatBufferObject {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Struct
 
@@ -85,7 +85,7 @@ public struct zzz_DflatGen_Vec3_Mutable: FlatBufferObject {
 
 public struct zzz_DflatGen_TextContent: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
@@ -140,7 +140,7 @@ public struct zzz_DflatGen_TextContent: FlatBufferObject, Verifiable {
 
 public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
@@ -203,7 +203,7 @@ public struct zzz_DflatGen_ImageContent: FlatBufferObject, Verifiable {
 
 public struct zzz_DflatGen_BenchDoc: FlatBufferObject, Verifiable {
 
-  static func validateVersion() { FlatBuffersVersion_2_0_0() }
+  static func validateVersion() { FlatBuffersVersion_22_9_29() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
   private var _accessor: Table
 
