@@ -108,7 +108,7 @@ public protocol Workspace: Queryable {
    * While writing data to disk is serialized under the hood, we don't wait the
    * writes. This dictionary is an class object, it is always mutable.
    */
-  var dictionary: WorkspaceDictionary { get }
+  var dictionary: WorkspaceDictionary { get set }
   // MARK - Observations
   typealias Subscription = WorkspaceSubscription
   /**

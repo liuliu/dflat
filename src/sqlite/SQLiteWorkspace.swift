@@ -70,7 +70,12 @@ public final class SQLiteWorkspace: Workspace {
   private let state = SQLiteWorkspaceState()
   private let dictionaryStorage = SQLiteWorkspaceDictionary.Storage(namespace: "")
   public var dictionary: WorkspaceDictionary {
-    SQLiteWorkspaceDictionary(workspace: self, storage: dictionaryStorage)
+    get { SQLiteWorkspaceDictionary(workspace: self, storage: dictionaryStorage) }
+    set {
+      let newDictionary = newValue as! SQLiteWorkspaceDictionary
+      assert(newDictionary.workspace === self);
+      assert(newDictionary.storage === dictionaryStorage);
+    }
   }
 
   /**
