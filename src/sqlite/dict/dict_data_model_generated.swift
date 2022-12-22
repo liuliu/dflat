@@ -119,6 +119,39 @@ public final class DictItem: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDeco
   }
 }
 
+public struct DictItemBuilder {
+  public var key: String
+  public var namespace: String
+  public var version: String?
+  public var valueType: ValueType
+  public var boolValue: Bool
+  public var longValue: Int64
+  public var unsignedLongValue: UInt64
+  public var floatValue: Float32
+  public var doubleValue: Double
+  public var stringValue: String?
+  public var codable: [UInt8]
+  public init(from object: DictItem) {
+    key = object.key
+    namespace = object.namespace
+    version = object.version
+    valueType = object.valueType
+    boolValue = object.boolValue
+    longValue = object.longValue
+    unsignedLongValue = object.unsignedLongValue
+    floatValue = object.floatValue
+    doubleValue = object.doubleValue
+    stringValue = object.stringValue
+    codable = object.codable
+  }
+  public func build() -> DictItem {
+    DictItem(
+      key: key, namespace: namespace, version: version, valueType: valueType, boolValue: boolValue,
+      longValue: longValue, unsignedLongValue: unsignedLongValue, floatValue: floatValue,
+      doubleValue: doubleValue, stringValue: stringValue, codable: codable)
+  }
+}
+
 #if compiler(>=5.5) && canImport(_Concurrency)
   extension DictItem: @unchecked Sendable {}
 #endif

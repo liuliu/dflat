@@ -417,6 +417,38 @@ extension MyGame.SampleV2 {
     }
   }
 
+  public struct MonsterBuilder {
+    public var pos: MyGame.SampleV2.Vec3?
+    public var mana: Int16
+    public var hp: Int16
+    public var name: String
+    public var color: MyGame.SampleV2.Color
+    public var inventory: [UInt8]
+    public var weapons: [MyGame.SampleV2.Weapon]
+    public var equipped: MyGame.SampleV2.Equipment?
+    public var colors: [MyGame.SampleV2.Color]
+    public var path: [MyGame.SampleV2.Vec3]
+    public var wear: MyGame.SampleV2.Equipment?
+    public init(from object: Monster) {
+      pos = object.pos
+      mana = object.mana
+      hp = object.hp
+      name = object.name
+      color = object.color
+      inventory = object.inventory
+      weapons = object.weapons
+      equipped = object.equipped
+      colors = object.colors
+      path = object.path
+      wear = object.wear
+    }
+    public func build() -> Monster {
+      Monster(
+        name: name, color: color, pos: pos, mana: mana, hp: hp, inventory: inventory,
+        weapons: weapons, equipped: equipped, colors: colors, path: path, wear: wear)
+    }
+  }
+
 }
 
 // MARK: - MyGame.SampleV2

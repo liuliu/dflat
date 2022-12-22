@@ -89,6 +89,24 @@ public final class BenchDocV2: Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDe
   }
 }
 
+public struct BenchDocV2Builder {
+  public var color: ColorV2
+  public var title: String
+  public var tag: String?
+  public var priority: Int32
+  public var text: String?
+  public init(from object: BenchDocV2) {
+    color = object.color
+    title = object.title
+    tag = object.tag
+    priority = object.priority
+    text = object.text
+  }
+  public func build() -> BenchDocV2 {
+    BenchDocV2(title: title, color: color, tag: tag, priority: priority, text: text)
+  }
+}
+
 #if compiler(>=5.5) && canImport(_Concurrency)
   extension BenchDocV2: @unchecked Sendable {}
 #endif

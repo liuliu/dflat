@@ -612,6 +612,36 @@ func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code += "}\n"
 }
 
+func GenRootBuilder(_ structDef: Struct, code: inout String) {
+  code +=
+    "\npublic struct \(structDef.name)Builder {\n"
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    code += "  public var \(field.name): \(GetFieldType(field))\n"
+  }
+  code += "  public init(from object: \(structDef.name)) {\n"
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    code += "    \(field.name) = object.\(field.name)\n"
+  }
+  code += "  }\n"
+  code += "  public func build() -> \(structDef.name) {\n"
+  var parameters = [String]()
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    guard field.isPrimary else { continue }
+    parameters.append("\(field.name): \(field.name)")
+  }
+  for field in structDef.fields {
+    guard IsDataField(field) else { continue }
+    guard !field.isPrimary else { continue }
+    parameters.append("\(field.name): \(field.name)")
+  }
+  code += "    \(structDef.name)(\(parameters.joined(separator: ", ")))\n"
+  code += "  }\n"
+  code += "}\n"
+}
+
 func GenSendableExtension(_ structDef: Struct, code: inout String) {
   code += "\n#if compiler(>=5.5) && canImport(_Concurrency)\n"
   code += "extension \(GetFullyQualifiedName(structDef)): @unchecked Sendable {}\n"
@@ -645,6 +675,7 @@ func GenDataModel(schema: Schema, outputPath: String) {
       SetNamespace(structDef.namespace, previous: &namespace, code: &code)
       rootStructDef = structDef
       GenRootDataModel(structDef, code: &code)
+      GenRootBuilder(structDef, code: &code)
       break
     }
   }
