@@ -15,5 +15,5 @@ cc_binary(
 
 swift_binary(
     name = "dflatc",
-    srcs = ["dflatc.swift"],
+    srcs = ["dflatc/main.swift"],
 )

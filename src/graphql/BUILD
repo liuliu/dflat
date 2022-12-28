@@ -12,7 +12,7 @@ swift_library(
 
 swift_binary(
     name = "codegen",
-    srcs = ["codegen.swift"],
+    srcs = ["codegen/main.swift"],
     deps = [
         ":ChangeCases",
         "@InflectorKit",
