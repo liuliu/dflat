@@ -73,8 +73,17 @@ public protocol WorkspaceDictionary {
   mutating func removeAll()
 }
 
+public struct WorkspaceShutdownFlag: OptionSet {
+  public let rawValue: Int
+  public init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+  public static let truncate = WorkspaceShutdownFlag(rawValue: 1 << 0)
+}
+
 public protocol Workspace: Queryable {
   // MARK - Management
+  typealias ShutdownFlag = WorkspaceShutdownFlag
   /**
    * Shutdown the Workspace. All transactions made to Dflat after this call will fail.
    * Transactions initiated before this will finish normally. Data fetching after this
@@ -84,7 +93,7 @@ public protocol Workspace: Queryable {
    * If `completion` closure not provided, this call will wait until all finished before
    * return.
    */
-  func shutdown(completion: (() -> Void)?)
+  func shutdown(flags: ShutdownFlag, completion: (() -> Void)?)
   // MARK - Changes
   typealias ChangesHandler = (_ transactionContext: TransactionContext) -> Void
   typealias CompletionHandler = (_ success: Bool) -> Void
@@ -278,8 +287,14 @@ extension WorkspaceDictionary {
 }
 
 extension Workspace {
+  public func shutdown(flags: ShutdownFlag) {
+    shutdown(flags: flags, completion: nil)
+  }
   public func shutdown() {
-    shutdown(completion: nil)
+    shutdown(flags: [], completion: nil)
+  }
+  public func shutdown(completion: (() -> Void)?) {
+    shutdown(flags: [], completion: completion)
   }
   public func performChanges(
     _ transactionalObjectTypes: [Any.Type], changesHandler: @escaping ChangesHandler
@@ -291,6 +306,14 @@ extension Workspace {
     public func shutdown() async {
       await withUnsafeContinuation { continuation in
         shutdown {
+          continuation.resume()
+        }
+      }
+    }
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    public func shutdown(flags: ShutdownFlag) async {
+      await withUnsafeContinuation { continuation in
+        shutdown(flags: flags) {
           continuation.resume()
         }
       }

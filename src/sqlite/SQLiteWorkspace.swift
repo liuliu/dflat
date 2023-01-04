@@ -73,8 +73,8 @@ public final class SQLiteWorkspace: Workspace {
     get { SQLiteWorkspaceDictionary(workspace: self, storage: dictionaryStorage) }
     set {
       let newDictionary = newValue as! SQLiteWorkspaceDictionary
-      assert(newDictionary.workspace === self);
-      assert(newDictionary.storage === dictionaryStorage);
+      assert(newDictionary.workspace === self)
+      assert(newDictionary.storage === dictionaryStorage)
     }
   }
 
@@ -113,7 +113,7 @@ public final class SQLiteWorkspace: Workspace {
 
   // MARK - Management
 
-  public func shutdown(completion: (() -> Void)?) {
+  public func shutdown(flags: WorkspaceShutdownFlag, completion: (() -> Void)?) {
     guard
       !(withUnsafeMutablePointer(to: &state.shutdown) {
         UnsafeAtomic(at: $0).load(ordering: .acquiring)
@@ -149,6 +149,11 @@ public final class SQLiteWorkspace: Workspace {
     group.notify(queue: targetQueue) { [self] in
       // After shutdown all writers, now to drain the reader pool.
       self.readerPool.drain()
+      // Create a new connection just for the checkpoint truncate purpose.
+      if flags.contains(.truncate), let connection = newConnection() {
+        sqlite3_wal_checkpoint_v2(connection.sqlite, nil, SQLITE_CHECKPOINT_TRUNCATE, nil, nil)
+        connection.close()
+      }
       completion()
     }
   }
