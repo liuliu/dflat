@@ -152,6 +152,8 @@ public final class SQLiteWorkspace: Workspace {
       // Create a new connection just for the checkpoint truncate purpose.
       if flags.contains(.truncate), let connection = newConnection() {
         sqlite3_wal_checkpoint_v2(connection.sqlite, nil, SQLITE_CHECKPOINT_TRUNCATE, nil, nil)
+        // Revert back to normal mode so this is one file.
+        sqlite3_exec(connection.sqlite, "PRAGMA journal_mode=DELETE", nil, nil, nil)
         connection.close()
       }
       completion()

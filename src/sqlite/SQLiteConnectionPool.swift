@@ -37,6 +37,10 @@ final class SQLiteConnectionPool {
     for _ in 0..<capacity {
       flowControl.wait()
     }
+    // Explicitly close every connection in the pool.
+    for connection in pool {
+      connection.close()
+    }
     // Balance the above waits.
     for _ in 0..<capacity {
       flowControl.signal()
