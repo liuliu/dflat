@@ -168,4 +168,320 @@ import Dispatch
     }
   }
 
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryFlatBuffersCodableValuePublisher<
+    Element: FlatBuffersCodable & Equatable
+  >: DictionaryValuePublisher<Element> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Element.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryCodableValuePublisher<Element: Codable & Equatable>:
+    DictionaryValuePublisher<Element>
+  {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Element.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryBoolValuePublisher: DictionaryValuePublisher<Bool> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Bool.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryIntValuePublisher: DictionaryValuePublisher<Int> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Int.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryUIntValuePublisher: DictionaryValuePublisher<UInt> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: UInt.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryFloatValuePublisher: DictionaryValuePublisher<Float> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Float.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryDoubleValuePublisher: DictionaryValuePublisher<Double> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: Double.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  final class SQLiteDictionaryStringValuePublisher: DictionaryValuePublisher<String> {
+    final class DictionaryValueSubscription<S: Subscriber>: Subscription
+    where Failure == S.Failure, Output == S.Input {
+      private let subscriber: S
+      private let dictionary: SQLiteWorkspaceDictionary
+      private let key: String
+      private var subscription: Workspace.Subscription? = nil
+      init(subscriber: S, dictionary: SQLiteWorkspaceDictionary, key: String) {
+        self.subscriber = subscriber
+        self.dictionary = dictionary
+        self.key = key
+      }
+      func request(_ demand: Subscribers.Demand) {
+        guard subscription == nil else { return }
+        subscription = dictionary.subscribe(key, of: String.self) { [weak self] updatedObject in
+          guard let self = self else { return }
+          let _ = self.subscriber.receive(updatedObject)
+        }
+      }
+      func cancel() {
+        subscription?.cancel()
+      }
+    }
+    private let dictionary: SQLiteWorkspaceDictionary
+    private let key: String
+    init(dictionary: SQLiteWorkspaceDictionary, key: String) {
+      self.dictionary = dictionary
+      self.key = key
+    }
+    override func receive<S: Subscriber>(subscriber: S)
+    where Failure == S.Failure, Output == S.Input {
+      subscriber.receive(
+        subscription: DictionaryValueSubscription(
+          subscriber: subscriber, dictionary: dictionary, key: key)
+      )
+    }
+  }
+
 #endif

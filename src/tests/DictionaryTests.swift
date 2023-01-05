@@ -221,6 +221,116 @@ class DictionaryTests: XCTestCase {
     XCTAssertEqual(keys.count, 0)
   }
 
+  func testSubscribeChanges() {
+    guard var dictionary = dflat?.dictionary else { return }
+    dictionary["stringValue"] = "abcde"
+    dictionary["intValue", Int.self] = 10
+    var stringValues = [SubscribedDictionaryValue<String>]()
+    let sub1 = dictionary.subscribe("stringValue", of: String.self) { value in
+      stringValues.append(value)
+    }
+    var intValues = [SubscribedDictionaryValue<Int>]()
+    let sub2 = dictionary.subscribe("intValue", of: Int.self) { value in
+      intValues.append(value)
+    }
+    var doubleValues = [SubscribedDictionaryValue<Double>]()
+    let sub3 = dictionary.subscribe("doubleValue", of: Double.self) { value in
+      doubleValues.append(value)
+    }
+    dictionary["stringValue", String.self] = nil
+    dictionary["intValue", Int.self] = 12
+    dictionary["doubleValue", Double.self] = 23.4
+    dictionary["stringValue"] = "bd"
+    dictionary["intValue", Int.self] = nil
+    dictionary["doubleValue", Double.self] = 34.5
+    sub1.cancel()
+    sub2.cancel()
+    dictionary["intValue", Int.self] = 14
+    dictionary["doubleValue", Double.self] = 45.6
+    dictionary.removeAll()
+    sub3.cancel()
+    dictionary["stringValue"] = "bde"
+    dictionary["doubleValue", Double.self] = 56.7
+    XCTAssertEqual(stringValues, [.initial("abcde"), .deleted, .updated("bd")])
+    XCTAssertEqual(intValues, [.initial(10), .updated(12), .deleted])
+    XCTAssertEqual(
+      doubleValues, [.initial(nil), .updated(23.4), .updated(34.5), .updated(45.6), .deleted])
+  }
+  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    func drainMainQueue() {
+      // Double dispatch to avoid nested main queue dispatch in previous blocks.
+      let mainQueueDrain = XCTestExpectation(description: "main")
+      DispatchQueue.main.async {
+        DispatchQueue.main.async {
+          mainQueueDrain.fulfill()
+        }
+      }
+      wait(for: [mainQueueDrain], timeout: 10.0)
+    }
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func testSubscribeChangesWithPublisher() {
+      guard var dictionary = dflat?.dictionary else { return }
+      dictionary["stringValue"] = "abcde"
+      dictionary["boolValue", Bool.self] = true
+      dictionary["floatValue", Float.self] = 12.3
+      var stringValues = [SubscribedDictionaryValue<String>]()
+      let stringPubExpectation = XCTestExpectation(description: "string publisher")
+      let stringCancellable = dictionary.publisher("stringValue", of: String.self).subscribe(
+        on: DispatchQueue.main
+      )
+      .sink { value in
+        stringValues.append(value)
+        if stringValues.count == 3 {
+          stringPubExpectation.fulfill()
+        }
+      }
+      var boolValues = [SubscribedDictionaryValue<Bool>]()
+      let boolPubExpectation = XCTestExpectation(description: "bool publisher")
+      let boolCancellable = dictionary.publisher("boolValue", of: Bool.self).subscribe(
+        on: DispatchQueue.main
+      )
+      .sink { value in
+        boolValues.append(value)
+        if boolValues.count == 3 {
+          boolPubExpectation.fulfill()
+        }
+      }
+      var floatValues = [SubscribedDictionaryValue<Float>]()
+      let floatPubExpectation = XCTestExpectation(description: "float publisher")
+      let floatCancellable = dictionary.publisher("floatValue", of: Float.self).subscribe(
+        on: DispatchQueue.main
+      )
+      .sink { value in
+        floatValues.append(value)
+        if floatValues.count == 3 {
+          floatPubExpectation.fulfill()
+        }
+      }
+      // The subscription happens on main queue asynchronously. Drain it to avoid we skip
+      // directly to deletion.
+      drainMainQueue()
+      dictionary["stringValue", String.self] = nil
+      dictionary["boolValue", Bool.self] = false
+      dictionary["floatValue", Float.self] = 23.4
+      dictionary["stringValue"] = "bd"
+      dictionary["boolValue", Bool.self] = nil
+      dictionary["floatValue", Float.self] = 34.5
+      stringCancellable.cancel()
+      boolCancellable.cancel()
+      dictionary["boolValue", Bool.self] = true
+      dictionary["floatValue", Float.self] = 45.6
+      dictionary.removeAll()
+      floatCancellable.cancel()
+      dictionary["stringValue"] = "bde"
+      dictionary["floatValue", Float.self] = 56.7
+      drainMainQueue()
+      XCTAssertEqual(stringValues, [.initial("abcde"), .deleted, .updated("bd")])
+      XCTAssertEqual(boolValues, [.initial(true), .updated(false), .deleted])
+      XCTAssertEqual(
+        floatValues, [.initial(12.3), .updated(23.4), .updated(34.5), .updated(45.6), .deleted])
+    }
+  #endif
+
   static let allTests = [
     ("testReadWriteReadCodableObject", testReadWriteReadCodableObject),
     ("testReadWriteReadFlatBuffersObject", testReadWriteReadFlatBuffersObject),
@@ -237,5 +347,6 @@ class DictionaryTests: XCTestCase {
     ("testIterateKeys", testIterateKeys),
     ("testRemoveAll", testRemoveAll),
     ("testRemoveAllWithPersistence", testRemoveAllWithPersistence),
+    ("testSubscribeChanges", testSubscribeChanges),
   ]
 }

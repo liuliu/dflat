@@ -12,6 +12,16 @@
   }
 
   @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+  open class DictionaryValuePublisher<Element: Equatable>: Publisher {
+    public typealias Output = SubscribedDictionaryValue<Element>
+    public typealias Failure = Never
+    public init() {}
+    open func receive<S: Subscriber>(subscriber: S) where Failure == S.Failure, Output == S.Input {
+      fatalError()
+    }
+  }
+
+  @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
   open class FetchedResultPublisher<Element: Atom & Equatable>: Publisher {
     public typealias Output = FetchedResult<Element>
     public typealias Failure = Never

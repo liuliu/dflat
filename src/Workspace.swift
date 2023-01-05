@@ -30,6 +30,21 @@ public enum SubscribedObject<Element: Atom> {
   case deleted
 }
 
+public enum SubscribedDictionaryValue<Element: Equatable>: Equatable {
+  /**
+   * Giving the initial value upon subscription (nil means no value).
+   */
+  case initial(_: Element?)
+  /**
+   * Giving the updated value.
+   */
+  case updated(_: Element)
+  /**
+   * The value is deleted.
+   */
+  case deleted
+}
+
 public protocol WorkspaceDictionary {
   /**
    * Get the latest value, whether it is in memory or from disk.
@@ -71,6 +86,121 @@ public protocol WorkspaceDictionary {
    * fetching from disk).
    */
   mutating func removeAll()
+  /**
+   * Subscribe to changes of a given key. If a new value added, changed, or removed, a
+   * callback will be triggered. The callback will be triggered on the target queue the same
+   * as the workspace. It will also trigger a callback upon first subscription to give you
+   * something to start with.
+   *
+   * - Parameters:
+   *    - object: The object to be observed. If it is outdated already, you will get an updated callback
+   *              soon after.
+   *    - changeHandler: The callback where you will receive an update if anything changed.
+   *
+   * - Returns: A subscription object that you can cancel on. If no one hold the subscription, it will cancel
+   *            automatically.
+   */
+  func subscribe<Element: Codable & Equatable>(
+    _: String,
+    of: Element.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Element>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe<Element: FlatBuffersCodable & Equatable>(
+    _: String,
+    of: Element.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Element>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: Bool.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Bool>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: Int.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Int>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: UInt.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<UInt>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: Float.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Float>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: Double.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<Double>) -> Void
+  ) -> Workspace.Subscription
+  func subscribe(
+    _: String,
+    of: String.Type, changeHandler: @escaping (_: SubscribedDictionaryValue<String>) -> Void
+  ) -> Workspace.Subscription
+  #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    // MARK - Combine-compliant
+    /**
+     * Return a publisher for key subscription in Combine.
+     */
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher<Element: Codable & Equatable>(_: String, of: Element.Type)
+      -> DictionaryValuePublisher<Element>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher<Element: FlatBuffersCodable & Equatable>(_: String, of: Element.Type)
+      -> DictionaryValuePublisher<Element>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: Bool.Type) -> DictionaryValuePublisher<Bool>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: Int.Type) -> DictionaryValuePublisher<Int>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: UInt.Type) -> DictionaryValuePublisher<UInt>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: Float.Type) -> DictionaryValuePublisher<Float>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: Double.Type) -> DictionaryValuePublisher<Double>
+    @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+    func publisher(_: String, of: String.Type) -> DictionaryValuePublisher<String>
+  #endif
+  #if compiler(>=5.5) && canImport(_Concurrency)
+    /**
+     * Subscribe to a given key, and return the AsyncSequence you can iterate over.
+     *
+     * - Parameters:
+     *    - key: The key for the dictionary.
+     *    - bufferingPolicy: The buffering policy to avoid issuing all updates to concerned parties. Default will be the newest of 1.
+     *
+     * - Returns: An AsyncSequence that can await for new updates. It never finishes.
+     */
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe<Element: Codable & Equatable>(
+      _: String, of: Element.Type,
+      bufferingPolicy: AsyncStream<Element?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Element?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe<Element: FlatBuffersCodable & Equatable>(
+      _: String, of: Element.Type,
+      bufferingPolicy: AsyncStream<Element?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Element?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: Bool.Type, bufferingPolicy: AsyncStream<Bool?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Bool?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: Int.Type, bufferingPolicy: AsyncStream<Int?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Int?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: UInt.Type, bufferingPolicy: AsyncStream<UInt?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<UInt?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: Float.Type, bufferingPolicy: AsyncStream<Float?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Float?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: Double.Type, bufferingPolicy: AsyncStream<Double?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<Double?>
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func subscribe(
+      _: String, of: String.Type, bufferingPolicy: AsyncStream<String?>.Continuation.BufferingPolicy
+    ) -> AsyncStream<String?>
+  #endif
 }
 
 public struct WorkspaceShutdownFlag: OptionSet {
