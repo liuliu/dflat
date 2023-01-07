@@ -209,6 +209,7 @@ public struct WorkspaceShutdownFlag: OptionSet {
     self.rawValue = rawValue
   }
   public static let truncate = WorkspaceShutdownFlag(rawValue: 1 << 0)
+  public static let vacuum = WorkspaceShutdownFlag(rawValue: 2 << 0)
 }
 
 public protocol Workspace: Queryable {

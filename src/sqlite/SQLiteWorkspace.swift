@@ -144,13 +144,30 @@ public final class SQLiteWorkspace: Workspace {
     }
     guard let completion = completion else {
       group.wait()
+      // After shutdown all writers, now to drain the reader pool.
+      self.readerPool.drain()
+      // Create a new connection just for the checkpoint truncate / vacuum  purpose.
+      if flags.contains(.truncate) || flags.contains(.vacuum), let connection = newConnection() {
+        if flags.contains(.vacuum) {
+          sqlite3_exec(connection.sqlite, "VACUUM", nil, nil, nil)
+        }
+        if flags.contains(.truncate) {
+          sqlite3_wal_checkpoint_v2(connection.sqlite, nil, SQLITE_CHECKPOINT_TRUNCATE, nil, nil)
+        }
+        // Revert back to normal mode so this is one file.
+        sqlite3_exec(connection.sqlite, "PRAGMA journal_mode=DELETE", nil, nil, nil)
+        connection.close()
+      }
       return
     }
     group.notify(queue: targetQueue) { [self] in
       // After shutdown all writers, now to drain the reader pool.
       self.readerPool.drain()
-      // Create a new connection just for the checkpoint truncate purpose.
-      if flags.contains(.truncate), let connection = newConnection() {
+      // Create a new connection just for the checkpoint truncate / vacuum purpose.
+      if flags.contains(.truncate) || flags.contains(.vacuum), let connection = newConnection() {
+        if flags.contains(.vacuum) {
+          sqlite3_exec(connection.sqlite, "VACUUM", nil, nil, nil)
+        }
         sqlite3_wal_checkpoint_v2(connection.sqlite, nil, SQLITE_CHECKPOINT_TRUNCATE, nil, nil)
         // Revert back to normal mode so this is one file.
         sqlite3_exec(connection.sqlite, "PRAGMA journal_mode=DELETE", nil, nil, nil)
