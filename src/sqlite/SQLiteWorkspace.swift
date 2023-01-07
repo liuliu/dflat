@@ -629,7 +629,6 @@ public final class SQLiteWorkspace: Workspace {
   }
 
   private func newConnection() -> SQLiteConnection? {
-    dispatchPrecondition(condition: .onQueue(targetQueue))
     switch writeConcurrency {
     case .concurrent:
       // Set the flag before creating the s
