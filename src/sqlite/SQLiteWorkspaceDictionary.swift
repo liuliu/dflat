@@ -883,14 +883,14 @@ extension SQLiteWorkspaceDictionary {
           DictItem.key == key && DictItem.namespace == storage.namespace
         ).first {
           assert(value.valueType == .longValue)
-          let object = value.longValue
+          let object = Int(value.longValue)
           storage.lock(tuple.1)
           // If no one else populated the cache, do that now.
           if storage.get(key, hashValue: tuple.1) == nil {
             storage.set(key, hashValue: tuple.1, value: object)
           }
           storage.unlock(tuple.1)
-          fetchedValue = Int(object)
+          fetchedValue = object
         } else {
           storage.lock(tuple.1)
           // If no one else populated the cache, do that now.
@@ -930,14 +930,14 @@ extension SQLiteWorkspaceDictionary {
           DictItem.key == key && DictItem.namespace == storage.namespace
         ).first {
           assert(value.valueType == .unsignedLongValue)
-          let object = value.unsignedLongValue
+          let object = UInt(value.unsignedLongValue)
           storage.lock(tuple.1)
           // If no one else populated the cache, do that now.
           if storage.get(key, hashValue: tuple.1) == nil {
             storage.set(key, hashValue: tuple.1, value: object)
           }
           storage.unlock(tuple.1)
-          fetchedValue = UInt(object)
+          fetchedValue = object
         } else {
           storage.lock(tuple.1)
           // If no one else populated the cache, do that now.
