@@ -112,7 +112,7 @@ final class SQLiteResultPublisher<Element: Atom>: ResultPublisher {
             if objects.contains(rowid) {
               // This object is in the list, now just need to check whether we need to update the order.
               let index = underlyingArray.indexSorted(element, orderBy: orderBy)
-              if underlyingArray[index]._rowid == rowid {
+              if index < underlyingArray.count && underlyingArray[index]._rowid == rowid {
                 underlyingArray[index] = element  // Inplace replacement
                 resultUpdated = true
               } else {
