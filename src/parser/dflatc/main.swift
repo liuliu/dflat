@@ -201,7 +201,7 @@ func SetNamespace(_ namespace: [String], previous pns: inout [String], code: ino
 
 func GenEnumDataModel(_ enumDef: Enum, code: inout String) {
   code +=
-    "\npublic enum \(enumDef.name): \(SwiftType[enumDef.underlyingType!]!), DflatFriendlyValue {\n"
+    "\npublic enum \(enumDef.name): \(SwiftType[enumDef.underlyingType!]!), DflatFriendlyValue, CaseIterable {\n"
   for field in enumDef.fields {
     code += "  case \(field.name.firstLowercasedIfNotAllCaps()) = \(field.value)\n"
   }
