@@ -8,3 +8,4 @@ build:clang --action_env=CXX=clang++
 build --config=clang
 
 try-import %workspace%/clang.bazelrc
+try-import %workspace%/.bazelrc.local
