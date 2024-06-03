@@ -18,7 +18,7 @@ struct SQLiteWorkspaceDictionary: WorkspaceDictionary {
     init(namespace: String) {
       self.namespace = namespace
       locks = UnsafeMutablePointer.allocate(capacity: Self.size)
-      locks.assign(repeating: os_unfair_lock(), count: Self.size)
+      locks.update(repeating: os_unfair_lock(), count: Self.size)
       dictionaries = Array(repeating: [String: Any](), count: Self.size)
       subscriptions = Array(
         repeating: [String: [ObjectIdentifier: (Any?) -> Void]](), count: Self.size)
