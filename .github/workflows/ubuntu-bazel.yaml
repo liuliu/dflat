@@ -24,6 +24,8 @@ jobs:
         run: |
           sudo apt -y install clang llvm
           ./bazel/setup_clang.sh
+          echo 'build --linkopt="-z nostart-stop-gc"' >> "${GITHUB_WORKSPACE}/.bazelrc.local"
+          echo 'build --host_linkopt="-z nostart-stop-gc"' >> "${GITHUB_WORKSPACE}/.bazelrc.local"
 
       - name: Run tests
         run: |
