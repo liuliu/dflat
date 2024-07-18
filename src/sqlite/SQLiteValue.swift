@@ -35,7 +35,7 @@ extension Int32: SQLiteValue {
 }
 extension UInt32: SQLiteValue {
   public func bindSQLite(_ query: OpaquePointer, parameterId: Int32) {
-    sqlite3_bind_int(query, parameterId, Int32(self))
+    sqlite3_bind_int(query, parameterId, Int32(bitPattern: self))
   }
 }
 extension Int64: SQLiteValue {
@@ -45,7 +45,7 @@ extension Int64: SQLiteValue {
 }
 extension UInt64: SQLiteValue {
   public func bindSQLite(_ query: OpaquePointer, parameterId: Int32) {
-    sqlite3_bind_int64(query, parameterId, Int64(self))
+    sqlite3_bind_int64(query, parameterId, Int64(bitPattern: self))
   }
 }
 extension Float: SQLiteValue {
