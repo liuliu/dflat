@@ -71,8 +71,8 @@ protobuf_deps()
 http_archive(
     name = "sqlite3",
     build_file = "sqlite3.BUILD",
-    sha256 = "87775784f8b22d0d0f1d7811870d39feaa7896319c7c20b849a4181c5a50609b",
-    urls = ["https://www.sqlite.org/2022/sqlite-amalgamation-3390200.zip"],
+    sha256 = "9da21e6b14ef6a943cdc30f973df259fb390bb4483f77e7f171b9b6e977e5458",
+    urls = ["https://www.sqlite.org/2024/sqlite-amalgamation-3470100.zip"],
 )
 
 # Optional dependencies for Apollo GraphQL support

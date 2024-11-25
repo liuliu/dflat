@@ -4,10 +4,10 @@ package(
 
 cc_library(
     name = "SQLite3",
-    srcs = ["sqlite-amalgamation-3390200/sqlite3.c"],
+    srcs = ["sqlite-amalgamation-3470100/sqlite3.c"],
     hdrs = [
-        "sqlite-amalgamation-3390200/sqlite3.h",
-        "sqlite-amalgamation-3390200/sqlite3ext.h",
+        "sqlite-amalgamation-3470100/sqlite3.h",
+        "sqlite-amalgamation-3470100/sqlite3ext.h",
     ],
     copts = ["-fPIC"],
     defines = [
@@ -50,6 +50,6 @@ cc_library(
         "SQLITE_THREADSAFE=2",
         "SQLITE_USE_URI",
     ],
-    includes = ["sqlite-amalgamation-3390200"],
+    includes = ["sqlite-amalgamation-3470100"],
     tags = ["swift_module=SQLite3"],
 )
