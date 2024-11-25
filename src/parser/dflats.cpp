@@ -115,6 +115,7 @@ const std::string GenUnion(const flatbuffers::EnumDef &enum_def) {
 	json += "\"generated\": ";
 	json += (enum_def.generated ? "true, " : "false, ");
 	json += "\"namespace\": [" + GenNamespace(*enum_def.defined_namespace) + "], ";
+	json += GenAttributes(enum_def.attributes) + ", ";
 	if (!enum_def.is_union) {
 		json += std::string("\"underlying_type\": \"") + idl_types[enum_def.underlying_type.base_type] + "\", ";
 	}
@@ -265,6 +266,7 @@ int main(int argc, const char **argv) {
     parser->known_attributes_["primary"] = true;
     parser->known_attributes_["indexed"] = true;
     parser->known_attributes_["unique"] = true;
+    parser->known_attributes_["codable"] = true;
     parser->known_attributes_["v"] = true;
     ParseFile(*parser.get(), filename, contents, include_directories);
 

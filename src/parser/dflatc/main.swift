@@ -19,6 +19,7 @@ struct Enum: Decodable {
   var underlyingType: String?
   var fields: [EnumVal]
   var generated: Bool
+  var attributes: [[String: String]]
 }
 
 enum ElementTypeEnum: String, Decodable {
@@ -174,6 +175,18 @@ extension Field {
 }
 
 extension Enum {
+  var isCodable: Bool {
+    attributes.contains { $0["codable"] != nil }
+  }
+}
+
+extension Struct {
+  var isCodable: Bool {
+    attributes.contains { $0["codable"] != nil }
+  }
+}
+
+extension Enum {
   func findEnumVal(_ value: Int) -> EnumVal? {
     for field in fields {
       if field.value == value {
@@ -201,7 +214,7 @@ func SetNamespace(_ namespace: [String], previous pns: inout [String], code: ino
 
 func GenEnumDataModel(_ enumDef: Enum, code: inout String) {
   code +=
-    "\npublic enum \(enumDef.name): \(SwiftType[enumDef.underlyingType!]!), DflatFriendlyValue, CaseIterable {\n"
+    "\npublic enum \(enumDef.name): \(SwiftType[enumDef.underlyingType!]!), DflatFriendlyValue, CaseIterable\(enumDef.isCodable ? ", Codable" : "") {\n"
   for field in enumDef.fields {
     code += "  case \(field.name.firstLowercasedIfNotAllCaps()) = \(field.value)\n"
   }
@@ -459,7 +472,7 @@ func GetStructDeserializer(_ structDef: Struct) -> String {
 }
 
 func GenStructDataModel(_ structDef: Struct, code: inout String) {
-  code += "\npublic struct \(structDef.name): Equatable, FlatBuffersDecodable {\n"
+  code += "\npublic struct \(structDef.name): Equatable, FlatBuffersDecodable\(structDef.isCodable ? ", Codable" : "") {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
     code += "  public var \(field.name): \(GetFieldType(field))\n"
@@ -506,7 +519,7 @@ func GenStructDataModel(_ structDef: Struct, code: inout String) {
 
 func GenRootDataModel(_ structDef: Struct, code: inout String) {
   code +=
-    "\npublic final class \(structDef.name): Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable {\n"
+    "\npublic final class \(structDef.name): Dflat.Atom, SQLiteDflat.SQLiteAtom, FlatBuffersDecodable, Equatable\(structDef.isCodable ? ", Codable" : "") {\n"
   code += "  public static func == (lhs: \(structDef.name), rhs: \(structDef.name)) -> Bool {\n"
   for field in structDef.fields {
     guard IsDataField(field) else { continue }
