@@ -1,9 +1,5 @@
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
-package(
-    default_visibility = ["//visibility:public"],
-)
-
 cc_library(
     name = "_AtomicsShims",
     srcs = ["Sources/_AtomicsShims/src/_AtomicsShims.c"],
@@ -20,7 +16,9 @@ swift_library(
         "Sources/Atomics/**/*.swift",
     ]),
     module_name = "Atomics",
+    visibility = ["//visibility:public"],
     deps = [
         ":_AtomicsShims",
     ],
+    alwayslink = True,
 )
