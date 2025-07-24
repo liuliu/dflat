@@ -1,4 +1,4 @@
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_interop_hint")
 
 cc_library(
     name = "_AtomicsShims",
@@ -8,6 +8,12 @@ cc_library(
         "Sources/_AtomicsShims/include/",
     ],
     tags = ["swift_module=_AtomicsShims"],
+    aspect_hints = [":AtomicsShims_swift_interop"],
+)
+
+swift_interop_hint(
+    name = "AtomicsShims_swift_interop",
+    module_name = "AtomicsShims",
 )
 
 swift_library(

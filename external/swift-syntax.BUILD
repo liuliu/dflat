@@ -1,5 +1,4 @@
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_interop_hint")
 
 cc_library(
     name = "_CSwiftSyntax",
@@ -12,6 +11,12 @@ cc_library(
         "Sources/_CSwiftSyntax/include/",
     ],
     tags = ["swift_module=_CSwiftSyntax"],
+    aspect_hints = [":CSwiftSyntax_swift_interop"],
+)
+
+swift_interop_hint(
+    name = "CSwiftSyntax_swift_interop",
+    module_name = "CSwiftSyntax",
 )
 
 swift_library(
