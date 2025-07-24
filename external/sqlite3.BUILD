@@ -1,13 +1,11 @@
-package(
-    default_visibility = ["//visibility:public"],
-)
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_interop_hint")
 
 cc_library(
     name = "SQLite3",
-    srcs = ["sqlite-amalgamation-3470100/sqlite3.c"],
+    srcs = ["sqlite-amalgamation-3500300/sqlite3.c"],
     hdrs = [
-        "sqlite-amalgamation-3470100/sqlite3.h",
-        "sqlite-amalgamation-3470100/sqlite3ext.h",
+        "sqlite-amalgamation-3500300/sqlite3.h",
+        "sqlite-amalgamation-3500300/sqlite3ext.h",
     ],
     copts = ["-fPIC"],
     defines = [
@@ -50,6 +48,13 @@ cc_library(
         "SQLITE_THREADSAFE=2",
         "SQLITE_USE_URI",
     ],
-    includes = ["sqlite-amalgamation-3470100"],
+    includes = ["sqlite-amalgamation-3500300"],
     tags = ["swift_module=SQLite3"],
+    visibility = ["//visibility:public"],
+    aspect_hints = [":C_sqlite3_swift_interop"],
+)
+
+swift_interop_hint(
+    name = "C_sqlite3_swift_interop",
+    module_name = "SQLite3",
 )

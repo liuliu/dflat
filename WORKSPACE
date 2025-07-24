@@ -5,16 +5,16 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 git_repository(
     name = "build_bazel_rules_swift",
-    commit = "3bc7bc164020a842ae08e0cf071ed35f0939dd39",
+    commit = "bffd22a56b8949616dfbd710cdca385cb2800274",
     remote = "https://github.com/bazelbuild/rules_swift.git",
-    shallow_since = "1654173801 -0500",
+    shallow_since = "1752542865 -0400",
 )
 
 git_repository(
     name = "build_bazel_rules_apple",
-    commit = "39bf97fb9b2db76bca8fe015b8c72fc92d5c6b81",
+    commit = "724e402ee9f270b6704737251d785ad405661ab0",
     remote = "https://github.com/bazelbuild/rules_apple.git",
-    shallow_since = "1653707025 -0700",
+    shallow_since = "1753131380 +0000",
 )
 
 new_git_repository(
@@ -71,8 +71,8 @@ protobuf_deps()
 http_archive(
     name = "sqlite3",
     build_file = "sqlite3.BUILD",
-    sha256 = "9da21e6b14ef6a943cdc30f973df259fb390bb4483f77e7f171b9b6e977e5458",
-    urls = ["https://www.sqlite.org/2024/sqlite-amalgamation-3470100.zip"],
+    sha256 = "9ad6d16cbc1df7cd55c8b55127c82a9bca5e9f287818de6dc87e04e73599d754",
+    urls = ["https://www.sqlite.org/2025/sqlite-amalgamation-3500300.zip"],
 )
 
 # Optional dependencies for Apollo GraphQL support

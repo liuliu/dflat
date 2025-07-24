@@ -50,6 +50,7 @@ swift_test(
     deps = [
         ":Tests_lib",
     ],
+    discover_tests = False
 )
 
 ios_unit_test(

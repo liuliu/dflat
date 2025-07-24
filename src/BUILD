@@ -1,3 +1,5 @@
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_interop_hint")
+
 cc_library(
     name = "_SQLiteDflatOSShim",
     srcs = ["sqlite/os.c"],
@@ -5,6 +7,12 @@ cc_library(
     includes = ["sqlite/include"],
     tags = ["swift_module=_SQLiteDflatOSShim"],
     visibility = ["//:__pkg__"],
+    aspect_hints = [":_SQLiteDflatOSShim_swift_interop"],
+)
+
+swift_interop_hint(
+    name = "_SQLiteDflatOSShim_swift_interop",
+    module_name = "_SQLiteDflatOSShim",
 )
 
 filegroup(
