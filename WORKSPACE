@@ -159,40 +159,69 @@ new_git_repository(
     shallow_since = "1665415355 -0700",
 )
 
+http_archive(
+    name = "rules_python",
+    sha256 = "fa532d635f29c038a64c8062724af700c30cf6b31174dd4fac120bc561a1a560",
+    strip_prefix = "rules_python-1.5.1",
+    url = "https://github.com/bazel-contrib/rules_python/releases/download/1.5.1/rules_python-1.5.1.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories")
+
+py_repositories()
+
 # buildifier is written in Go and hence needs rules_go to be built.
 # See https://github.com/bazelbuild/rules_go for the up to date setup instructions.
-
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "099a9fb96a376ccbbb7d291ed4ecbdfd42f6bc822ab77ae6f1b5cb9e914e94fa",
+    sha256 = "6dc2da7ab4cf5d7bfc7c949776b1b7c733f05e56edc4bcd9022bb249d2e2a996",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.39.1/rules_go-v0.39.1.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.39.1/rules_go-v0.39.1.zip",
     ],
 )
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies")
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.19.1")
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains")
+
+go_register_toolchains(version = "1.20.3")
 
 http_archive(
     name = "bazel_gazelle",
-    sha256 = "501deb3d5695ab658e82f6f6f549ba681ea3ca2a5fb7911154b5aa45596183fa",
+    sha256 = "727f3e4edd96ea20c29e8c2ca9e8d2af724d8c7778e7923a854b2c80952bc405",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.26.0/bazel-gazelle-v0.26.0.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.26.0/bazel-gazelle-v0.26.0.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.30.0/bazel-gazelle-v0.30.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.30.0/bazel-gazelle-v0.30.0.tar.gz",
     ],
 )
 
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 
+# If you use WORKSPACE.bazel, use the following line instead of the bare gazelle_dependencies():
+# gazelle_dependencies(go_repository_default_config = "@//:WORKSPACE.bazel")
 gazelle_dependencies()
 
-git_repository(
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "3bd7828aa5af4b13b99c191e8b1e884ebfa9ad371b0ce264605d347f135d2568",
+    strip_prefix = "protobuf-3.19.4",
+    urls = [
+        "https://github.com/protocolbuffers/protobuf/archive/v3.19.4.tar.gz",
+    ],
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+http_archive(
     name = "com_github_bazelbuild_buildtools",
-    commit = "174cbb4ba7d15a3ad029c2e4ee4f30ea4d76edce",
-    remote = "https://github.com/bazelbuild/buildtools.git",
-    shallow_since = "1607975103 +0100",
+    sha256 = "ae34c344514e08c23e90da0e2d6cb700fcd28e80c02e23e4d5715dddcb42f7b3",
+    strip_prefix = "buildtools-4.2.2",
+    urls = [
+        "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.2.2.tar.gz",
+    ],
 )
