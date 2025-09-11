@@ -638,6 +638,7 @@ public final class SQLiteWorkspace: Workspace {
         let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false)
       else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 30_000)
+      sqlite3_exec(writer.sqlite, "PRAGMA trusted_schema=OFF", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
       case .normal:
@@ -657,6 +658,7 @@ public final class SQLiteWorkspace: Workspace {
         let writer = SQLiteConnection(filePath: filePath, createIfMissing: true, readOnly: false)
       else { return nil }
       sqlite3_busy_timeout(writer.sqlite, 30_000)
+      sqlite3_exec(writer.sqlite, "PRAGMA trusted_schema=OFF", nil, nil, nil)
       sqlite3_exec(writer.sqlite, "PRAGMA journal_mode=WAL", nil, nil, nil)
       switch synchronous {
       case .normal:
